@@ -41,6 +41,22 @@ const validate = (schema, property = 'body') => {
     };
 };
 
+/**
+ * Convenience function for validating query parameters
+ * @param {Object} schema - Joi validation schema
+ * @returns {Function} - Express middleware
+ */
+const validateQuery = (schema) => validate(schema, 'query');
+
+/**
+ * Convenience function for validating URL parameters
+ * @param {Object} schema - Joi validation schema
+ * @returns {Function} - Express middleware
+ */
+const validateParams = (schema) => validate(schema, 'params');
+
 module.exports = {
-    validate
+    validate,
+    validateQuery,
+    validateParams
 };
