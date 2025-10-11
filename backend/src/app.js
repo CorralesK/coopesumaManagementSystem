@@ -51,12 +51,14 @@ const memberRoutes = require('./modules/members/memberRoutes');
 const assemblyRoutes = require('./modules/assemblies/assemblyRoutes');
 const attendanceRoutes = require('./modules/attendance/attendanceRoutes');
 const userRoutes = require('./modules/users/userRoutes');
+const reportRoutes = require('./modules/reports/reportRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/assemblies', assemblyRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/reports', reportRoutes);
 
 // 404 handler
 app.use((req, res) => {
