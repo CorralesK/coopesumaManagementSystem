@@ -1,0 +1,182 @@
+/**
+ * User Validation Schemas
+ * Joi validation schemas for user management endpoints
+ *
+ * @module modules/users/userValidation
+ */
+
+const Joi = require('joi');
+
+/**
+ * Schema for creating a new user
+ */
+const createUserSchema = Joi.object({
+    fullName: Joi.string()
+        .min(3)
+        .max(100)
+        .required()
+        .messages({
+            'string.empty': 'El nombre completo es requerido',
+            'string.min': 'El nombre completo debe tener al menos 3 caracteres',
+            'string.max': 'El nombre completo no puede exceder 100 caracteres',
+            'any.required': 'El nombre completo es requerido'
+        }),
+    username: Joi.string()
+        .min(3)
+        .max(50)
+        .pattern(/^[a-zA-Z0-9_]+$/)
+        .required()
+        .messages({
+            'string.empty': 'El nombre de usuario es requerido',
+            'string.min': 'El nombre de usuario debe tener al menos 3 caracteres',
+            'string.max': 'El nombre de usuario no puede exceder 50 caracteres',
+            'string.pattern.base': 'El nombre de usuario solo puede contener letras, números y guiones bajos',
+            'any.required': 'El nombre de usuario es requerido'
+        }),
+    password: Joi.string()
+        .min(8)
+        .max(100)
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .optional()
+        .messages({
+            'string.min': 'La contraseña debe tener al menos 8 caracteres',
+            'string.max': 'La contraseña no puede exceder 100 caracteres',
+            'string.pattern.base': 'La contraseña debe contener al menos una letra mayúscula, una minúscula y un número'
+        }),
+    email: Joi.string()
+        .email()
+        .max(255)
+        .optional()
+        .messages({
+            'string.email': 'El email debe ser válido',
+            'string.max': 'El email no puede exceder 255 caracteres'
+        }),
+    role: Joi.string()
+        .valid('administrator', 'registrar', 'treasurer')
+        .required()
+        .messages({
+            'any.only': 'El rol debe ser "administrator", "registrar" o "treasurer"',
+            'any.required': 'El rol es requerido'
+        }),
+    isActive: Joi.boolean()
+        .optional()
+        .default(true)
+        .messages({
+            'boolean.base': 'isActive debe ser un valor booleano'
+        }),
+    microsoftId: Joi.string()
+        .max(255)
+        .optional()
+        .messages({
+            'string.max': 'El Microsoft ID no puede exceder 255 caracteres'
+        })
+}).custom((value, helpers) => {
+    // Validate that at least one authentication method is provided
+    if (!value.password && !value.microsoftId) {
+        return helpers.error('any.invalid', {
+            message: 'Se requiere al menos un método de autenticación (password o microsoftId)'
+        });
+    }
+    return value;
+});
+
+/**
+ * Schema for updating a user
+ */
+const updateUserSchema = Joi.object({
+    fullName: Joi.string()
+        .min(3)
+        .max(100)
+        .optional()
+        .messages({
+            'string.min': 'El nombre completo debe tener al menos 3 caracteres',
+            'string.max': 'El nombre completo no puede exceder 100 caracteres'
+        }),
+    username: Joi.string()
+        .min(3)
+        .max(50)
+        .pattern(/^[a-zA-Z0-9_]+$/)
+        .optional()
+        .messages({
+            'string.min': 'El nombre de usuario debe tener al menos 3 caracteres',
+            'string.max': 'El nombre de usuario no puede exceder 50 caracteres',
+            'string.pattern.base': 'El nombre de usuario solo puede contener letras, números y guiones bajos'
+        }),
+    password: Joi.string()
+        .min(8)
+        .max(100)
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .optional()
+        .messages({
+            'string.min': 'La contraseña debe tener al menos 8 caracteres',
+            'string.max': 'La contraseña no puede exceder 100 caracteres',
+            'string.pattern.base': 'La contraseña debe contener al menos una letra mayúscula, una minúscula y un número'
+        }),
+    email: Joi.string()
+        .email()
+        .max(255)
+        .optional()
+        .messages({
+            'string.email': 'El email debe ser válido',
+            'string.max': 'El email no puede exceder 255 caracteres'
+        }),
+    role: Joi.string()
+        .valid('administrator', 'registrar', 'treasurer')
+        .optional()
+        .messages({
+            'any.only': 'El rol debe ser "administrator", "registrar" o "treasurer"'
+        })
+}).min(1).messages({
+    'object.min': 'Se debe proporcionar al menos un campo para actualizar'
+});
+
+/**
+ * Schema for changing password
+ */
+const changePasswordSchema = Joi.object({
+    currentPassword: Joi.string()
+        .required()
+        .messages({
+            'string.empty': 'La contraseña actual es requerida',
+            'any.required': 'La contraseña actual es requerida'
+        }),
+    newPassword: Joi.string()
+        .min(8)
+        .max(100)
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .required()
+        .invalid(Joi.ref('currentPassword'))
+        .messages({
+            'string.empty': 'La nueva contraseña es requerida',
+            'string.min': 'La nueva contraseña debe tener al menos 8 caracteres',
+            'string.max': 'La nueva contraseña no puede exceder 100 caracteres',
+            'string.pattern.base': 'La nueva contraseña debe contener al menos una letra mayúscula, una minúscula y un número',
+            'any.required': 'La nueva contraseña es requerida',
+            'any.invalid': 'La nueva contraseña debe ser diferente a la contraseña actual'
+        })
+});
+
+/**
+ * Schema for query filters
+ */
+const userFiltersSchema = Joi.object({
+    role: Joi.string()
+        .valid('administrator', 'registrar', 'treasurer')
+        .optional()
+        .messages({
+            'any.only': 'El rol debe ser "administrator", "registrar" o "treasurer"'
+        }),
+    isActive: Joi.string()
+        .valid('true', 'false')
+        .optional()
+        .messages({
+            'any.only': 'isActive debe ser "true" o "false"'
+        })
+});
+
+module.exports = {
+    createUserSchema,
+    updateUserSchema,
+    changePasswordSchema,
+    userFiltersSchema
+};
