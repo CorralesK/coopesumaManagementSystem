@@ -1,141 +1,124 @@
 -- ============================================================================
 -- Script: 03_create_indexes.sql
--- Descripción: Crea todos los índices necesarios para optimizar las consultas
---              en las tablas de la Fase 1
--- Proyecto: CoopeSuma Management System - Phase 1
+-- Descripción: Creación de índices para optimización de consultas
+-- Proyecto: CoopeSuma Management System
+-- Fase: 1 - Control de Asistencia
 -- Base de datos: PostgreSQL 14+
--- Propósito: Mejorar el rendimiento de las consultas frecuentes
+-- ============================================================================
+--
+-- INSTRUCCIONES DE USO:
+-- psql -U postgres -d coopesuma_db -f 03_create_indexes.sql
+--
+-- PREREQUISITOS:
+-- - Ejecutar 01_create_functions.sql
+-- - Ejecutar 02_create_tables.sql
+--
 -- ============================================================================
 
 -- ============================================================================
--- ÍNDICES PARA LA TABLA: users
--- Propósito: Optimizar búsquedas por username, role y estado activo
+-- ÍNDICES PARA TABLA: users
 -- ============================================================================
 
--- Índice para búsqueda por username (usado en autenticación)
-CREATE INDEX idx_users_username ON users(username);
-COMMENT ON INDEX idx_users_username IS 'Optimiza búsquedas de usuarios por nombre de usuario';
+-- Índice para búsqueda por email (usado en login y verificación)
+CREATE INDEX idx_users_email ON users(email);
+COMMENT ON INDEX idx_users_email IS 'Optimiza búsquedas por email durante login';
 
--- Índice para filtrado por rol de usuario
+-- Índice para búsqueda por Microsoft ID (usado en OAuth callback)
+CREATE INDEX idx_users_microsoft_id ON users(microsoft_id);
+COMMENT ON INDEX idx_users_microsoft_id IS 'Optimiza búsquedas por Microsoft ID durante autenticación OAuth';
+
+-- Índice para filtrado por rol
 CREATE INDEX idx_users_role ON users(role);
 COMMENT ON INDEX idx_users_role IS 'Optimiza filtrado de usuarios por rol';
 
 -- Índice para filtrado por estado activo
 CREATE INDEX idx_users_is_active ON users(is_active);
-COMMENT ON INDEX idx_users_is_active IS 'Optimiza filtrado de usuarios activos/inactivos';
-
+COMMENT ON INDEX idx_users_is_active IS 'Optimiza filtrado de usuarios activos vs inactivos';
 
 -- ============================================================================
--- ÍNDICES PARA LA TABLA: members
--- Propósito: Optimizar búsquedas por identification, qr_hash, grade/section,
---            estado activo y nombre completo
+-- ÍNDICES PARA TABLA: members
 -- ============================================================================
 
 -- Índice para búsqueda por número de identificación
 CREATE INDEX idx_members_identification ON members(identification);
-COMMENT ON INDEX idx_members_identification IS 'Optimiza búsquedas de miembros por número de identificación';
+COMMENT ON INDEX idx_members_identification IS 'Optimiza búsquedas por número de identificación';
 
--- Índice para búsqueda por hash QR (usado en escaneo de códigos QR)
+-- Índice para búsqueda por QR hash (usado en escaneo de asistencia)
 CREATE INDEX idx_members_qr_hash ON members(qr_hash);
-COMMENT ON INDEX idx_members_qr_hash IS 'Optimiza búsquedas de miembros por código QR';
+COMMENT ON INDEX idx_members_qr_hash IS 'Optimiza búsquedas por QR hash durante escaneo de asistencia';
 
--- Índice compuesto para búsqueda por grado y sección
+-- Índice compuesto para filtrado por grado y sección
 CREATE INDEX idx_members_grade_section ON members(grade, section);
 COMMENT ON INDEX idx_members_grade_section IS 'Optimiza filtrado de miembros por grado y sección';
 
 -- Índice para filtrado por estado activo
 CREATE INDEX idx_members_is_active ON members(is_active);
-COMMENT ON INDEX idx_members_is_active IS 'Optimiza filtrado de miembros activos/inactivos';
+COMMENT ON INDEX idx_members_is_active IS 'Optimiza filtrado de miembros activos vs inactivos';
 
--- Índice para búsqueda por nombre completo (útil para búsquedas y ordenamiento)
+-- Índice para búsqueda por nombre (usado en búsquedas de texto)
 CREATE INDEX idx_members_full_name ON members(full_name);
-COMMENT ON INDEX idx_members_full_name IS 'Optimiza búsquedas y ordenamiento por nombre de miembro';
-
+COMMENT ON INDEX idx_members_full_name IS 'Optimiza búsquedas por nombre completo';
 
 -- ============================================================================
--- ÍNDICES PARA LA TABLA: assemblies
--- Propósito: Optimizar búsquedas por fecha, estado activo y usuario creador
---            Incluye índice único para garantizar una sola asamblea activa
+-- ÍNDICES PARA TABLA: assemblies
 -- ============================================================================
 
--- Índice para búsqueda y ordenamiento por fecha programada
+-- Índice para ordenamiento y filtrado por fecha
 CREATE INDEX idx_assemblies_scheduled_date ON assemblies(scheduled_date);
-COMMENT ON INDEX idx_assemblies_scheduled_date IS 'Optimiza búsquedas y ordenamiento por fecha de asamblea';
+COMMENT ON INDEX idx_assemblies_scheduled_date IS 'Optimiza ordenamiento y filtrado por fecha programada';
 
--- Índice para filtrado por estado activo
+-- Índice para búsqueda de asamblea activa
 CREATE INDEX idx_assemblies_is_active ON assemblies(is_active);
-COMMENT ON INDEX idx_assemblies_is_active IS 'Optimiza búsquedas de asambleas activas';
+COMMENT ON INDEX idx_assemblies_is_active IS 'Optimiza búsqueda de asamblea activa';
+
+-- Índice único parcial para garantizar solo una asamblea activa
+-- Este índice también sirve como constraint a nivel de base de datos
+CREATE UNIQUE INDEX idx_assemblies_single_active ON assemblies(is_active)
+    WHERE is_active = true;
+COMMENT ON INDEX idx_assemblies_single_active IS
+'Garantiza que solo una asamblea pueda estar activa simultáneamente (constraint a nivel DB)';
 
 -- Índice para filtrado por usuario creador
 CREATE INDEX idx_assemblies_created_by ON assemblies(created_by);
-COMMENT ON INDEX idx_assemblies_created_by IS 'Optimiza búsquedas de asambleas por usuario creador';
-
--- Índice único parcial: garantiza que solo una asamblea esté activa
--- Este índice solo incluye registros donde is_active = true
--- PostgreSQL no permitirá insertar/actualizar si viola esta restricción
-CREATE UNIQUE INDEX idx_assemblies_single_active ON assemblies(is_active)
-    WHERE is_active = true;
-COMMENT ON INDEX idx_assemblies_single_active IS 'Garantiza que solo una asamblea pueda estar activa al mismo tiempo';
-
+COMMENT ON INDEX idx_assemblies_created_by IS 'Optimiza filtrado de asambleas por usuario creador';
 
 -- ============================================================================
--- ÍNDICES PARA LA TABLA: attendance_records
--- Propósito: Optimizar búsquedas por member_id, assembly_id, fecha de registro,
---            usuario registrador y método de registro
+-- ÍNDICES PARA TABLA: attendance_records
 -- ============================================================================
 
--- Índice para búsqueda por ID de miembro (útil para historial de asistencia)
+-- Índice para búsqueda de registros por miembro
 CREATE INDEX idx_attendance_member_id ON attendance_records(member_id);
-COMMENT ON INDEX idx_attendance_member_id IS 'Optimiza búsquedas de registros de asistencia por miembro';
+COMMENT ON INDEX idx_attendance_member_id IS 'Optimiza búsqueda de historial de asistencia por miembro';
 
--- Índice para búsqueda por ID de asamblea (útil para lista de asistentes)
+-- Índice para búsqueda de registros por asamblea
 CREATE INDEX idx_attendance_assembly_id ON attendance_records(assembly_id);
-COMMENT ON INDEX idx_attendance_assembly_id IS 'Optimiza búsquedas de registros de asistencia por asamblea';
+COMMENT ON INDEX idx_attendance_assembly_id IS 'Optimiza búsqueda de asistencia por asamblea';
 
 -- Índice para ordenamiento por fecha de registro
 CREATE INDEX idx_attendance_registered_at ON attendance_records(registered_at);
-COMMENT ON INDEX idx_attendance_registered_at IS 'Optimiza ordenamiento por fecha de registro de asistencia';
+COMMENT ON INDEX idx_attendance_registered_at IS 'Optimiza ordenamiento por fecha de registro';
 
--- Índice para filtrado por usuario que registró la asistencia
+-- Índice para filtrado por usuario registrador
 CREATE INDEX idx_attendance_registered_by ON attendance_records(registered_by);
-COMMENT ON INDEX idx_attendance_registered_by IS 'Optimiza búsquedas de registros por usuario registrador';
+COMMENT ON INDEX idx_attendance_registered_by IS 'Optimiza filtrado por usuario que registró la asistencia';
 
--- Índice para filtrado por método de registro (qr_scan o manual)
+-- Índice para filtrado por método de registro
 CREATE INDEX idx_attendance_method ON attendance_records(registration_method);
-COMMENT ON INDEX idx_attendance_method IS 'Optimiza filtrado por método de registro (QR o manual)';
-
-
--- ============================================================================
--- RESUMEN DE ÍNDICES CREADOS
--- ============================================================================
--- Tabla users: 3 índices
---   - idx_users_username (username)
---   - idx_users_role (role)
---   - idx_users_is_active (is_active)
---
--- Tabla members: 5 índices
---   - idx_members_identification (identification)
---   - idx_members_qr_hash (qr_hash)
---   - idx_members_grade_section (grade, section)
---   - idx_members_is_active (is_active)
---   - idx_members_full_name (full_name)
---
--- Tabla assemblies: 4 índices
---   - idx_assemblies_scheduled_date (scheduled_date)
---   - idx_assemblies_is_active (is_active)
---   - idx_assemblies_created_by (created_by)
---   - idx_assemblies_single_active (is_active WHERE is_active = true) [UNIQUE]
---
--- Tabla attendance_records: 5 índices
---   - idx_attendance_member_id (member_id)
---   - idx_attendance_assembly_id (assembly_id)
---   - idx_attendance_registered_at (registered_at)
---   - idx_attendance_registered_by (registered_by)
---   - idx_attendance_method (registration_method)
---
--- TOTAL: 17 índices
--- ============================================================================
+COMMENT ON INDEX idx_attendance_method IS 'Optimiza filtrado por método de registro (qr_scan vs manual)';
 
 -- ============================================================================
--- Fin del script 03_create_indexes.sql
+-- FIN DEL SCRIPT
+-- ============================================================================
+-- Resumen:
+-- - 22 índices creados exitosamente:
+--   * users: 4 índices
+--   * members: 5 índices
+--   * assemblies: 4 índices (incluyendo 1 índice único parcial)
+--   * attendance_records: 5 índices
+--
+-- IMPORTANTE: El índice idx_assemblies_single_active garantiza a nivel de base
+-- de datos que solo una asamblea puede estar activa simultáneamente.
+--
+-- Próximo paso:
+-- Ejecutar 04_create_triggers.sql
 -- ============================================================================

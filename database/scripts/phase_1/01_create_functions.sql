@@ -1,63 +1,62 @@
 -- ============================================================================
 -- Script: 01_create_functions.sql
--- Descripción: Crea las funciones comunes necesarias para la base de datos
--- Proyecto: CoopeSuma Management System - Phase 1
--- Base de datos: PostgreSQL
+-- Descripción: Funciones de utilidad para la base de datos CoopeSuma
+-- Proyecto: CoopeSuma Management System
+-- Fase: 1 - Control de Asistencia
+-- Base de datos: PostgreSQL 14+
+-- ============================================================================
+--
+-- INSTRUCCIONES DE USO:
+-- psql -U postgres -d coopesuma_db -f 01_create_functions.sql
+--
 -- ============================================================================
 
 -- ============================================================================
--- FUNCIÓN: update_updated_at_column()
--- Descripción: Actualiza automáticamente el campo updated_at cuando se
---              modifica un registro en cualquier tabla
--- Retorna: TRIGGER
--- Uso: Se ejecuta BEFORE UPDATE en las tablas que tienen campo updated_at
+-- FUNCIÓN 1: update_updated_at_column()
+-- Descripción: Actualiza automáticamente el campo updated_at con timestamp actual
+-- Uso: Se usa en triggers BEFORE UPDATE en todas las tablas con updated_at
 -- ============================================================================
+
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Asigna el timestamp actual al campo updated_at del nuevo registro
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Comentario descriptivo de la función
 COMMENT ON FUNCTION update_updated_at_column() IS
-'Función de trigger que actualiza automáticamente el campo updated_at con el timestamp actual cuando se modifica un registro';
-
+'Función de trigger que actualiza automáticamente el campo updated_at con el timestamp actual';
 
 -- ============================================================================
--- FUNCIÓN: deactivate_other_assemblies()
--- Descripción: Garantiza que solo una asamblea esté activa a la vez.
---              Cuando se activa una asamblea, desactiva automáticamente
---              todas las demás asambleas activas.
--- Retorna: TRIGGER
--- Uso: Se ejecuta BEFORE INSERT OR UPDATE en la tabla assemblies
--- Regla de negocio: Solo puede haber UNA asamblea activa al mismo tiempo
+-- FUNCIÓN 2: deactivate_other_assemblies()
+-- Descripción: Garantiza que solo una asamblea esté activa simultáneamente
+-- Uso: Se usa en trigger BEFORE INSERT OR UPDATE en tabla assemblies
 -- ============================================================================
+
 CREATE OR REPLACE FUNCTION deactivate_other_assemblies()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Si la asamblea nueva o modificada está siendo activada (is_active = true)
     IF NEW.is_active = true THEN
-        -- Desactiva todas las demás asambleas que estén activas
-        -- excepto la asamblea actual (NEW.assembly_id)
         UPDATE assemblies
         SET is_active = false
         WHERE assembly_id != NEW.assembly_id
         AND is_active = true;
     END IF;
-
-    -- Retorna el registro nuevo para que la operación continue
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Comentario descriptivo de la función
 COMMENT ON FUNCTION deactivate_other_assemblies() IS
-'Función de trigger que asegura que solo una asamblea esté activa simultáneamente. Desactiva automáticamente otras asambleas cuando se activa una nueva';
-
+'Garantiza que solo una asamblea esté activa simultáneamente.
+Desactiva todas las demás asambleas cuando se activa una nueva.';
 
 -- ============================================================================
--- Fin del script 01_create_functions.sql
+-- FIN DEL SCRIPT
+-- ============================================================================
+-- Resumen:
+-- - 2 funciones creadas exitosamente
+--
+-- Próximo paso:
+-- Ejecutar 02_create_tables.sql
 -- ============================================================================
