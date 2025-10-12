@@ -1,7 +1,7 @@
 /**
  * Authentication Routes
  * Defines authentication endpoints and their middleware chains
- * Supports both Microsoft OAuth 2.0 and traditional username/password login
+ * Uses Microsoft OAuth 2.0 authentication only
  *
  * @module modules/auth/authRoutes
  */
@@ -10,8 +10,6 @@ const express = require('express');
 const router = express.Router();
 
 const authController = require('./authController');
-const { loginSchema } = require('./authValidation');
-const { validate } = require('../../middlewares/validationMiddleware');
 const authMiddleware = require('../../middlewares/authMiddleware');
 
 // ============================================================================
@@ -39,22 +37,6 @@ router.get(
 router.get(
     '/callback',
     authController.handleMicrosoftCallback
-);
-
-// ============================================================================
-// Traditional Login Routes
-// ============================================================================
-
-/**
- * POST /api/auth/login
- * Authenticate user with username and password
- * Public endpoint - no authentication required
- * Returns JWT token and user data
- */
-router.post(
-    '/login',
-    validate(loginSchema),    // Validate request body
-    authController.login      // Handle login
 );
 
 // ============================================================================

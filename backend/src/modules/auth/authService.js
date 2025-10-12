@@ -1,13 +1,12 @@
 /**
  * Authentication Service
  * Business logic for authentication operations
- * Supports both Microsoft OAuth 2.0 and traditional username/password login
+ * Uses Microsoft OAuth 2.0 authentication only
  *
  * @module modules/auth/authService
  */
 
 const userRepository = require('../users/userRepository');
-const { comparePassword } = require('../../utils/passwordUtils');
 const { generateToken, verifyToken } = require('../../utils/jwtUtils');
 const { completeOAuthFlow } = require('../../utils/microsoftOAuthUtils');
 const { isEmailAuthorized, getRoleByEmail, getFullNameByEmail } = require('../../config/authorizedUsers');
@@ -131,7 +130,7 @@ const authenticateWithMicrosoft = async (code) => {
         // Step 5: Generate internal JWT token
         const tokenPayload = {
             userId: user.user_id,
-            username: user.username,
+            email: user.email,
             role: user.role
         };
 
@@ -141,7 +140,6 @@ const authenticateWithMicrosoft = async (code) => {
         const userData = {
             userId: user.user_id,
             fullName: user.full_name,
-            username: user.username,
             email: user.email,
             role: user.role
         };
@@ -177,124 +175,6 @@ const authenticateWithMicrosoft = async (code) => {
     }
 };
 
-/**
- * Authenticate user with username and password (traditional login)
- * FALLBACK: This method is still available but Microsoft OAuth is preferred
- *
- * @param {string} username - User's username
- * @param {string} password - User's plain text password
- * @returns {Promise<Object>} - Token and user data
- * @throws {AuthError} - If authentication fails
- */
-const login = async (username, password) => {
-    try {
-        logger.info('Traditional login attempt', { username });
-
-        // Find user by username (including password_hash for comparison)
-        const user = await userRepository.findByUsername(username.toLowerCase());
-
-        // If user not found, return generic invalid credentials error
-        if (!user) {
-            logger.warn('Login attempt with non-existent username', { username });
-            throw new AuthError(
-                MESSAGES.LOGIN_FAILED,
-                ERROR_CODES.INVALID_CREDENTIALS,
-                401
-            );
-        }
-
-        // Check if user is active
-        if (!user.is_active) {
-            logger.warn('Login attempt by inactive user', {
-                username,
-                userId: user.user_id
-            });
-
-            throw new AuthError(
-                MESSAGES.USER_INACTIVE,
-                ERROR_CODES.USER_INACTIVE,
-                401
-            );
-        }
-
-        // Check if user has a password (OAuth users don't have passwords)
-        if (!user.password_hash) {
-            logger.warn('Login attempt with OAuth-only account', {
-                username,
-                userId: user.user_id
-            });
-
-            throw new AuthError(
-                'Esta cuenta solo puede iniciar sesión con Microsoft. Use "Iniciar sesión con Microsoft".',
-                ERROR_CODES.INVALID_CREDENTIALS,
-                401
-            );
-        }
-
-        // Compare provided password with stored hash
-        const isPasswordValid = await comparePassword(password, user.password_hash);
-
-        if (!isPasswordValid) {
-            logger.warn('Login attempt with invalid password', {
-                username,
-                userId: user.user_id
-            });
-
-            throw new AuthError(
-                MESSAGES.LOGIN_FAILED,
-                ERROR_CODES.INVALID_CREDENTIALS,
-                401
-            );
-        }
-
-        // Generate JWT token
-        const tokenPayload = {
-            userId: user.user_id,
-            username: user.username,
-            role: user.role
-        };
-
-        const token = generateToken(tokenPayload);
-
-        // Prepare user data for response (excluding password_hash)
-        const userData = {
-            userId: user.user_id,
-            fullName: user.full_name,
-            username: user.username,
-            email: user.email,
-            role: user.role
-        };
-
-        logger.info('Traditional login successful', {
-            username,
-            userId: user.user_id,
-            role: user.role
-        });
-
-        return {
-            token,
-            user: userData
-        };
-    } catch (error) {
-        // Re-throw operational errors
-        if (error.isOperational) {
-            throw error;
-        }
-
-        // Log unexpected errors
-        logger.error('Error during traditional login', {
-            error: error.message,
-            stack: error.stack
-        });
-
-        // Throw generic error for unexpected issues
-        throw new AuthError(
-            MESSAGES.INTERNAL_ERROR,
-            ERROR_CODES.INTERNAL_ERROR,
-            500
-        );
-    }
-};
 
 /**
  * Verify token and retrieve user data
@@ -341,7 +221,6 @@ const verifyTokenAndGetUser = async (token) => {
         return {
             userId: user.user_id,
             fullName: user.full_name,
-            username: user.username,
             email: user.email,
             role: user.role,
             isActive: user.is_active
@@ -386,7 +265,6 @@ const verifyTokenAndGetUser = async (token) => {
 
 module.exports = {
     authenticateWithMicrosoft,
-    login,
     verifyTokenAndGetUser,
     AuthError
 };

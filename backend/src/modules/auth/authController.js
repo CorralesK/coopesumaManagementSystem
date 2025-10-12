@@ -144,65 +144,6 @@ const handleMicrosoftCallback = async (req, res) => {
 };
 
 /**
- * Traditional login endpoint
- * Authenticates user with username and password
- *
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with token and user data
- */
-const login = async (req, res) => {
-    try {
-        const { username, password } = req.body;
-
-        // Validate input
-        if (!username || !password) {
-            return errorResponse(
-                res,
-                MESSAGES.VALIDATION_ERROR,
-                ERROR_CODES.VALIDATION_ERROR,
-                400
-            );
-        }
-
-        // Call authentication service
-        const result = await authService.login(username, password);
-
-        // Return success response with token and user data
-        return successResponse(
-            res,
-            MESSAGES.LOGIN_SUCCESS,
-            result,
-            200
-        );
-    } catch (error) {
-        // Handle operational errors
-        if (error.isOperational) {
-            return errorResponse(
-                res,
-                error.message,
-                error.errorCode,
-                error.statusCode
-            );
-        }
-
-        // Log unexpected errors
-        logger.error('Unexpected error in login controller', {
-            error: error.message,
-            stack: error.stack
-        });
-
-        // Return generic error response
-        return errorResponse(
-            res,
-            MESSAGES.INTERNAL_ERROR,
-            ERROR_CODES.INTERNAL_ERROR,
-            500
-        );
-    }
-};
-
-/**
  * Verify token endpoint
  * Verifies JWT token and returns user data
  * Note: Token is already verified by authMiddleware
@@ -264,7 +205,7 @@ const logout = async (req, res) => {
         if (req.user) {
             logger.info('User logged out', {
                 userId: req.user.userId,
-                username: req.user.username
+                email: req.user.email
             });
         }
 
@@ -294,7 +235,6 @@ const logout = async (req, res) => {
 module.exports = {
     initiateMicrosoftLogin,
     handleMicrosoftCallback,
-    login,
     verifyToken,
     logout
 };

@@ -39,37 +39,8 @@ const findById = async (userId) => {
     }
 };
 
-/**
- * Find user by username (for traditional login)
- *
- * @param {string} username - Username
- * @returns {Promise<Object|null>} User object with password_hash or null
- */
-const findByUsername = async (username) => {
-    try {
-        const query = `
-            SELECT
-                user_id,
-                full_name,
-                username,
-                password_hash,
-                role,
-                is_active,
-                microsoft_id,
-                email,
-                created_at,
-                updated_at
-            FROM users
-            WHERE username = $1
-        `;
-
-        const result = await db.query(query, [username]);
-        return result.rows[0] || null;
-    } catch (error) {
-        logger.error('Error finding user by username:', error);
-        throw error;
-    }
-};
+// NOTE: findByUsername was removed as traditional login is no longer supported
+// Authentication is only available through Microsoft OAuth 2.0
 
 /**
  * Find user by Microsoft ID (for OAuth login)
@@ -350,7 +321,6 @@ const countActiveAdministrators = async () => {
 
 module.exports = {
     findById,
-    findByUsername,
     findByMicrosoftId,
     findByEmail,
     create,

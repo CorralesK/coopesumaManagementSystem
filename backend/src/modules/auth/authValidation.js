@@ -1,38 +1,57 @@
 /**
  * Authentication Validation Schemas
  * Input validation for authentication endpoints using Joi
+ *
+ * NOTE: Microsoft OAuth does not require validation schemas
+ * as authentication is handled by Microsoft's OAuth provider.
+ *
+ * This file is kept for consistency with the module structure
+ * and for potential future validation needs (e.g., state validation).
+ *
+ * @module modules/auth/authValidation
  */
 
 const Joi = require('joi');
 
 /**
- * Login validation schema
- * Validates username and password for login endpoint
+ * State validation schema (for OAuth CSRF protection)
+ * Validates state parameter in OAuth callback
  */
-const loginSchema = Joi.object({
-    username: Joi.string()
-        .trim()
-        .lowercase()
-        .min(3)
-        .max(50)
+const stateValidationSchema = Joi.object({
+    state: Joi.string()
         .required()
         .messages({
-            'string.empty': 'El nombre de usuario es requerido',
-            'string.min': 'El nombre de usuario debe tener al menos 3 caracteres',
-            'string.max': 'El nombre de usuario no puede exceder 50 caracteres',
-            'any.required': 'El nombre de usuario es requerido'
-        }),
-
-    password: Joi.string()
-        .min(6)
-        .required()
-        .messages({
-            'string.empty': 'La contraseña es requerida',
-            'string.min': 'La contraseña debe tener al menos 6 caracteres',
-            'any.required': 'La contraseña es requerida'
+            'string.empty': 'State parameter is required',
+            'any.required': 'State parameter is required'
         })
 });
 
+/**
+ * OAuth callback query validation schema
+ * Validates query parameters received from Microsoft OAuth callback
+ */
+const oauthCallbackSchema = Joi.object({
+    code: Joi.string()
+        .optional()
+        .messages({
+            'string.empty': 'Authorization code cannot be empty'
+        }),
+
+    state: Joi.string()
+        .required()
+        .messages({
+            'string.empty': 'State parameter is required',
+            'any.required': 'State parameter is required'
+        }),
+
+    error: Joi.string()
+        .optional(),
+
+    error_description: Joi.string()
+        .optional()
+});
+
 module.exports = {
-    loginSchema
+    stateValidationSchema,
+    oauthCallbackSchema
 };
