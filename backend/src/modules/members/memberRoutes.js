@@ -92,11 +92,12 @@ router.delete(
  * GET /api/members/:id/qr
  * Generate QR code for member
  * Protected: Requires authentication
- * Accessible by: All authenticated users
+ * Accessible by: Administrator only
  */
 router.get(
     '/:id/qr',
     authMiddleware,
+    requireRole([USER_ROLES.ADMINISTRATOR]),
     memberController.generateQrCode
 );
 

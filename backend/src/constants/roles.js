@@ -16,7 +16,9 @@ const ROLE_PERMISSIONS = {
         'scan_attendance',
         'generate_reports',
         'manage_savings',
-        'view_all_data'
+        'view_all_data',
+        'view_qr_codes',
+        'generate_qr_codes'
     ],
     [USER_ROLES.REGISTRAR]: [
         'scan_attendance',
