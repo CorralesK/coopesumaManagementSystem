@@ -1,0 +1,180 @@
+# ============================================================================
+# .gitignore - CoopeSuma Management System
+# ============================================================================
+
+# ============================================================================
+# Documentation and Summary Files
+# ============================================================================
+# Exclude documentation folder and summary markdown files
+/docs/
+FRONTEND_SETUP_COMPLETED.md
+LIMPIEZA_RAIZ_COMPLETADA.md
+VERIFICACION_MICROSOFT_OAUTH.md
+PASO_2_COMPLETADO.md
+PHASE_1_BACKEND_COMPLETED.md
+TESTING_GUIDE.md
+
+# ============================================================================
+# Root Level - Only documentation and configuration
+# ============================================================================
+# Do NOT allow node_modules or package files at root level
+/node_modules/
+/package.json
+/package-lock.json
+
+# ============================================================================
+# Backend
+# ============================================================================
+backend/node_modules/
+backend/.env
+backend/logs/
+backend/uploads/
+backend/.env.local
+backend/.env.production
+backend/dist/
+backend/build/
+
+# ============================================================================
+# Frontend
+# ============================================================================
+frontend/node_modules/
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+frontend/dist/
+frontend/build/
+frontend/.vite/
+
+# ============================================================================
+# Database
+# ============================================================================
+# Don't ignore SQL scripts - they should be versioned
+# database/*.sql  # Commented out - we want to version SQL scripts
+database/backups/
+*.backup
+*.dump
+
+# ============================================================================
+# IDE and Editor Files
+# ============================================================================
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ============================================================================
+# Operating System Files
+# ============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================================================
+# Logs
+# ============================================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# ============================================================================
+# Testing
+# ============================================================================
+coverage/
+*.lcov
+.nyc_output/
+
+# ============================================================================
+# Temporary Files
+# ============================================================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.cache/
+
+# ============================================================================
+# Environment Variables
+# ============================================================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Exception: Keep example env files
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+
+# ============================================================================
+# Build Outputs
+# ============================================================================
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# ============================================================================
+# Package Manager Files
+# ============================================================================
+# npm
+package-lock.json
+npm-debug.log
+
+# yarn
+yarn.lock
+yarn-error.log
+
+# pnpm
+pnpm-lock.yaml
+
+# Exception: Keep package-lock.json in backend and frontend
+!backend/package-lock.json
+!frontend/package-lock.json
+
+# ============================================================================
+# Miscellaneous
+# ============================================================================
+*.pid
+*.seed
+*.pid.lock
+.npm/
+.eslintcache
+.node_repl_history
+.yarn-integrity
