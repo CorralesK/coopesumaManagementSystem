@@ -68,14 +68,14 @@ const LoginPage = () => {
 
                 {/* Footer */}
                 <div className="mt-8 pt-6 border-t border-gray-200 text-center text-xs sm:text-sm text-gray-600">
-                    <p className="font-medium">Universidad Técnica Nacional</p>
-                    <p>Sede San Carlos</p>
+                    <p className="font-medium">Cooperativa Estudiantil Unida Motivando el Ahorro</p>
+                    <p className="text-xs mt-1">CoopeSuma</p>
                 </div>
 
                 {/* Additional Info */}
                 <div className="mt-4 text-center">
                     <p className="text-xs text-gray-500">
-                        Módulo de Control de Asistencia
+                        Sistema de Gestión de Asistencia
                     </p>
                 </div>
             </div>

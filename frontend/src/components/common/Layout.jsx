@@ -13,7 +13,7 @@ const Layout = ({ children }) => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -96,7 +96,7 @@ const Layout = ({ children }) => {
     return (
         <div className="min-h-screen bg-gray-100">
             {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-blue-800 text-white transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-blue-800 text-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                 <div className="flex flex-col h-full">
                     {/* Logo/Brand */}
                     <div className="flex items-center justify-between h-16 px-6 bg-blue-900">
@@ -157,13 +157,13 @@ const Layout = ({ children }) => {
             </aside>
 
             {/* Main Content */}
-            <div className={`transition-all duration-300 ${isSidebarOpen ? 'lg:ml-64' : ''}`}>
+            <div className="lg:ml-64">
                 {/* Top Header */}
                 <header className="bg-white shadow-sm">
-                    <div className="flex items-center justify-between h-16 px-6">
+                    <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="text-gray-600 hover:text-gray-900 focus:outline-none"
+                            className="lg:hidden text-gray-600 hover:text-gray-900 focus:outline-none"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -171,15 +171,15 @@ const Layout = ({ children }) => {
                         </button>
 
                         <div className="flex items-center space-x-4">
-                            <span className="text-sm text-gray-600">
-                                Universidad Técnica Nacional - Sede San Carlos
+                            <span className="text-xs sm:text-sm text-gray-600 text-right">
+                                Cooperativa Estudiantil Unida Motivando el Ahorro
                             </span>
                         </div>
                     </div>
                 </header>
 
                 {/* Page Content */}
-                <main className="p-6">
+                <main className="p-4 sm:p-6 lg:p-8">
                     {children}
                 </main>
             </div>
