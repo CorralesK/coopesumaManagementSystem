@@ -31,10 +31,11 @@ CoopeSuma es una cooperativa estudiantil de primaria respaldada por la entidad f
 ## Tecnologías
 
 ### Frontend
-- React.js 18+ con Vite
-- Progressive Web App (PWA)
-- qrcode.react / html5-qrcode
-- Tailwind CSS
+- React.js 19+ con Vite 7
+- React Router DOM 7
+- Tailwind CSS 4
+- Axios para comunicación HTTP
+- PropTypes para validación
 
 ### Backend
 - Node.js 18+ con Express
@@ -222,11 +223,11 @@ VITE_APP_NAME=CoopeSuma
 
 ### Fase 1: Control de Asistencia (Semanas 1-10)
 - ✅ Base de datos
-- ✅ Autenticación
-- 🔄 Gestión de miembros
+- ✅ Autenticación (Microsoft OAuth 2.0)
+- ✅ Gestión de miembros (CRUD + QR codes)
 - 🔄 Gestión de asambleas
-- 🔄 Registro de asistencia
-- 🔄 Reportes
+- 🔄 Registro de asistencia (QR scanner)
+- 🔄 Reportes PDF
 
 ### Fase 2: Gestión de Ahorros (Semanas 11-14)
 - ⏳ Transacciones de ahorro
@@ -337,17 +338,23 @@ test(scope): descripción     # Agregar tests
 
 ---
 
-## Usuario Admin Inicial
+## Autenticación
 
-Después de ejecutar los scripts de seed:
+El sistema utiliza **Microsoft OAuth 2.0** exclusivamente. No hay login tradicional con usuario/contraseña.
 
+### Usuarios Autorizados
+
+Los usuarios autorizados se configuran en `backend/src/config/authorizedUsers.js`:
+
+```javascript
+{
+  email: 'kicorralesve@est.utn.ac.cr',
+  role: 'administrator',
+  fullName: 'Kimberly Corrales'
+}
 ```
-Usuario: admin
-Contraseña: Admin123!
-Rol: administrator
-```
 
-**⚠️ IMPORTANTE**: Cambiar esta contraseña en producción
+Solo los emails en esta whitelist pueden autenticarse en el sistema.
 
 ---
 
@@ -368,11 +375,11 @@ Este proyecto es desarrollado como Proyecto Final de Graduación para la Univers
 
 ## Estado del Proyecto
 
-**Última actualización**: Septiembre 2025
+**Última actualización**: Octubre 2025
 
 **Fase actual**: Fase 1 - Desarrollo de Control de Asistencia
 
-**Progreso**: 15% (Base de datos + Autenticación)
+**Progreso**: 40% (Base de datos + Autenticación + Módulo Members completo)
 
 ---
 
