@@ -25,6 +25,11 @@ const USER_ROLES = require('../constants/roles');
 const AUTHORIZED_USERS = [
     // Administrators
     {
+        email: 'kicorralesve@est.utn.ac.cr',
+        role: USER_ROLES.USER_ROLES.ADMINISTRATOR,
+        fullName: 'Kimberly Corrales'
+    },
+    {
         email: 'director@escuela.ed.cr',
         role: USER_ROLES.USER_ROLES.ADMINISTRATOR,
         fullName: 'Director Escuela'

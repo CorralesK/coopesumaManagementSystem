@@ -35,7 +35,7 @@
 
 INSERT INTO users (full_name, email, microsoft_id, role, is_active) VALUES
 -- Usuario administrador de prueba
-('Admin de Prueba', 'admin@escuela.ed.cr', 'test-ms-id-001', 'administrator', true),
+('Kimberly Corrales', 'kicorralesve@est.utn.ac.cr', 'test-ms-id-001', 'administrator', true),
 
 -- Usuario registrador de prueba
 ('Registrador de Prueba', 'registrar@escuela.ed.cr', 'test-ms-id-002', 'registrar', true),

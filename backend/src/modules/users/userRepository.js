@@ -20,7 +20,6 @@ const findById = async (userId) => {
             SELECT
                 user_id,
                 full_name,
-                username,
                 role,
                 is_active,
                 microsoft_id,
@@ -54,7 +53,6 @@ const findByMicrosoftId = async (microsoftId) => {
             SELECT
                 user_id,
                 full_name,
-                username,
                 role,
                 is_active,
                 microsoft_id,
@@ -85,7 +83,6 @@ const findByEmail = async (email) => {
             SELECT
                 user_id,
                 full_name,
-                username,
                 role,
                 is_active,
                 microsoft_id,
@@ -115,18 +112,15 @@ const create = async (userData) => {
         const query = `
             INSERT INTO users (
                 full_name,
-                username,
-                password_hash,
                 role,
                 is_active,
                 microsoft_id,
                 email
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING
                 user_id,
                 full_name,
-                username,
                 role,
                 is_active,
                 microsoft_id,
@@ -136,8 +130,6 @@ const create = async (userData) => {
 
         const values = [
             userData.fullName,
-            userData.username,
-            userData.passwordHash || null,
             userData.role,
             userData.isActive !== undefined ? userData.isActive : true,
             userData.microsoftId || null,
@@ -161,7 +153,7 @@ const create = async (userData) => {
  */
 const update = async (userId, updates) => {
     try {
-        const allowedFields = ['full_name', 'username', 'password_hash', 'role', 'is_active', 'microsoft_id', 'email'];
+        const allowedFields = ['full_name', 'role', 'is_active', 'microsoft_id', 'email'];
         const fields = Object.keys(updates).filter(key => allowedFields.includes(key));
 
         if (fields.length === 0) {
@@ -178,7 +170,6 @@ const update = async (userId, updates) => {
             RETURNING
                 user_id,
                 full_name,
-                username,
                 role,
                 is_active,
                 microsoft_id,
@@ -214,7 +205,6 @@ const linkMicrosoftAccount = async (userId, microsoftId, email) => {
             RETURNING
                 user_id,
                 full_name,
-                username,
                 role,
                 is_active,
                 microsoft_id,
@@ -242,7 +232,6 @@ const findAll = async (filters = {}) => {
             SELECT
                 user_id,
                 full_name,
-                username,
                 role,
                 is_active,
                 microsoft_id,

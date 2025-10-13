@@ -92,13 +92,8 @@ const authenticateWithMicrosoft = async (code) => {
                     role: authorizedUser.role
                 });
 
-                // Generate username from email
-                const username = microsoftProfile.email.split('@')[0].toLowerCase();
-
                 user = await userRepository.create({
                     fullName: microsoftProfile.displayName || authorizedUser.fullName,
-                    username: username,
-                    passwordHash: null, // OAuth users don't have password
                     role: authorizedUser.role,
                     isActive: true,
                     microsoftId: microsoftProfile.microsoftId,
