@@ -93,13 +93,13 @@ const DashboardPage = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-10">
             {/* Welcome Section */}
             <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3">
                     Bienvenido, {user?.fullName}
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-base sm:text-lg text-gray-600">
                     {isAdministrator && 'Panel de administración del sistema CoopeSuma'}
                     {isRegistrar && 'Panel de registro de asistencia'}
                 </p>
@@ -127,15 +127,15 @@ const DashboardPage = () => {
             )}
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {(isAdministrator || isRegistrar) && stats.activeAssembly && (
                     <Card className="border-l-4 border-l-blue-500">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-3">
                                     Registrar Asistencia
                                 </h3>
-                                <p className="text-sm text-gray-600 mb-4">
+                                <p className="text-sm text-gray-600 mb-5">
                                     Escanear código QR de miembros
                                 </p>
                                 <Button
@@ -206,7 +206,7 @@ const DashboardPage = () => {
 
             {/* Statistics Cards (Admin Only) */}
             {isAdministrator && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     <Card padding="normal">
                         <div className="flex items-center">
                             <div className="flex-shrink-0 bg-blue-100 rounded-lg p-3">
@@ -270,7 +270,7 @@ const DashboardPage = () => {
             {/* Quick Links */}
             {isAdministrator && (
                 <Card title="Accesos Rápidos">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                         <Button
                             onClick={() => navigate('/members/new')}
                             variant="outline"

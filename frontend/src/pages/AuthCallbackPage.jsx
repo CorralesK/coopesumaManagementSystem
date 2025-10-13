@@ -16,10 +16,14 @@ const AuthCallbackPage = () => {
     useEffect(() => {
         const token = searchParams.get('token');
         const errorParam = searchParams.get('error');
+        const errorMessage = searchParams.get('message');
 
         if (errorParam) {
-            setError('Error de autenticación. Por favor, intenta de nuevo.');
-            setTimeout(() => navigate('/login'), 3000);
+            const displayError = errorMessage || 'Error de autenticación. Por favor, intenta de nuevo.';
+            setError(displayError);
+            // Limpiar URL
+            window.history.replaceState({}, document.title, '/auth/callback');
+            setTimeout(() => navigate('/login', { replace: true }), 3000);
             return;
         }
 
@@ -36,15 +40,19 @@ const AuthCallbackPage = () => {
                 };
 
                 login(token, userData);
-                navigate('/dashboard');
+                // Limpiar URL antes de navegar
+                window.history.replaceState({}, document.title, '/auth/callback');
+                navigate('/dashboard', { replace: true });
             } catch (err) {
                 console.error('Error processing token:', err);
                 setError('Error al procesar la autenticación.');
-                setTimeout(() => navigate('/login'), 3000);
+                window.history.replaceState({}, document.title, '/auth/callback');
+                setTimeout(() => navigate('/login', { replace: true }), 3000);
             }
         } else {
             setError('Token no recibido.');
-            setTimeout(() => navigate('/login'), 3000);
+            window.history.replaceState({}, document.title, '/auth/callback');
+            setTimeout(() => navigate('/login', { replace: true }), 3000);
         }
     }, [searchParams, navigate, login]);
 

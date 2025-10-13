@@ -15,15 +15,15 @@ const Card = ({
 }) => {
     const paddingClasses = {
         none: '',
-        sm: 'p-3',
-        normal: 'p-6',
-        lg: 'p-8'
+        sm: 'p-4',
+        normal: 'p-6 sm:p-7 lg:p-8',
+        lg: 'p-8 sm:p-9 lg:p-10'
     };
 
     return (
         <div className={`bg-white rounded-lg shadow-md ${className}`}>
             {title && (
-                <div className="px-6 py-4 border-b border-gray-200">
+                <div className="px-6 py-5 border-b border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
                 </div>
             )}
@@ -33,7 +33,7 @@ const Card = ({
             </div>
 
             {footer && (
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+                <div className="px-6 py-5 bg-gray-50 border-t border-gray-200 rounded-b-lg">
                     {footer}
                 </div>
             )}

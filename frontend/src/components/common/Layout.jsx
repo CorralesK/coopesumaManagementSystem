@@ -96,7 +96,7 @@ const Layout = ({ children }) => {
     return (
         <div className="min-h-screen bg-gray-100">
             {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-blue-800 text-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-blue-800 text-white transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
                 <div className="flex flex-col h-full">
                     {/* Logo/Brand */}
                     <div className="flex items-center justify-between h-16 px-6 bg-blue-900">
@@ -117,6 +117,7 @@ const Layout = ({ children }) => {
                             <Link
                                 key={item.path}
                                 to={item.path}
+                                onClick={() => setIsSidebarOpen(false)}
                                 className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                                     isCurrentPath(item.path)
                                         ? 'bg-blue-700 text-white'
@@ -157,10 +158,10 @@ const Layout = ({ children }) => {
             </aside>
 
             {/* Main Content */}
-            <div className="lg:ml-64">
+            <div className="main-content">
                 {/* Top Header */}
                 <header className="bg-white shadow-sm">
-                    <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16 px-6 sm:px-8 lg:px-10">
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                             className="lg:hidden text-gray-600 hover:text-gray-900 focus:outline-none"
@@ -179,7 +180,7 @@ const Layout = ({ children }) => {
                 </header>
 
                 {/* Page Content */}
-                <main className="p-4 sm:p-6 lg:p-8">
+                <main className="p-6 sm:p-8 lg:p-10">
                     {children}
                 </main>
             </div>

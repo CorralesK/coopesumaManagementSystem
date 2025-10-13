@@ -63,14 +63,14 @@ const Alert = ({
     const config = typeConfig[type];
 
     return (
-        <div className={`${config.bgColor} border-l-4 ${config.borderColor} p-4 mb-4 ${className}`}>
+        <div className={`${config.bgColor} border-l-4 ${config.borderColor} p-6 mb-6 rounded-r-lg ${className}`}>
             <div className="flex">
                 <div className={`flex-shrink-0 ${config.iconColor}`}>
                     {config.icon}
                 </div>
-                <div className="ml-3 flex-1">
+                <div className="ml-4 flex-1">
                     {title && (
-                        <h3 className={`text-sm font-medium ${config.textColor} mb-1`}>
+                        <h3 className={`text-base font-semibold ${config.textColor} mb-2`}>
                             {title}
                         </h3>
                     )}
@@ -79,10 +79,10 @@ const Alert = ({
                     </p>
                 </div>
                 {onClose && (
-                    <div className="ml-3 flex-shrink-0">
+                    <div className="ml-4 flex-shrink-0">
                         <button
                             onClick={onClose}
-                            className={`inline-flex ${config.textColor} hover:opacity-75 focus:outline-none`}
+                            className={`inline-flex ${config.textColor} hover:opacity-75 focus:outline-none p-1`}
                         >
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
