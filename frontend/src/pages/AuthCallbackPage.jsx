@@ -50,31 +50,49 @@ const AuthCallbackPage = () => {
 
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-100">
-                <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
-                    <div className="text-red-500 text-5xl mb-4">⚠️</div>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-500 to-red-700 px-4 py-8">
+                <div className="bg-white rounded-xl shadow-2xl p-6 sm:p-8 md:p-10 w-full max-w-md mx-auto text-center">
+                    <div className="flex justify-center mb-6">
+                        <div className="bg-red-100 p-4 rounded-full">
+                            <svg className="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">
                         Error de Autenticación
                     </h2>
-                    <p className="text-gray-600 mb-4">{error}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm sm:text-base text-gray-600 mb-4">{error}</p>
+                    <p className="text-xs sm:text-sm text-gray-500">
                         Redirigiendo a la página de inicio de sesión...
                     </p>
+                    <div className="mt-6">
+                        <div className="w-full h-1 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-full bg-red-500 animate-pulse" style={{width: '100%'}}></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-700 px-4 py-8">
+            <div className="bg-white rounded-xl shadow-2xl p-6 sm:p-8 md:p-10 w-full max-w-md mx-auto text-center">
+                <div className="flex justify-center mb-6">
+                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">
                     Autenticando...
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600 mb-6">
                     Por favor espera mientras procesamos tu inicio de sesión
                 </p>
+                <div className="flex justify-center gap-2">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+                </div>
             </div>
         </div>
     );
