@@ -206,7 +206,7 @@ const DashboardPage = () => {
 
             {/* Statistics Cards (Admin Only) */}
             {isAdministrator && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     <Card padding="normal">
                         <div className="flex items-center">
                             <div className="flex-shrink-0 bg-blue-100 rounded-lg p-3">
@@ -247,20 +247,6 @@ const DashboardPage = () => {
                                 <p className="text-2xl font-bold text-gray-900">
                                     {stats.activeAssembly ? '1' : '0'}
                                 </p>
-                            </div>
-                        </div>
-                    </Card>
-
-                    <Card padding="normal">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0 bg-yellow-100 rounded-lg p-3">
-                                <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                </svg>
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Asistencias Hoy</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.recentAttendance}</p>
                             </div>
                         </div>
                     </Card>

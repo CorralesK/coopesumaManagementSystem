@@ -12,6 +12,7 @@ export const USER_ROLES = {
     ADMINISTRATOR: 'administrator',
     REGISTRAR: 'registrar',
     TREASURER: 'treasurer',
+    STUDENT: 'student',
 };
 
 /**

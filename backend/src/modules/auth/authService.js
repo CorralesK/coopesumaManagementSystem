@@ -76,12 +76,12 @@ const authenticateWithMicrosoft = async (code) => {
             if (user) {
                 // User exists but doesn't have Microsoft account linked
                 logger.info('Linking Microsoft account to existing user', {
-                    userId: user.user_id,
+                    userId: user.userId,
                     email: microsoftProfile.email
                 });
 
                 user = await userRepository.linkMicrosoftAccount(
-                    user.user_id,
+                    user.userId,
                     microsoftProfile.microsoftId,
                     microsoftProfile.email
                 );
@@ -101,7 +101,7 @@ const authenticateWithMicrosoft = async (code) => {
                 });
 
                 logger.info('New user created successfully', {
-                    userId: user.user_id,
+                    userId: user.userId,
                     email: user.email,
                     role: user.role
                 });
@@ -109,9 +109,9 @@ const authenticateWithMicrosoft = async (code) => {
         }
 
         // Step 4: Check if user is active
-        if (!user.is_active) {
+        if (!user.isActive) {
             logger.warn('Inactive user attempted to login', {
-                userId: user.user_id,
+                userId: user.userId,
                 email: user.email
             });
 
@@ -124,23 +124,24 @@ const authenticateWithMicrosoft = async (code) => {
 
         // Step 5: Generate internal JWT token
         const tokenPayload = {
-            userId: user.user_id,
+            userId: user.userId,
             email: user.email,
-            role: user.role
+            role: user.role,
+            fullName: user.fullName
         };
 
         const token = generateToken(tokenPayload);
 
         // Step 6: Prepare user data for response
         const userData = {
-            userId: user.user_id,
-            fullName: user.full_name,
+            userId: user.userId,
+            fullName: user.fullName,
             email: user.email,
             role: user.role
         };
 
         logger.info('Microsoft OAuth authentication successful', {
-            userId: user.user_id,
+            userId: user.userId,
             email: user.email,
             role: user.role
         });
@@ -200,9 +201,9 @@ const verifyTokenAndGetUser = async (token) => {
         }
 
         // Check if user is still active
-        if (!user.is_active) {
+        if (!user.isActive) {
             logger.warn('Token verification failed: user is inactive', {
-                userId: user.user_id
+                userId: user.userId
             });
 
             throw new AuthError(
@@ -214,11 +215,11 @@ const verifyTokenAndGetUser = async (token) => {
 
         // Return user data
         return {
-            userId: user.user_id,
-            fullName: user.full_name,
+            userId: user.userId,
+            fullName: user.fullName,
             email: user.email,
             role: user.role,
-            isActive: user.is_active
+            isActive: user.isActive
         };
     } catch (error) {
         // Handle JWT specific errors

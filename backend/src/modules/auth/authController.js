@@ -114,9 +114,13 @@ const handleMicrosoftCallback = async (req, res) => {
 
         // Redirect to frontend with token
         // Frontend will store token in memory (React state)
-        return res.redirect(
-            `${microsoftConfig.frontendUrl}/auth/success?token=${result.token}`
-        );
+        const redirectUrl = `${microsoftConfig.frontendUrl}/auth/success?token=${result.token}`;
+
+        logger.debug('Redirecting to frontend', {
+            url: redirectUrl.substring(0, 100) + '...' // Log partial URL for security
+        });
+
+        return res.redirect(redirectUrl);
     } catch (error) {
         // Handle operational errors
         if (error.isOperational) {

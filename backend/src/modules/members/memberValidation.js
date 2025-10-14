@@ -43,13 +43,16 @@ const createMemberSchema = Joi.object({
             'any.required': 'El grado es requerido'
         }),
 
-    section: Joi.string()
+    institutionalEmail: Joi.string()
         .trim()
-        .max(10)
-        .optional()
-        .allow('', null)
+        .email()
+        .pattern(/mep\.go\.cr$/)
+        .required()
         .messages({
-            'string.max': 'La sección no puede exceder 10 caracteres'
+            'string.empty': 'El correo institucional es requerido',
+            'string.email': 'El correo institucional debe ser válido',
+            'string.pattern.base': 'El correo debe ser un correo institucional del MEP (debe terminar en mep.go.cr)',
+            'any.required': 'El correo institucional es requerido'
         }),
 
     photoUrl: Joi.string()
@@ -90,15 +93,6 @@ const updateMemberSchema = Joi.object({
         .optional()
         .messages({
             'any.only': 'El grado debe ser un número entre 1 y 6'
-        }),
-
-    section: Joi.string()
-        .trim()
-        .max(10)
-        .optional()
-        .allow('', null)
-        .messages({
-            'string.max': 'La sección no puede exceder 10 caracteres'
         }),
 
     photoUrl: Joi.string()

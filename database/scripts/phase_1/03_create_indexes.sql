@@ -47,9 +47,9 @@ COMMENT ON INDEX idx_members_identification IS 'Optimiza búsquedas por número 
 CREATE INDEX idx_members_qr_hash ON members(qr_hash);
 COMMENT ON INDEX idx_members_qr_hash IS 'Optimiza búsquedas por QR hash durante escaneo de asistencia';
 
--- Índice compuesto para filtrado por grado y sección
-CREATE INDEX idx_members_grade_section ON members(grade, section);
-COMMENT ON INDEX idx_members_grade_section IS 'Optimiza filtrado de miembros por grado y sección';
+-- Índice para filtrado por grado
+CREATE INDEX idx_members_grade ON members(grade);
+COMMENT ON INDEX idx_members_grade IS 'Optimiza filtrado de miembros por grado';
 
 -- Índice para filtrado por estado activo
 CREATE INDEX idx_members_is_active ON members(is_active);
@@ -58,6 +58,11 @@ COMMENT ON INDEX idx_members_is_active IS 'Optimiza filtrado de miembros activos
 -- Índice para búsqueda por nombre (usado en búsquedas de texto)
 CREATE INDEX idx_members_full_name ON members(full_name);
 COMMENT ON INDEX idx_members_full_name IS 'Optimiza búsquedas por nombre completo';
+
+-- Índice para búsqueda por correo institucional
+CREATE INDEX idx_members_institutional_email ON members(institutional_email)
+    WHERE institutional_email IS NOT NULL;
+COMMENT ON INDEX idx_members_institutional_email IS 'Optimiza búsquedas por correo institucional';
 
 -- ============================================================================
 -- ÍNDICES PARA TABLA: assemblies
@@ -109,16 +114,6 @@ COMMENT ON INDEX idx_attendance_method IS 'Optimiza filtrado por método de regi
 -- ============================================================================
 -- FIN DEL SCRIPT
 -- ============================================================================
--- Resumen:
--- - 22 índices creados exitosamente:
---   * users: 4 índices
---   * members: 5 índices
---   * assemblies: 4 índices (incluyendo 1 índice único parcial)
---   * attendance_records: 5 índices
---
--- IMPORTANTE: El índice idx_assemblies_single_active garantiza a nivel de base
--- de datos que solo una asamblea puede estar activa simultáneamente.
---
 -- Próximo paso:
 -- Ejecutar 04_create_triggers.sql
 -- ============================================================================

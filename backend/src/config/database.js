@@ -4,6 +4,7 @@
 
 const { Pool } = require('pg');
 const config = require('./environment');
+const { keysToCamel } = require('../utils/caseConverter');
 
 // Create connection pool
 const pool = new Pool({
@@ -27,7 +28,7 @@ pool.on('error', (err) => {
     process.exit(-1);
 });
 
-// Query helper with logging
+// Query helper with logging and automatic camelCase conversion
 const query = async (text, params) => {
     const start = Date.now();
     try {
@@ -36,6 +37,11 @@ const query = async (text, params) => {
 
         if (config.nodeEnv === 'development') {
             console.log('📊 Query executed:', { text, duration, rows: result.rowCount });
+        }
+
+        // Convert snake_case column names to camelCase
+        if (result.rows && result.rows.length > 0) {
+            result.rows = keysToCamel(result.rows);
         }
 
         return result;

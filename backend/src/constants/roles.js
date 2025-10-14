@@ -5,7 +5,8 @@
 const USER_ROLES = {
     ADMINISTRATOR: 'administrator',
     REGISTRAR: 'registrar',
-    TREASURER: 'treasurer'
+    TREASURER: 'treasurer',
+    STUDENT: 'student'
 };
 
 const ROLE_PERMISSIONS = {
@@ -28,6 +29,10 @@ const ROLE_PERMISSIONS = {
         'manage_savings',
         'view_savings_reports',
         'view_member_balances'
+    ],
+    [USER_ROLES.STUDENT]: [
+        // Estudiantes no tienen permisos por ahora
+        // Estos permisos se agregarán cuando se implemente el módulo correspondiente
     ]
 };
 

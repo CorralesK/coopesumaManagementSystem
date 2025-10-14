@@ -14,7 +14,7 @@ import Table from '../../components/common/Table';
 import Pagination from '../../components/common/Pagination';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
-import { GRADES, SECTIONS } from '../../utils/constants';
+import { GRADES } from '../../utils/constants';
 
 const MembersListPage = () => {
     const navigate = useNavigate();
@@ -27,7 +27,6 @@ const MembersListPage = () => {
     const [filters, setFilters] = useState({
         search: '',
         grade: '',
-        section: '',
         isActive: 'true'
     });
     const [currentPage, setCurrentPage] = useState(1);
@@ -48,7 +47,6 @@ const MembersListPage = () => {
                 limit: 20,
                 ...(filters.search && { search: filters.search }),
                 ...(filters.grade && { grade: filters.grade }),
-                ...(filters.section && { section: filters.section }),
                 ...(filters.isActive && { isActive: filters.isActive })
             };
 
@@ -124,11 +122,6 @@ const MembersListPage = () => {
             render: (member) => `${member.grade}° grado`
         },
         {
-            key: 'section',
-            label: 'Sección',
-            render: (member) => member.section || 'N/A'
-        },
-        {
             key: 'isActive',
             label: 'Estado',
             render: (member) => (
@@ -179,11 +172,6 @@ const MembersListPage = () => {
         label: `${grade}° grado`
     }));
 
-    const sectionOptions = SECTIONS.map(section => ({
-        value: section,
-        label: `Sección ${section}`
-    }));
-
     const statusOptions = [
         { value: 'true', label: 'Activos' },
         { value: 'false', label: 'Inactivos' },
@@ -209,11 +197,12 @@ const MembersListPage = () => {
                 <Button
                     onClick={() => navigate('/members/new')}
                     variant="primary"
+                    className="whitespace-nowrap"
                 >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                     </svg>
-                    Nuevo Miembro
+                    Agregar Miembro
                 </Button>
             </div>
 
@@ -227,7 +216,7 @@ const MembersListPage = () => {
 
             {/* Filters */}
             <Card title="Filtros de Búsqueda">
-                <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Input
                         label="Buscar"
                         name="search"
@@ -245,33 +234,37 @@ const MembersListPage = () => {
                         placeholder="Todos los grados"
                     />
                     <Select
-                        label="Sección"
-                        name="section"
-                        value={filters.section}
-                        onChange={(e) => handleFilterChange('section', e.target.value)}
-                        options={sectionOptions}
-                        placeholder="Todas las secciones"
-                    />
-                    <Select
                         label="Estado"
                         name="isActive"
                         value={filters.isActive}
                         onChange={(e) => handleFilterChange('isActive', e.target.value)}
                         options={statusOptions}
                     />
-                </form>
-                <div className="mt-4 flex space-x-2">
-                    <Button type="submit" onClick={handleSearch} variant="primary">
+                </div>
+                <div className="mt-6 flex flex-wrap gap-3">
+                    <Button
+                        onClick={handleSearch}
+                        variant="primary"
+                        size="md"
+                        className="whitespace-nowrap"
+                    >
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
                         Buscar
                     </Button>
                     <Button
-                        type="button"
                         onClick={() => {
-                            setFilters({ search: '', grade: '', section: '', isActive: 'true' });
+                            setFilters({ search: '', grade: '', isActive: 'true' });
                             setCurrentPage(1);
                         }}
                         variant="outline"
+                        size="md"
+                        className="whitespace-nowrap"
                     >
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
                         Limpiar Filtros
                     </Button>
                 </div>

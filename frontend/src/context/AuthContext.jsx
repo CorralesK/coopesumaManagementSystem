@@ -15,34 +15,61 @@ export const AuthProvider = ({ children }) => {
 
     // Check for existing token on mount
     useEffect(() => {
-        const storedToken = sessionStorage.getItem('token');
-        const storedUser = sessionStorage.getItem('user');
-
-        if (storedToken && storedUser) {
+        // Use a microtask to avoid React 19 "Breaking Browser Locker Behavior" warning
+        const checkStoredAuth = () => {
             try {
-                setToken(storedToken);
-                setUser(JSON.parse(storedUser));
+                const storedToken = sessionStorage.getItem('token');
+                const storedUser = sessionStorage.getItem('user');
+
+                if (storedToken && storedUser) {
+                    setToken(storedToken);
+                    setUser(JSON.parse(storedUser));
+                }
             } catch (error) {
                 console.error('Error parsing stored user:', error);
-                sessionStorage.removeItem('token');
-                sessionStorage.removeItem('user');
+                try {
+                    sessionStorage.removeItem('token');
+                    sessionStorage.removeItem('user');
+                } catch (cleanupError) {
+                    console.error('Error cleaning up storage:', cleanupError);
+                }
+            } finally {
+                setLoading(false);
             }
-        }
-        setLoading(false);
+        };
+
+        // Defer storage access to avoid React 19 hydration warnings
+        queueMicrotask(checkStoredAuth);
     }, []);
 
     const login = (newToken, userData) => {
         setToken(newToken);
         setUser(userData);
-        sessionStorage.setItem('token', newToken);
-        sessionStorage.setItem('user', JSON.stringify(userData));
+
+        // Defer storage access to avoid React 19 warnings
+        queueMicrotask(() => {
+            try {
+                sessionStorage.setItem('token', newToken);
+                sessionStorage.setItem('user', JSON.stringify(userData));
+            } catch (error) {
+                console.error('Error saving to sessionStorage:', error);
+            }
+        });
     };
 
     const logout = () => {
         setToken(null);
         setUser(null);
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user');
+
+        // Defer storage access to avoid React 19 warnings
+        queueMicrotask(() => {
+            try {
+                sessionStorage.removeItem('token');
+                sessionStorage.removeItem('user');
+            } catch (error) {
+                console.error('Error clearing sessionStorage:', error);
+            }
+        });
     };
 
     const hasRole = (requiredRole) => {

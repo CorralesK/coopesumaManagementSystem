@@ -22,7 +22,7 @@ const findById = async (memberId) => {
                 full_name,
                 identification,
                 grade,
-                section,
+                institutional_email,
                 photo_url,
                 qr_hash,
                 is_active,
@@ -54,7 +54,7 @@ const findByIdentification = async (identification) => {
                 full_name,
                 identification,
                 grade,
-                section,
+                institutional_email,
                 photo_url,
                 qr_hash,
                 is_active,
@@ -86,7 +86,7 @@ const findByQrHash = async (qrHash) => {
                 full_name,
                 identification,
                 grade,
-                section,
+                institutional_email,
                 photo_url,
                 qr_hash,
                 is_active,
@@ -118,7 +118,7 @@ const findAll = async (filters = {}) => {
                 full_name,
                 identification,
                 grade,
-                section,
+                institutional_email,
                 photo_url,
                 qr_hash,
                 is_active,
@@ -134,12 +134,6 @@ const findAll = async (filters = {}) => {
         if (filters.grade) {
             query += ` AND grade = $${paramIndex}`;
             params.push(filters.grade);
-            paramIndex++;
-        }
-
-        if (filters.section) {
-            query += ` AND section = $${paramIndex}`;
-            params.push(filters.section);
             paramIndex++;
         }
 
@@ -200,12 +194,6 @@ const count = async (filters = {}) => {
             paramIndex++;
         }
 
-        if (filters.section) {
-            query += ` AND section = $${paramIndex}`;
-            params.push(filters.section);
-            paramIndex++;
-        }
-
         if (filters.isActive !== undefined) {
             query += ` AND is_active = $${paramIndex}`;
             params.push(filters.isActive);
@@ -241,7 +229,7 @@ const create = async (memberData) => {
                 full_name,
                 identification,
                 grade,
-                section,
+                institutional_email,
                 photo_url,
                 qr_hash,
                 is_active
@@ -252,7 +240,7 @@ const create = async (memberData) => {
                 full_name,
                 identification,
                 grade,
-                section,
+                institutional_email,
                 photo_url,
                 qr_hash,
                 is_active,
@@ -263,7 +251,7 @@ const create = async (memberData) => {
             memberData.fullName,
             memberData.identification,
             memberData.grade,
-            memberData.section || null,
+            memberData.institutionalEmail || null,
             memberData.photoUrl || null,
             memberData.qrHash,
             memberData.isActive !== undefined ? memberData.isActive : true
@@ -286,7 +274,7 @@ const create = async (memberData) => {
  */
 const update = async (memberId, updates) => {
     try {
-        const allowedFields = ['full_name', 'identification', 'grade', 'section', 'photo_url', 'is_active'];
+        const allowedFields = ['full_name', 'identification', 'grade', 'institutional_email', 'photo_url', 'is_active'];
         const fields = Object.keys(updates).filter(key => allowedFields.includes(key));
 
         if (fields.length === 0) {
@@ -305,7 +293,6 @@ const update = async (memberId, updates) => {
                 full_name,
                 identification,
                 grade,
-                section,
                 photo_url,
                 qr_hash,
                 is_active,
@@ -338,7 +325,6 @@ const updateQrHash = async (memberId, qrHash) => {
                 full_name,
                 identification,
                 grade,
-                section,
                 photo_url,
                 qr_hash,
                 is_active,
@@ -383,16 +369,6 @@ const findByGrade = async (grade) => {
     return findAll({ grade, isActive: true });
 };
 
-/**
- * Get members by grade and section
- *
- * @param {string} grade - Grade (1-6)
- * @param {string} section - Section (A, B, C, etc.)
- * @returns {Promise<Array>} Array of member objects
- */
-const findByGradeAndSection = async (grade, section) => {
-    return findAll({ grade, section, isActive: true });
-};
 
 module.exports = {
     findById,
@@ -405,6 +381,5 @@ module.exports = {
     updateQrHash,
     deactivate,
     activate,
-    findByGrade,
-    findByGradeAndSection
+    findByGrade
 };

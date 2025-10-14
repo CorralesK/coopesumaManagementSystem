@@ -17,7 +17,9 @@ const Layout = ({ children }) => {
 
     const handleLogout = () => {
         logout();
-        navigate('/login');
+        // Use window.location instead of navigate to force full page reload
+        // This clears all React state and prevents back button issues
+        window.location.href = '/login';
     };
 
     const isAdministrator = user?.role === USER_ROLES.ADMINISTRATOR;
@@ -56,16 +58,6 @@ const Layout = ({ children }) => {
             show: isAdministrator
         },
         {
-            name: 'Registrar Asistencia',
-            path: '/attendance/scan',
-            icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                </svg>
-            ),
-            show: isAdministrator || isRegistrar
-        },
-        {
             name: 'Usuarios',
             path: '/users',
             icon: (
@@ -99,8 +91,7 @@ const Layout = ({ children }) => {
             <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-blue-800 text-white transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
                 <div className="flex flex-col h-full">
                     {/* Logo/Brand */}
-                    <div className="flex items-center justify-between h-16 px-6 bg-blue-900">
-                        <h1 className="text-xl font-bold">CoopeSuma</h1>
+                    <div className="flex items-center justify-end h-16 px-6 bg-blue-900">
                         <button
                             onClick={() => setIsSidebarOpen(false)}
                             className="lg:hidden text-white hover:text-gray-300"

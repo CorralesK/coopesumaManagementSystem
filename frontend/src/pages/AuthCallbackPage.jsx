@@ -18,40 +18,62 @@ const AuthCallbackPage = () => {
         const errorParam = searchParams.get('error');
         const errorMessage = searchParams.get('message');
 
+        console.log('AuthCallback - URL params:', {
+            token: token ? 'present' : 'missing',
+            error: errorParam,
+            message: errorMessage,
+            allParams: Object.fromEntries(searchParams)
+        });
+
         if (errorParam) {
             const displayError = errorMessage || 'Error de autenticación. Por favor, intenta de nuevo.';
             setError(displayError);
-            // Limpiar URL
-            window.history.replaceState({}, document.title, '/auth/callback');
             setTimeout(() => navigate('/login', { replace: true }), 3000);
             return;
         }
 
         if (token) {
-            try {
-                // Decode JWT to get user info (simple base64 decode)
-                const payload = JSON.parse(atob(token.split('.')[1]));
+            // Use queueMicrotask to defer processing and avoid React 19 warnings
+            queueMicrotask(() => {
+                try {
+                    console.log('Token received, length:', token.length);
 
-                const userData = {
-                    userId: payload.userId,
-                    fullName: payload.fullName,
-                    email: payload.email,
-                    role: payload.role
-                };
+                    // Decode JWT to get user info (simple base64 decode)
+                    const parts = token.split('.');
+                    console.log('Token parts:', parts.length);
 
-                login(token, userData);
-                // Limpiar URL antes de navegar
-                window.history.replaceState({}, document.title, '/auth/callback');
-                navigate('/dashboard', { replace: true });
-            } catch (err) {
-                console.error('Error processing token:', err);
-                setError('Error al procesar la autenticación.');
-                window.history.replaceState({}, document.title, '/auth/callback');
-                setTimeout(() => navigate('/login', { replace: true }), 3000);
-            }
+                    if (parts.length !== 3) {
+                        throw new Error('Invalid token format');
+                    }
+
+                    const payload = JSON.parse(atob(parts[1]));
+                    console.log('Decoded payload:', payload);
+
+                    const userData = {
+                        userId: payload.userId,
+                        fullName: payload.fullName,
+                        email: payload.email,
+                        role: payload.role
+                    };
+
+                    console.log('User data prepared:', userData);
+
+                    login(token, userData);
+
+                    console.log('Login successful, navigating to dashboard');
+
+                    // Navigate to dashboard immediately (replace: true removes auth page from history)
+                    navigate('/dashboard', { replace: true });
+                } catch (err) {
+                    console.error('Error processing token:', err);
+                    console.error('Error details:', err.message, err.stack);
+                    setError(`Error al procesar la autenticación: ${err.message}`);
+                    setTimeout(() => navigate('/login', { replace: true }), 3000);
+                }
+            });
         } else {
+            console.error('No token in URL parameters');
             setError('Token no recibido.');
-            window.history.replaceState({}, document.title, '/auth/callback');
             setTimeout(() => navigate('/login', { replace: true }), 3000);
         }
     }, [searchParams, navigate, login]);

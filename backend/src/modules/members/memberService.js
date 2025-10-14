@@ -6,10 +6,14 @@
  */
 
 const memberRepository = require('./memberRepository');
+const userRepository = require('../users/userRepository');
 const { generateQrHash, generateQrCode } = require('../../utils/qrUtils');
+const { verifyInstitutionalEmail } = require('../../utils/emailVerification');
+const { USER_ROLES } = require('../../constants/roles');
 const ERROR_CODES = require('../../constants/errorCodes');
 const MESSAGES = require('../../constants/messages');
 const logger = require('../../utils/logger');
+const db = require('../../config/database');
 
 /**
  * Custom error class for operational errors
@@ -71,7 +75,6 @@ const getAllMembers = async (filters = {}) => {
 
         const queryFilters = {
             grade: filters.grade,
-            section: filters.section,
             isActive: filters.isActive,
             search: filters.search,
             limit,
@@ -103,20 +106,25 @@ const getAllMembers = async (filters = {}) => {
 };
 
 /**
- * Create a new member
+ * Create a new member with associated student user account
+ * Uses a database transaction to ensure atomicity
  *
- * @param {Object} memberData - Member data
- * @returns {Promise<Object>} Created member object
- * @throws {MemberError} If member already exists or validation fails
+ * @param {Object} memberData - Member data including institutionalEmail
+ * @returns {Promise<Object>} Created member and user objects
+ * @throws {MemberError} If member already exists, email is invalid, or transaction fails
  */
 const createMember = async (memberData) => {
-    try {
-        // Check if member with same identification already exists
-        const existingMember = await memberRepository.findByIdentification(
-            memberData.identification
-        );
+    const client = await db.pool.connect();
 
-        if (existingMember) {
+    try {
+        // Begin transaction
+        await client.query('BEGIN');
+
+        // Check if member with same identification already exists (using transaction client)
+        const checkMemberQuery = 'SELECT member_id FROM members WHERE identification = $1';
+        const existingMemberResult = await client.query(checkMemberQuery, [memberData.identification]);
+
+        if (existingMemberResult.rows.length > 0) {
             throw new MemberError(
                 MESSAGES.MEMBER_ALREADY_EXISTS,
                 ERROR_CODES.MEMBER_ALREADY_EXISTS,
@@ -124,32 +132,159 @@ const createMember = async (memberData) => {
             );
         }
 
+        // Verify institutional email if provided
+        if (memberData.institutionalEmail) {
+            const emailVerification = await verifyInstitutionalEmail(memberData.institutionalEmail);
+
+            if (!emailVerification.isValid) {
+                throw new MemberError(
+                    emailVerification.error || 'El correo institucional no es válido',
+                    ERROR_CODES.VALIDATION_ERROR,
+                    400
+                );
+            }
+
+            // Check if email is already in use (using transaction client)
+            const checkEmailQuery = 'SELECT user_id FROM users WHERE email = $1';
+            const existingUserResult = await client.query(checkEmailQuery, [emailVerification.email]);
+
+            if (existingUserResult.rows.length > 0) {
+                throw new MemberError(
+                    'El correo institucional ya está registrado en el sistema',
+                    ERROR_CODES.USER_ALREADY_EXISTS,
+                    409
+                );
+            }
+
+            memberData.institutionalEmail = emailVerification.email;
+        }
+
         // Generate QR hash for the member
         const qrHash = generateQrHash(memberData.identification);
 
-        // Create member with QR hash
-        const newMember = await memberRepository.create({
-            ...memberData,
-            qrHash
-        });
+        // Create member with QR hash (using transaction client)
+        const insertMemberQuery = `
+            INSERT INTO members (
+                full_name,
+                identification,
+                grade,
+                institutional_email,
+                photo_url,
+                qr_hash,
+                is_active
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING
+                member_id,
+                full_name,
+                identification,
+                grade,
+                institutional_email,
+                photo_url,
+                qr_hash,
+                is_active,
+                created_at
+        `;
 
-        logger.info('Member created successfully', {
+        const memberValues = [
+            memberData.fullName,
+            memberData.identification,
+            memberData.grade,
+            memberData.institutionalEmail || null,
+            memberData.photoUrl || null,
+            qrHash,
+            true
+        ];
+
+        const memberResult = await client.query(insertMemberQuery, memberValues);
+        const newMember = memberResult.rows[0];
+
+        let newUser = null;
+
+        // Create student user account if institutional email was provided (using transaction client)
+        if (memberData.institutionalEmail) {
+            const insertUserQuery = `
+                INSERT INTO users (
+                    full_name,
+                    email,
+                    microsoft_id,
+                    role,
+                    is_active
+                )
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING
+                    user_id,
+                    full_name,
+                    email,
+                    role,
+                    is_active,
+                    created_at
+            `;
+
+            const userValues = [
+                memberData.fullName,
+                memberData.institutionalEmail,
+                null,  // microsoft_id will be set when student logs in
+                USER_ROLES.STUDENT,
+                true
+            ];
+
+            try {
+                const userResult = await client.query(insertUserQuery, userValues);
+                newUser = userResult.rows[0];
+
+                logger.info('Student user created successfully', {
+                    userId: newUser.user_id,
+                    email: newUser.email,
+                    memberId: newMember.member_id
+                });
+            } catch (userError) {
+                logger.error('Error creating student user:', userError);
+                // If user creation fails, throw error to rollback the transaction
+                throw new MemberError(
+                    'No se pudo crear la cuenta de usuario para el estudiante. Por favor, verifique que el correo institucional sea válido.',
+                    ERROR_CODES.INTERNAL_ERROR,
+                    500
+                );
+            }
+        }
+
+        // Commit transaction
+        await client.query('COMMIT');
+
+        logger.info('Member and user created successfully', {
             memberId: newMember.member_id,
-            identification: newMember.identification
+            identification: newMember.identification,
+            hasUser: !!newUser,
+            userId: newUser?.user_id
         });
 
-        return newMember;
+        return {
+            member: newMember,
+            user: newUser
+        };
     } catch (error) {
+        // Rollback transaction on any error
+        await client.query('ROLLBACK');
+
+        logger.error('Transaction rolled back due to error', {
+            error: error.message,
+            stack: error.stack
+        });
+
         if (error.isOperational) {
             throw error;
         }
 
         logger.error('Error creating member:', error);
         throw new MemberError(
-            MESSAGES.INTERNAL_ERROR,
+            error.message || 'Error al crear el miembro. Por favor intente nuevamente.',
             ERROR_CODES.INTERNAL_ERROR,
             500
         );
+    } finally {
+        // Release the client back to the pool
+        client.release();
     }
 };
 

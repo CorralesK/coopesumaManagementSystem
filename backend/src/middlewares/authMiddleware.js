@@ -35,7 +35,7 @@ const authMiddleware = async (req, res, next) => {
             SELECT
                 user_id,
                 full_name,
-                username,
+                email,
                 role,
                 is_active
             FROM users
@@ -60,10 +60,10 @@ const authMiddleware = async (req, res, next) => {
         const user = result.rows[0];
 
         // Check if user is still active
-        if (!user.is_active) {
+        if (!user.isActive) {
             logger.warn('Token verification failed: user is inactive', {
-                userId: user.user_id,
-                username: user.username
+                userId: user.userId,
+                email: user.email
             });
             return errorResponse(
                 res,
@@ -73,13 +73,13 @@ const authMiddleware = async (req, res, next) => {
             );
         }
 
-        // Attach user info to request (excluding password_hash)
+        // Attach user info to request
         req.user = {
-            userId: user.user_id,
-            fullName: user.full_name,
-            username: user.username,
+            userId: user.userId,
+            fullName: user.fullName,
+            email: user.email,
             role: user.role,
-            isActive: user.is_active
+            isActive: user.isActive
         };
 
         next();

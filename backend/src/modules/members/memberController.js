@@ -22,7 +22,6 @@ const getAllMembers = async (req, res) => {
     try {
         const filters = {
             grade: req.query.grade,
-            section: req.query.section,
             isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : undefined,
             search: req.query.search,
             page: req.query.page,
@@ -113,16 +112,16 @@ const createMember = async (req, res) => {
             fullName: req.body.fullName,
             identification: req.body.identification,
             grade: req.body.grade,
-            section: req.body.section,
+            institutionalEmail: req.body.institutionalEmail,
             photoUrl: req.body.photoUrl
         };
 
-        const newMember = await memberService.createMember(memberData);
+        const result = await memberService.createMember(memberData);
 
         return successResponse(
             res,
             MESSAGES.MEMBER_CREATED,
-            newMember,
+            result,
             201
         );
     } catch (error) {
@@ -163,7 +162,6 @@ const updateMember = async (req, res) => {
             fullName: req.body.fullName,
             identification: req.body.identification,
             grade: req.body.grade,
-            section: req.body.section,
             photoUrl: req.body.photoUrl,
             isActive: req.body.isActive
         };

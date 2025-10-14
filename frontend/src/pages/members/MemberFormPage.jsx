@@ -12,7 +12,7 @@ import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
-import { GRADES, SECTIONS } from '../../utils/constants';
+import { GRADES } from '../../utils/constants';
 
 const MemberFormPage = () => {
     const navigate = useNavigate();
@@ -28,7 +28,7 @@ const MemberFormPage = () => {
         fullName: '',
         identification: '',
         grade: '',
-        section: '',
+        institutionalEmail: '',
         photoUrl: ''
     });
 
@@ -50,7 +50,7 @@ const MemberFormPage = () => {
                 fullName: member.fullName || '',
                 identification: member.identification || '',
                 grade: member.grade || '',
-                section: member.section || '',
+                institutionalEmail: member.institutionalEmail || '',
                 photoUrl: member.photoUrl || ''
             });
         } catch (err) {
@@ -94,6 +94,17 @@ const MemberFormPage = () => {
             newErrors.grade = 'El grado es requerido';
         }
 
+        // Solo validar correo institucional en modo creación
+        if (!isEditMode) {
+            if (!formData.institutionalEmail.trim()) {
+                newErrors.institutionalEmail = 'El correo institucional es requerido';
+            } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.institutionalEmail)) {
+                newErrors.institutionalEmail = 'El formato del correo no es válido';
+            } else if (!formData.institutionalEmail.toLowerCase().endsWith('mep.go.cr')) {
+                newErrors.institutionalEmail = 'Debe ser un correo institucional del MEP (debe terminar en mep.go.cr)';
+            }
+        }
+
         if (formData.photoUrl && !/^https?:\/\/.+/.test(formData.photoUrl)) {
             newErrors.photoUrl = 'La URL de la foto debe ser válida';
         }
@@ -118,9 +129,13 @@ const MemberFormPage = () => {
                 fullName: formData.fullName.trim(),
                 identification: formData.identification.trim(),
                 grade: formData.grade,
-                section: formData.section.trim() || null,
                 photoUrl: formData.photoUrl.trim() || null
             };
+
+            // Solo incluir correo institucional en modo creación
+            if (!isEditMode) {
+                payload.institutionalEmail = formData.institutionalEmail.trim();
+            }
 
             if (isEditMode) {
                 await api.put(`/members/${id}`, payload);
@@ -147,11 +162,6 @@ const MemberFormPage = () => {
     const gradeOptions = GRADES.map(grade => ({
         value: grade,
         label: `${grade}° grado`
-    }));
-
-    const sectionOptions = SECTIONS.map(section => ({
-        value: section,
-        label: `Sección ${section}`
     }));
 
     return (
@@ -201,28 +211,31 @@ const MemberFormPage = () => {
                         disabled={isEditMode} // Cannot change identification in edit mode
                     />
 
-                    {/* Grade and Section in same row */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Select
-                            label="Grado"
-                            name="grade"
-                            value={formData.grade}
+                    {/* Institutional Email - Solo en modo creación */}
+                    {!isEditMode && (
+                        <Input
+                            label="Correo Institucional"
+                            name="institutionalEmail"
+                            type="email"
+                            value={formData.institutionalEmail}
                             onChange={handleInputChange}
-                            options={gradeOptions}
-                            error={errors.grade}
+                            error={errors.institutionalEmail}
                             required
-                            placeholder="Seleccione el grado"
+                            placeholder="Ej: estudiante@educacion.mep.go.cr"
                         />
+                    )}
 
-                        <Select
-                            label="Sección"
-                            name="section"
-                            value={formData.section}
-                            onChange={handleInputChange}
-                            options={sectionOptions}
-                            placeholder="Seleccione la sección (opcional)"
-                        />
-                    </div>
+                    {/* Grade */}
+                    <Select
+                        label="Grado"
+                        name="grade"
+                        value={formData.grade}
+                        onChange={handleInputChange}
+                        options={gradeOptions}
+                        error={errors.grade}
+                        required
+                        placeholder="Seleccione el grado"
+                    />
 
                     {/* Photo URL */}
                     <Input
@@ -262,7 +275,7 @@ const MemberFormPage = () => {
                                 <p className="text-sm text-blue-700">
                                     {isEditMode
                                         ? 'Al guardar los cambios, la información del miembro será actualizada.'
-                                        : 'Al crear el miembro, se generará automáticamente un código QR único para el registro de asistencia.'}
+                                        : 'Al crear el miembro, se generará automáticamente un código QR único para el registro de asistencia y se creará un usuario estudiante con el correo institucional proporcionado.'}
                                 </p>
                             </div>
                         </div>

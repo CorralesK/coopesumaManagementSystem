@@ -42,6 +42,12 @@ const MemberDetailPage = () => {
     };
 
     const handleRegenerateQR = async () => {
+        // Check if member is active
+        if (!member.isActive) {
+            setError('No se puede regenerar el código QR de un miembro inactivo');
+            return;
+        }
+
         if (!window.confirm('¿Estás seguro de que deseas regenerar el código QR? El código anterior dejará de funcionar.')) {
             return;
         }
@@ -174,7 +180,6 @@ const MemberDetailPage = () => {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                         </svg>
                                         <span>Grado: {member.grade}°</span>
-                                        {member.section && <span className="ml-2">- Sección: {member.section}</span>}
                                     </div>
                                     <div className="flex items-center">
                                         <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
@@ -255,11 +260,19 @@ const MemberDetailPage = () => {
                                     onClick={handleRegenerateQR}
                                     variant="warning"
                                     fullWidth
-                                    disabled={regenerating}
+                                    disabled={regenerating || !member.isActive}
                                 >
                                     {regenerating ? 'Regenerando...' : 'Regenerar QR'}
                                 </Button>
                             </div>
+
+                            {!member.isActive && (
+                                <div className="mt-4 bg-red-50 border-l-4 border-red-400 p-3">
+                                    <p className="text-xs text-red-700">
+                                        <strong>Miembro Inactivo:</strong> No se puede regenerar el código QR de un miembro inactivo.
+                                    </p>
+                                </div>
+                            )}
 
                             <div className="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-3">
                                 <p className="text-xs text-yellow-700">
@@ -288,7 +301,7 @@ const MemberDetailPage = () => {
                     </div>
                     <div className="mt-6 text-center">
                         <p className="text-lg font-medium text-gray-900">{member.fullName}</p>
-                        <p className="text-sm text-gray-600">Grado: {member.grade}° {member.section && `- Sección: ${member.section}`}</p>
+                        <p className="text-sm text-gray-600">Grado: {member.grade}°</p>
                         <p className="text-xs text-gray-500 mt-2 font-mono">{member.qrHash}</p>
                     </div>
                     <div className="mt-6 flex space-x-3">

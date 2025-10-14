@@ -24,8 +24,8 @@ CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    microsoft_id VARCHAR(255) UNIQUE NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('administrator', 'registrar', 'treasurer')),
+    microsoft_id VARCHAR(255) UNIQUE,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('administrator', 'registrar', 'treasurer', 'student')),
     is_active BOOLEAN DEFAULT true NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -34,12 +34,12 @@ CREATE TABLE users (
     CONSTRAINT chk_email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
 );
 
-COMMENT ON TABLE users IS 'Usuarios del sistema autenticados únicamente con Microsoft OAuth';
+COMMENT ON TABLE users IS 'Usuarios del sistema autenticados con Microsoft OAuth';
 COMMENT ON COLUMN users.user_id IS 'ID único del usuario (clave primaria)';
 COMMENT ON COLUMN users.full_name IS 'Nombre completo del usuario';
 COMMENT ON COLUMN users.email IS 'Email del usuario obtenido de Microsoft OAuth';
-COMMENT ON COLUMN users.microsoft_id IS 'ID único del usuario en Microsoft Azure AD (oid)';
-COMMENT ON COLUMN users.role IS 'Rol del usuario: administrator, registrar o treasurer';
+COMMENT ON COLUMN users.microsoft_id IS 'ID único del usuario en Microsoft Azure AD (oid) - NULL para usuarios estudiantes hasta que inicien sesión';
+COMMENT ON COLUMN users.role IS 'Rol del usuario: administrator, registrar, treasurer o student';
 COMMENT ON COLUMN users.is_active IS 'Indica si el usuario está activo (soft delete)';
 COMMENT ON COLUMN users.created_at IS 'Fecha y hora de creación del registro';
 COMMENT ON COLUMN users.updated_at IS 'Fecha y hora de última actualización del registro';
@@ -54,7 +54,7 @@ CREATE TABLE members (
     full_name VARCHAR(100) NOT NULL,
     identification VARCHAR(20) UNIQUE NOT NULL,
     grade VARCHAR(20) NOT NULL,
-    section VARCHAR(10),
+    institutional_email VARCHAR(255) UNIQUE,
     photo_url VARCHAR(255),
     qr_hash VARCHAR(255) UNIQUE NOT NULL,
     is_active BOOLEAN DEFAULT true NOT NULL,
@@ -64,6 +64,10 @@ CREATE TABLE members (
     CONSTRAINT chk_full_name_not_empty CHECK (TRIM(full_name) != ''),
     CONSTRAINT chk_identification_format CHECK (identification ~ '^[0-9-]+$'),
     CONSTRAINT chk_grade_valid CHECK (grade ~ '^[1-6]$'),
+    CONSTRAINT chk_institutional_email_format CHECK (
+        institutional_email IS NULL OR
+        institutional_email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]*mep\.go\.cr$'
+    ),
     CONSTRAINT chk_qr_hash_not_empty CHECK (TRIM(qr_hash) != '')
 );
 
@@ -72,7 +76,7 @@ COMMENT ON COLUMN members.member_id IS 'ID único del miembro (clave primaria)';
 COMMENT ON COLUMN members.full_name IS 'Nombre completo del estudiante';
 COMMENT ON COLUMN members.identification IS 'Número de identificación del estudiante (cédula o pasaporte)';
 COMMENT ON COLUMN members.grade IS 'Grado escolar del estudiante (1 a 6)';
-COMMENT ON COLUMN members.section IS 'Sección del estudiante (A, B, C, etc.)';
+COMMENT ON COLUMN members.institutional_email IS 'Correo institucional del estudiante (debe terminar en mep.go.cr) - usado para crear cuenta de usuario estudiante';
 COMMENT ON COLUMN members.photo_url IS 'URL de la foto del estudiante (opcional)';
 COMMENT ON COLUMN members.qr_hash IS 'Hash único para el código QR del estudiante';
 COMMENT ON COLUMN members.is_active IS 'Indica si el miembro está activo (soft delete)';
@@ -159,13 +163,6 @@ COMMENT ON CONSTRAINT unique_attendance ON attendance_records IS
 -- ============================================================================
 -- FIN DEL SCRIPT
 -- ============================================================================
--- Resumen:
--- - 4 tablas creadas exitosamente:
---   1. users (usuarios del sistema)
---   2. members (miembros de la cooperativa)
---   3. assemblies (asambleas)
---   4. attendance_records (registros de asistencia)
---
 -- Próximo paso:
 -- Ejecutar 03_create_indexes.sql
 -- ============================================================================
