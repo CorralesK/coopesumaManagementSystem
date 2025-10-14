@@ -29,9 +29,9 @@ const Button = ({
     };
 
     const sizeClasses = {
-        sm: 'px-6 py-2 text-sm',
-        md: 'px-8 py-2.5 text-base',
-        lg: 'px-10 py-3 text-lg'
+        sm: 'px-6 h-9 text-sm',
+        md: 'px-8 h-10 text-base',
+        lg: 'px-10 h-12 text-lg'
     };
 
     const widthClass = fullWidth ? 'w-full' : '';

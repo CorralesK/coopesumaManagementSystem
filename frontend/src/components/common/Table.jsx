@@ -27,14 +27,14 @@ const Table = ({
 
     return (
         <div className={`overflow-x-auto ${className}`}>
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                     <tr>
                         {columns.map((column) => (
                             <th
                                 key={column.key}
                                 scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
                                 {column.label}
                             </th>
@@ -49,7 +49,7 @@ const Table = ({
                             className={onRowClick ? 'hover:bg-gray-50 cursor-pointer transition-colors' : ''}
                         >
                             {columns.map((column) => (
-                                <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td key={column.key} className="px-6 py-5 text-sm text-gray-900 text-center">
                                     {column.render ? column.render(row) : row[column.key]}
                                 </td>
                             ))}

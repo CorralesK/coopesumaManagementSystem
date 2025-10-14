@@ -5,9 +5,10 @@
  * @module modules/members/memberService
  */
 
+// Updated to fix QR code generation
 const memberRepository = require('./memberRepository');
 const userRepository = require('../users/userRepository');
-const { generateQrHash, generateQrCode } = require('../../utils/qrUtils');
+const { generateQrHash, generateQrCodeDataUrl } = require('../../utils/qrUtils');
 const { verifyInstitutionalEmail } = require('../../utils/emailVerification');
 const { USER_ROLES } = require('../../constants/roles');
 const ERROR_CODES = require('../../constants/errorCodes');
@@ -31,11 +32,12 @@ class MemberError extends Error {
  * Get member by ID
  *
  * @param {number} memberId - Member ID
- * @returns {Promise<Object>} Member object
+ * @returns {Promise<Object>} Member object with QR code
  * @throws {MemberError} If member not found
  */
 const getMemberById = async (memberId) => {
     try {
+        logger.info('getMemberById called', { memberId });
         const member = await memberRepository.findById(memberId);
 
         if (!member) {
@@ -45,6 +47,40 @@ const getMemberById = async (memberId) => {
                 404
             );
         }
+
+        logger.info('Member found, checking QR hash', {
+            memberId: member.memberId,
+            hasQrHash: !!member.qrHash,
+            qrHash: member.qrHash
+        });
+
+        // Generate QR code image from hash
+        if (member.qrHash) {
+            try {
+                logger.info('Generating QR code data URL');
+                const qrCodeDataUrl = await generateQrCodeDataUrl(member.qrHash);
+                logger.info('QR code generated successfully', {
+                    dataUrlLength: qrCodeDataUrl?.length,
+                    dataUrlPrefix: qrCodeDataUrl?.substring(0, 50)
+                });
+                member.qrCodeDataUrl = qrCodeDataUrl;
+            } catch (qrError) {
+                logger.warn('Failed to generate QR code for member', {
+                    memberId: member.memberId,
+                    error: qrError.message,
+                    stack: qrError.stack
+                });
+                // Don't fail the request if QR generation fails
+                member.qrCodeDataUrl = null;
+            }
+        } else {
+            logger.warn('Member has no QR hash', { memberId: member.memberId });
+        }
+
+        logger.info('Returning member with QR', {
+            memberId: member.memberId,
+            hasQrCodeDataUrl: !!member.qrCodeDataUrl
+        });
 
         return member;
     } catch (error) {
@@ -409,7 +445,7 @@ const generateMemberQr = async (memberId) => {
         }
 
         // Generate QR code image from hash
-        const qrCodeImage = await generateQrCode(member.qr_hash);
+        const qrCodeDataUrl = await generateQrCodeDataUrl(member.qr_hash);
 
         logger.info('QR code generated for member', {
             memberId: member.member_id
@@ -420,7 +456,7 @@ const generateMemberQr = async (memberId) => {
             fullName: member.full_name,
             identification: member.identification,
             qrHash: member.qr_hash,
-            qrCodeImage // Base64 encoded image
+            qrCodeDataUrl // Base64 encoded data URL
         };
     } catch (error) {
         if (error.isOperational) {
@@ -464,16 +500,16 @@ const regenerateMemberQr = async (memberId) => {
         const updatedMember = await memberRepository.updateQrHash(memberId, qrHash);
 
         // Generate new QR code image
-        const qrCodeImage = await generateQrCode(qrHash);
+        const qrCodeDataUrl = await generateQrCodeDataUrl(qrHash);
+
+        // Add QR code data URL to the member object
+        updatedMember.qrCodeDataUrl = qrCodeDataUrl;
 
         logger.info('QR code regenerated for member', {
             memberId: updatedMember.member_id
         });
 
-        return {
-            member: updatedMember,
-            qrCodeImage
-        };
+        return updatedMember;
     } catch (error) {
         if (error.isOperational) {
             throw error;

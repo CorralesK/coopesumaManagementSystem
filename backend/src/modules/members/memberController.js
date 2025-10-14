@@ -69,6 +69,12 @@ const getAllMembers = async (req, res) => {
 const getMemberById = async (req, res) => {
     try {
         const { id } = req.params;
+
+        // Disable caching to ensure QR code is always regenerated
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+
         const member = await memberService.getMemberById(parseInt(id, 10));
 
         return successResponse(

@@ -182,7 +182,7 @@ const MemberDetailPage = () => {
                                         <span>Grado: {member.grade}°</span>
                                     </div>
                                     <div className="flex items-center">
-                                        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
+                                        <span className={`inline-flex px-4 py-1.5 text-sm font-semibold rounded-full ${
                                             member.isActive
                                                 ? 'bg-green-100 text-green-800'
                                                 : 'bg-red-100 text-red-800'
