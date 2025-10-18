@@ -1,94 +1,39 @@
 /**
- * DashboardPage Component
- * Main dashboard showing system statistics and quick actions
+ * @file DashboardPage.jsx
+ * @description Main dashboard showing system statistics and quick actions
+ * @module pages
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
+import { useActiveAssembly } from '../hooks/useAssemblies';
+import { useMembers } from '../hooks/useMembers';
+import { useAssemblyAttendance } from '../hooks/useAttendance';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Loading from '../components/common/Loading';
 import Alert from '../components/common/Alert';
 import { USER_ROLES } from '../utils/constants';
 
+/**
+ * DashboardPage Component
+ * Displays personalized dashboard based on user role
+ */
 const DashboardPage = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [stats, setStats] = useState({
-        totalMembers: 0,
-        activeMembers: 0,
-        activeAssembly: null,
-        recentAttendance: 0
-    });
 
     const isAdministrator = user?.role === USER_ROLES.ADMINISTRATOR;
     const isRegistrar = user?.role === USER_ROLES.REGISTRAR;
 
-    useEffect(() => {
-        fetchDashboardData();
-    }, []);
+    // Fetch data using custom hooks
+    const { activeAssembly, loading: loadingAssembly } = useActiveAssembly();
+    const { pagination: totalMembersPagination } = useMembers({ page: 1, limit: 1 });
+    const { pagination: activeMembersPagination } = useMembers({ isActive: 'true', page: 1, limit: 1 });
+    const { stats: attendanceStats } = useAssemblyAttendance(activeAssembly?.assemblyId);
 
-    const fetchDashboardData = async () => {
-        try {
-            setLoading(true);
-            setError('');
-
-            // Fetch active assembly
-            let activeAssembly = null;
-            try {
-                const assemblyResponse = await api.get('/assemblies/active');
-                activeAssembly = assemblyResponse.data;
-            } catch (err) {
-                // No active assembly is not an error
-                if (err.statusCode !== 404) {
-                    throw err;
-                }
-            }
-
-            // Fetch member statistics (only for admin)
-            let totalMembers = 0;
-            let activeMembers = 0;
-            if (isAdministrator) {
-                try {
-                    const membersResponse = await api.get('/members?page=1&limit=1');
-                    totalMembers = membersResponse.pagination?.total || 0;
-
-                    const activeMembersResponse = await api.get('/members?isActive=true&page=1&limit=1');
-                    activeMembers = activeMembersResponse.pagination?.total || 0;
-                } catch (err) {
-                    console.error('Error fetching member stats:', err);
-                }
-            }
-
-            // Fetch recent attendance count if there's an active assembly
-            let recentAttendance = 0;
-            if (activeAssembly) {
-                try {
-                    const attendanceResponse = await api.get(`/attendance/assembly/${activeAssembly.assemblyId}/stats`);
-                    recentAttendance = attendanceResponse.data?.totalAttendance || 0;
-                } catch (err) {
-                    console.error('Error fetching attendance stats:', err);
-                }
-            }
-
-            setStats({
-                totalMembers,
-                activeMembers,
-                activeAssembly,
-                recentAttendance
-            });
-        } catch (err) {
-            setError(err.message || 'Error al cargar los datos del dashboard');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (loading) {
+    if (loadingAssembly) {
         return <Loading message="Cargando dashboard..." />;
     }
 
@@ -105,16 +50,12 @@ const DashboardPage = () => {
                 </p>
             </div>
 
-            {error && (
-                <Alert type="error" message={error} onClose={() => setError('')} />
-            )}
-
             {/* Active Assembly Alert */}
-            {stats.activeAssembly ? (
+            {activeAssembly ? (
                 <Alert
                     type="info"
                     title="Asamblea Activa"
-                    message={`"${stats.activeAssembly.title}" - ${new Date(stats.activeAssembly.scheduledDate).toLocaleDateString('es-CR')}`}
+                    message={`"${activeAssembly.title}" - ${new Date(activeAssembly.scheduledDate).toLocaleDateString('es-CR')}`}
                 />
             ) : (
                 isAdministrator && (
@@ -128,21 +69,13 @@ const DashboardPage = () => {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {(isAdministrator || isRegistrar) && stats.activeAssembly && (
+                {(isAdministrator || isRegistrar) && activeAssembly && (
                     <Card className="border-l-4 border-l-blue-500">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                                    Registrar Asistencia
-                                </h3>
-                                <p className="text-sm text-gray-600 mb-5">
-                                    Escanear código QR de miembros
-                                </p>
-                                <Button
-                                    onClick={() => navigate('/attendance/scan')}
-                                    variant="primary"
-                                    size="sm"
-                                >
+                                <h3 className="text-lg font-semibold text-gray-900 mb-3">Registrar Asistencia</h3>
+                                <p className="text-sm text-gray-600 mb-5">Escanear código QR de miembros</p>
+                                <Button onClick={() => navigate('/attendance/scan')} variant="primary" size="sm">
                                     Escanear QR
                                 </Button>
                             </div>
@@ -158,17 +91,9 @@ const DashboardPage = () => {
                         <Card className="border-l-4 border-l-green-500">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                        Gestionar Miembros
-                                    </h3>
-                                    <p className="text-sm text-gray-600 mb-4">
-                                        Crear, editar y administrar miembros
-                                    </p>
-                                    <Button
-                                        onClick={() => navigate('/members')}
-                                        variant="success"
-                                        size="sm"
-                                    >
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Gestionar Miembros</h3>
+                                    <p className="text-sm text-gray-600 mb-4">Crear, editar y administrar miembros</p>
+                                    <Button onClick={() => navigate('/members')} variant="success" size="sm">
                                         Ver Miembros
                                     </Button>
                                 </div>
@@ -181,17 +106,9 @@ const DashboardPage = () => {
                         <Card className="border-l-4 border-l-purple-500">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                        Asambleas
-                                    </h3>
-                                    <p className="text-sm text-gray-600 mb-4">
-                                        Crear y administrar asambleas
-                                    </p>
-                                    <Button
-                                        onClick={() => navigate('/assemblies')}
-                                        variant="secondary"
-                                        size="sm"
-                                    >
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Asambleas</h3>
+                                    <p className="text-sm text-gray-600 mb-4">Crear y administrar asambleas</p>
+                                    <Button onClick={() => navigate('/assemblies')} variant="secondary" size="sm">
                                         Ver Asambleas
                                     </Button>
                                 </div>
@@ -216,7 +133,7 @@ const DashboardPage = () => {
                             </div>
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Total Miembros</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.totalMembers}</p>
+                                <p className="text-2xl font-bold text-gray-900">{totalMembersPagination.total || 0}</p>
                             </div>
                         </div>
                     </Card>
@@ -230,7 +147,7 @@ const DashboardPage = () => {
                             </div>
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Miembros Activos</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.activeMembers}</p>
+                                <p className="text-2xl font-bold text-gray-900">{activeMembersPagination.total || 0}</p>
                             </div>
                         </div>
                     </Card>
@@ -244,9 +161,7 @@ const DashboardPage = () => {
                             </div>
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Asamblea Activa</p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {stats.activeAssembly ? '1' : '0'}
-                                </p>
+                                <p className="text-2xl font-bold text-gray-900">{activeAssembly ? '1' : '0'}</p>
                             </div>
                         </div>
                     </Card>
@@ -257,25 +172,13 @@ const DashboardPage = () => {
             {isAdministrator && (
                 <Card title="Accesos Rápidos">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                        <Button
-                            onClick={() => navigate('/members/new')}
-                            variant="outline"
-                            fullWidth
-                        >
+                        <Button onClick={() => navigate('/members/new')} variant="outline" fullWidth>
                             Nuevo Miembro
                         </Button>
-                        <Button
-                            onClick={() => navigate('/assemblies/new')}
-                            variant="outline"
-                            fullWidth
-                        >
+                        <Button onClick={() => navigate('/assemblies/new')} variant="outline" fullWidth>
                             Nueva Asamblea
                         </Button>
-                        <Button
-                            onClick={() => navigate('/reports')}
-                            variant="outline"
-                            fullWidth
-                        >
+                        <Button onClick={() => navigate('/reports')} variant="outline" fullWidth>
                             Generar Reporte
                         </Button>
                     </div>
