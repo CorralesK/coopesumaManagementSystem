@@ -10,6 +10,7 @@ export * from './useMembers';
 export * from './useAssemblies';
 export * from './useAttendance';
 export * from './useUsers';
+export * from './useReports';
 export * from './useDebounce';
 export * from './useQrScanner';
 
