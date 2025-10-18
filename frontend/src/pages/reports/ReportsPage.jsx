@@ -20,7 +20,6 @@ import Alert from '../../components/common/Alert';
 const ReportsPage = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [selectedAssembly, setSelectedAssembly] = useState('');
-    const [reportFormat, setReportFormat] = useState('pdf');
 
     // Use custom hooks
     const { assemblies, loading: loadingAssemblies } = useAssemblies({ limit: 100 });
@@ -55,13 +54,8 @@ const ReportsPage = () => {
         }
 
         try {
-            const result = await generateAttendanceReport(selectedAssembly, { format: reportFormat });
-
-            if (result.downloadUrl) {
-                // Open download URL
-                window.open(result.downloadUrl, '_blank');
-                setSuccessMessage('Reporte generado exitosamente');
-            }
+            await generateAttendanceReport(selectedAssembly);
+            setSuccessMessage('Reporte PDF descargado exitosamente');
         } catch (err) {
             // Error handled by hook
         }
@@ -83,12 +77,6 @@ const ReportsPage = () => {
         label: `${assembly.title} - ${new Date(assembly.scheduledDate).toLocaleDateString('es-CR')}`
     }));
 
-    const formatOptions = [
-        { value: 'pdf', label: 'PDF' },
-        { value: 'excel', label: 'Excel' },
-        { value: 'csv', label: 'CSV' }
-    ];
-
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -102,24 +90,15 @@ const ReportsPage = () => {
             {successMessage && <Alert type="success" message={successMessage} onClose={() => setSuccessMessage('')} />}
 
             {/* Report Generation Section */}
-            <Card title="Generar Reporte de Asistencia">
+            <Card title="Generar Reporte de Asistencia (PDF)">
                 <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Select
-                            label="Seleccionar Asamblea"
-                            value={selectedAssembly}
-                            onChange={(e) => setSelectedAssembly(e.target.value)}
-                            options={assemblyOptions}
-                            disabled={loadingAssemblies}
-                        />
-
-                        <Select
-                            label="Formato de Reporte"
-                            value={reportFormat}
-                            onChange={(e) => setReportFormat(e.target.value)}
-                            options={formatOptions}
-                        />
-                    </div>
+                    <Select
+                        label="Seleccionar Asamblea"
+                        value={selectedAssembly}
+                        onChange={(e) => setSelectedAssembly(e.target.value)}
+                        options={assemblyOptions}
+                        disabled={loadingAssemblies}
+                    />
 
                     <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
                         <div className="flex">
@@ -155,9 +134,9 @@ const ReportsPage = () => {
                             ) : (
                                 <>
                                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
-                                    Generar Reporte
+                                    Descargar Reporte PDF
                                 </>
                             )}
                         </Button>

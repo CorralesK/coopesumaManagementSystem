@@ -19,8 +19,24 @@ export const useReports = () => {
         try {
             setLoading(true);
             setError(null);
+
+            // Get the PDF file from the API
             const response = await reportService.generateAttendanceReport(assemblyId, options);
-            return response.data;
+
+            // Create a blob from the response
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+
+            // Create a temporary link and trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `reporte-asistencia-${assemblyId}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+
+            return { success: true, downloadUrl: url };
         } catch (err) {
             const errorMessage = err.response?.data?.message || 'Error al generar reporte de asistencia';
             setError(errorMessage);

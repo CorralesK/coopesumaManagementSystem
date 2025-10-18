@@ -15,6 +15,7 @@ import Table from '../../components/common/Table';
 import Pagination from '../../components/common/Pagination';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import BatchQrPrintModal from '../../components/members/BatchQrPrintModal';
 import { GRADES } from '../../utils/constants';
 
 /**
@@ -24,6 +25,7 @@ import { GRADES } from '../../utils/constants';
 const MembersListPage = () => {
     const navigate = useNavigate();
     const [successMessage, setSuccessMessage] = useState('');
+    const [showBatchQrModal, setShowBatchQrModal] = useState(false);
 
     // Use custom hooks for members management
     const {
@@ -184,6 +186,18 @@ const MembersListPage = () => {
                     <Button onClick={() => resetFilters()} variant="outline" size="md" className="whitespace-nowrap">
                         Limpiar Filtros
                     </Button>
+                    <Button
+                        onClick={() => setShowBatchQrModal(true)}
+                        variant="secondary"
+                        size="md"
+                        className="whitespace-nowrap"
+                        disabled={members.length === 0}
+                    >
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                        </svg>
+                        Imprimir QR en Lote
+                    </Button>
                 </div>
             </Card>
 
@@ -202,6 +216,14 @@ const MembersListPage = () => {
                     </>
                 )}
             </Card>
+
+            {/* Batch QR Print Modal */}
+            <BatchQrPrintModal
+                isOpen={showBatchQrModal}
+                onClose={() => setShowBatchQrModal(false)}
+                members={members}
+                filterGrade={filters.grade}
+            />
         </div>
     );
 };

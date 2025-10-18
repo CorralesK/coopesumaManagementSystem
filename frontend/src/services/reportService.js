@@ -14,7 +14,10 @@ import api from './api';
  * @returns {Promise<Object>} Report data or download URL
  */
 export const generateAttendanceReport = async (assemblyId, options = {}) => {
-    const response = await api.post(`/reports/attendance/${assemblyId}`, options);
+    const response = await api.get(`/reports/attendance/${assemblyId}`, {
+        responseType: 'blob',
+        params: options
+    });
     return response;
 };
 
