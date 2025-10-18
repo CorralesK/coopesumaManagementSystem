@@ -9,6 +9,7 @@ export * from './useApi';
 export * from './useMembers';
 export * from './useAssemblies';
 export * from './useAttendance';
+export * from './useUsers';
 export * from './useDebounce';
 export * from './useQrScanner';
 
