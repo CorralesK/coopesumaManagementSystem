@@ -14,6 +14,9 @@ import { USER_ROLES } from './utils/constants';
 import LoginPage from './pages/LoginPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 
+// Public Pages
+import MemberVerifyPage from './pages/public/MemberVerifyPage';
+
 // Main Pages
 import DashboardPage from './pages/DashboardPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
@@ -48,6 +51,7 @@ function App() {
                     <Route path="/auth/callback" element={<AuthCallbackPage />} />
                     <Route path="/auth/success" element={<AuthCallbackPage />} />
                     <Route path="/unauthorized" element={<UnauthorizedPage />} />
+                    <Route path="/verify" element={<MemberVerifyPage />} />
 
                     {/* Protected Routes with Layout */}
                     <Route

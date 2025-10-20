@@ -431,6 +431,57 @@ const verifyMemberByQr = async (req, res) => {
     }
 };
 
+/**
+ * Public verification of member by QR hash
+ * Accessible without authentication for public verification
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const publicVerifyMember = async (req, res) => {
+    try {
+        const { qr } = req.query;
+
+        if (!qr) {
+            return errorResponse(
+                res,
+                'El parámetro QR es requerido',
+                ERROR_CODES.VALIDATION_ERROR,
+                400
+            );
+        }
+
+        const member = await memberService.publicVerifyMember(qr);
+
+        return successResponse(
+            res,
+            'Miembro verificado exitosamente',
+            member
+        );
+    } catch (error) {
+        if (error.isOperational) {
+            return errorResponse(
+                res,
+                error.message,
+                error.errorCode,
+                error.statusCode
+            );
+        }
+
+        logger.error('Unexpected error in publicVerifyMember controller', {
+            error: error.message,
+            stack: error.stack
+        });
+
+        return errorResponse(
+            res,
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    }
+};
+
 module.exports = {
     getAllMembers,
     getMemberById,
@@ -440,5 +491,6 @@ module.exports = {
     generateQrCode,
     regenerateQrCode,
     generateBatchQrCodes,
-    verifyMemberByQr
+    verifyMemberByQr,
+    publicVerifyMember
 };

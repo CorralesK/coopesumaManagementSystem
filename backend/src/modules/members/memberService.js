@@ -8,7 +8,7 @@
 // Updated to fix QR code generation
 const memberRepository = require('./memberRepository');
 const userRepository = require('../users/userRepository');
-const { generateQrHash, generateQrCodeDataUrl } = require('../../utils/qrUtils');
+const { generateQrHash, generateQrCodeDataUrl, generateVerificationUrl } = require('../../utils/qrUtils');
 const { verifyInstitutionalEmail } = require('../../utils/emailVerification');
 const { USER_ROLES } = require('../../constants/roles');
 const ERROR_CODES = require('../../constants/errorCodes');
@@ -54,16 +54,19 @@ const getMemberById = async (memberId) => {
             qrHash: member.qrHash
         });
 
-        // Generate QR code image from hash
+        // Generate QR code image from hash with verification URL
         if (member.qrHash) {
             try {
-                logger.info('Generating QR code data URL');
-                const qrCodeDataUrl = await generateQrCodeDataUrl(member.qrHash);
+                logger.info('Generating QR code data URL with verification URL');
+                const verificationUrl = generateVerificationUrl(member.qrHash);
+                const qrCodeDataUrl = await generateQrCodeDataUrl(verificationUrl);
                 logger.info('QR code generated successfully', {
                     dataUrlLength: qrCodeDataUrl?.length,
-                    dataUrlPrefix: qrCodeDataUrl?.substring(0, 50)
+                    dataUrlPrefix: qrCodeDataUrl?.substring(0, 50),
+                    verificationUrl
                 });
                 member.qrCodeDataUrl = qrCodeDataUrl;
+                member.verificationUrl = verificationUrl;
             } catch (qrError) {
                 logger.warn('Failed to generate QR code for member', {
                     memberId: member.memberId,
@@ -72,6 +75,7 @@ const getMemberById = async (memberId) => {
                 });
                 // Don't fail the request if QR generation fails
                 member.qrCodeDataUrl = null;
+                member.verificationUrl = null;
             }
         } else {
             logger.warn('Member has no QR hash', { memberId: member.memberId });
@@ -444,18 +448,32 @@ const generateMemberQr = async (memberId) => {
             );
         }
 
-        // Generate QR code image from hash
-        const qrCodeDataUrl = await generateQrCodeDataUrl(member.qr_hash);
+        // Check if member has QR hash
+        if (!member.qrHash) {
+            throw new MemberError(
+                'El miembro no tiene un código QR generado',
+                ERROR_CODES.MEMBER_NOT_FOUND,
+                404
+            );
+        }
+
+        // Generate verification URL and QR code image
+        const verificationUrl = generateVerificationUrl(member.qrHash);
+        const qrCodeDataUrl = await generateQrCodeDataUrl(verificationUrl);
 
         logger.info('QR code generated for member', {
-            memberId: member.member_id
+            memberId: member.memberId,
+            verificationUrl
         });
 
         return {
-            memberId: member.member_id,
-            fullName: member.full_name,
+            memberId: member.memberId,
+            fullName: member.fullName,
             identification: member.identification,
-            qrHash: member.qr_hash,
+            grade: member.grade,
+            photoUrl: member.photoUrl,
+            qrHash: member.qrHash,
+            verificationUrl,
             qrCodeDataUrl // Base64 encoded data URL
         };
     } catch (error) {
@@ -499,11 +517,13 @@ const regenerateMemberQr = async (memberId) => {
         // Update member with new QR hash
         const updatedMember = await memberRepository.updateQrHash(memberId, qrHash);
 
-        // Generate new QR code image
-        const qrCodeDataUrl = await generateQrCodeDataUrl(qrHash);
+        // Generate verification URL and new QR code image
+        const verificationUrl = generateVerificationUrl(qrHash);
+        const qrCodeDataUrl = await generateQrCodeDataUrl(verificationUrl);
 
-        // Add QR code data URL to the member object
+        // Add QR code data URL and verification URL to the member object
         updatedMember.qrCodeDataUrl = qrCodeDataUrl;
+        updatedMember.verificationUrl = verificationUrl;
 
         logger.info('QR code regenerated for member', {
             memberId: updatedMember.member_id
@@ -619,6 +639,55 @@ const verifyMemberByQr = async (qrHash) => {
     }
 };
 
+/**
+ * Public verification of member by QR hash
+ * Accessible without authentication for public verification
+ * Returns only basic member information for privacy
+ *
+ * @param {string} qrHash - QR hash scanned
+ * @returns {Promise<Object>} Basic member information
+ * @throws {MemberError} If QR invalid
+ */
+const publicVerifyMember = async (qrHash) => {
+    try {
+        // Find member by QR hash
+        const member = await memberRepository.findByQrHash(qrHash);
+
+        if (!member) {
+            throw new MemberError(
+                'El código QR escaneado no corresponde a ningún miembro registrado en la cooperativa',
+                ERROR_CODES.INVALID_QR_CODE,
+                404
+            );
+        }
+
+        logger.info('Public member verification', {
+            memberId: member.member_id,
+            isActive: member.is_active
+        });
+
+        // Return only public information
+        return {
+            fullName: member.full_name,
+            identification: member.identification,
+            grade: member.grade,
+            photoUrl: member.photo_url,
+            isActive: member.is_active
+        };
+    } catch (error) {
+        if (error.isOperational) {
+            throw error;
+        }
+
+        logger.error('Error in public member verification:', error);
+        throw new MemberError(
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    }
+};
+
 module.exports = {
     getMemberById,
     getAllMembers,
@@ -629,5 +698,6 @@ module.exports = {
     regenerateMemberQr,
     generateBatchQrCodes,
     verifyMemberByQr,
+    publicVerifyMember,
     MemberError
 };

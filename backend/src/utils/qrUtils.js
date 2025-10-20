@@ -23,6 +23,16 @@ const generateQrHash = (identification, fullName = '') => {
 };
 
 /**
+ * Generate verification URL for QR code
+ * @param {string} qrHash - QR hash
+ * @returns {string} - Full verification URL
+ */
+const generateVerificationUrl = (qrHash) => {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    return `${frontendUrl}/verify?qr=${qrHash}`;
+};
+
+/**
  * Generate QR code image as Data URL
  * @param {string} data - Data to encode in QR
  * @returns {Promise<string>} - QR code as Data URL
@@ -65,5 +75,6 @@ const generateQrCodeBuffer = async (data) => {
 module.exports = {
     generateQrHash,
     generateQrCodeDataUrl,
-    generateQrCodeBuffer
+    generateQrCodeBuffer,
+    generateVerificationUrl
 };

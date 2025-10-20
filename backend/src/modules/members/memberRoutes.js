@@ -143,4 +143,19 @@ router.post(
     memberController.verifyMemberByQr
 );
 
+// ============================================================================
+// Public Routes
+// ============================================================================
+
+/**
+ * GET /api/members/verify
+ * Public verification of member by QR hash
+ * Used for public QR verification from scanned codes
+ * Public: No authentication required
+ */
+router.get(
+    '/verify',
+    memberController.publicVerifyMember
+);
+
 module.exports = router;

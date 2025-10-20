@@ -12,6 +12,7 @@ import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Modal from '../../components/common/Modal';
+import MemberCard from '../../components/members/MemberCard';
 
 /**
  * MemberDetailPage Component
@@ -46,15 +47,12 @@ const MemberDetailPage = () => {
         }
     };
 
-    const handleDownloadQR = () => {
-        if (member?.qrCodeDataUrl) {
-            const link = document.createElement('a');
-            link.href = member.qrCodeDataUrl;
-            link.download = `QR-${member.fullName}-${member.identification}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+    const handlePrintCard = () => {
+        setQrModalOpen(true);
+        // Wait for modal to render then print
+        setTimeout(() => {
+            window.print();
+        }, 100);
     };
 
     const formatDate = (dateString) => {
@@ -167,9 +165,7 @@ const MemberDetailPage = () => {
                             )}
 
                             <div className="mt-4 w-full space-y-2">
-                                <Button onClick={() => setQrModalOpen(true)} variant="outline" fullWidth>Ver QR Grande</Button>
-                                <Button onClick={handleDownloadQR} variant="outline" fullWidth>Descargar QR</Button>
-                                <Button onClick={() => window.print()} variant="outline" fullWidth>Imprimir QR</Button>
+                                <Button onClick={() => setQrModalOpen(true)} variant="outline" fullWidth>Ver Carnet</Button>
                                 <Button onClick={handleRegenerateQR} variant="warning" fullWidth disabled={regenerating || !member.isActive}>
                                     {regenerating ? 'Regenerando...' : 'Regenerar QR'}
                                 </Button>
@@ -187,23 +183,73 @@ const MemberDetailPage = () => {
                 </div>
             </div>
 
-            {/* QR Modal */}
-            <Modal isOpen={qrModalOpen} onClose={() => setQrModalOpen(false)} title={`Código QR - ${member.fullName}`} size="lg">
-                <div className="flex flex-col items-center">
-                    <div className="bg-white p-8 rounded-lg border-2 border-gray-200">
-                        <img src={member.qrCodeDataUrl} alt={`QR Code for ${member.fullName}`} className="w-full max-w-md" />
+            {/* Card Modal - Shows Member Card */}
+            {qrModalOpen && (
+                <Modal isOpen={qrModalOpen} onClose={() => setQrModalOpen(false)} title={`Carnet - ${member.fullName}`} size="lg">
+                    <div className="flex flex-col items-center">
+                        <div id="printable-card" className="member-card-display">
+                            <MemberCard member={member} showCutLines={true} />
+                        </div>
+                        <div className="mt-6 flex space-x-3 print-hide">
+                            <Button onClick={() => setQrModalOpen(false)} variant="outline">Cerrar</Button>
+                            <Button onClick={() => window.print()} variant="primary">Imprimir Carnet</Button>
+                        </div>
                     </div>
-                    <div className="mt-6 text-center">
-                        <p className="text-lg font-medium text-gray-900">{member.fullName}</p>
-                        <p className="text-sm text-gray-600">Grado: {member.grade}°</p>
-                        <p className="text-xs text-gray-500 mt-2 font-mono">{member.qrHash}</p>
-                    </div>
-                    <div className="mt-6 flex space-x-3">
-                        <Button onClick={handleDownloadQR} variant="primary">Descargar</Button>
-                        <Button onClick={() => window.print()} variant="outline">Imprimir</Button>
-                    </div>
-                </div>
-            </Modal>
+                </Modal>
+            )}
+
+            {/* Print Styles */}
+            <style>{`
+                .member-card-display {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 20px;
+                }
+
+                @media print {
+                    @page {
+                        size: A4 portrait;
+                        margin: 10mm;
+                    }
+
+                    html, body {
+                        width: 210mm;
+                        height: 297mm;
+                        margin: 0;
+                        padding: 0;
+                        overflow: hidden;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+
+                    body * {
+                        visibility: hidden;
+                    }
+
+                    #printable-card,
+                    #printable-card * {
+                        visibility: visible;
+                    }
+
+                    #printable-card {
+                        position: fixed;
+                        left: 50%;
+                        top: 50%;
+                        transform: translate(-50%, -50%);
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    .print-hide {
+                        display: none !important;
+                    }
+
+                    .member-card-display {
+                        padding: 0;
+                    }
+                }
+            `}</style>
         </div>
     );
 };
