@@ -35,7 +35,7 @@ const AssembliesListPage = () => {
         try {
             await activate(assemblyId);
             setSuccessMessage('Asamblea activada exitosamente');
-            refetch();
+            await refetch();
         } catch (err) {
             // Error handled by hook
         }
@@ -49,7 +49,7 @@ const AssembliesListPage = () => {
         try {
             await deactivate(assemblyId);
             setSuccessMessage('Asamblea desactivada exitosamente');
-            refetch();
+            await refetch();
         } catch (err) {
             // Error handled by hook
         }
@@ -63,7 +63,7 @@ const AssembliesListPage = () => {
         try {
             await remove(assemblyId);
             setSuccessMessage('Asamblea eliminada exitosamente');
-            refetch();
+            await refetch();
         } catch (err) {
             // Error handled by hook
         }
@@ -83,14 +83,7 @@ const AssembliesListPage = () => {
         {
             key: 'title',
             label: 'Título',
-            render: (assembly) => (
-                <div>
-                    <p className="font-medium text-gray-900">{assembly.title}</p>
-                    {assembly.description && (
-                        <p className="text-sm text-gray-500 truncate max-w-xs">{assembly.description}</p>
-                    )}
-                </div>
-            )
+            render: (assembly) => assembly.title
         },
         {
             key: 'scheduledDate',
@@ -98,25 +91,17 @@ const AssembliesListPage = () => {
             render: (assembly) => formatDate(assembly.scheduledDate)
         },
         {
-            key: 'location',
-            label: 'Ubicación',
-            render: (assembly) => assembly.location || 'No especificada'
-        },
-        {
-            key: 'status',
+            key: 'isActive',
             label: 'Estado',
             render: (assembly) => {
-                const statusConfig = {
-                    ACTIVE: { label: 'Activa', class: 'bg-green-100 text-green-800' },
-                    SCHEDULED: { label: 'Programada', class: 'bg-blue-100 text-blue-800' },
-                    COMPLETED: { label: 'Completada', class: 'bg-gray-100 text-gray-800' },
-                    CANCELLED: { label: 'Cancelada', class: 'bg-red-100 text-red-800' }
-                };
-                const config = statusConfig[assembly.status] || { label: assembly.status, class: 'bg-gray-100 text-gray-800' };
+                const isActive = assembly.isActive;
+                const statusConfig = isActive
+                    ? { label: 'Activa', class: 'bg-green-100 text-green-800' }
+                    : { label: 'Inactiva', class: 'bg-gray-100 text-gray-800' };
 
                 return (
-                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${config.class}`}>
-                        {config.label}
+                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${statusConfig.class}`}>
+                        {statusConfig.label}
                     </span>
                 );
             }
@@ -140,7 +125,7 @@ const AssembliesListPage = () => {
                     >
                         Editar
                     </Button>
-                    {assembly.status === 'SCHEDULED' && (
+                    {!assembly.isActive && (
                         <Button
                             onClick={() => handleActivate(assembly.assemblyId)}
                             variant="success"
@@ -150,7 +135,7 @@ const AssembliesListPage = () => {
                             Activar
                         </Button>
                     )}
-                    {assembly.status === 'ACTIVE' && (
+                    {assembly.isActive && (
                         <Button
                             onClick={() => handleDeactivate(assembly.assemblyId)}
                             variant="warning"
@@ -160,7 +145,7 @@ const AssembliesListPage = () => {
                             Desactivar
                         </Button>
                     )}
-                    {assembly.status === 'SCHEDULED' && (
+                    {!assembly.isActive && (
                         <Button
                             onClick={() => handleDelete(assembly.assemblyId)}
                             variant="danger"

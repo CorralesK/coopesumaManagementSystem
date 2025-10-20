@@ -29,9 +29,7 @@ const AssemblyFormPage = () => {
     // Form state
     const [formData, setFormData] = useState({
         title: '',
-        description: '',
-        scheduledDate: '',
-        location: ''
+        scheduledDate: ''
     });
     const [errors, setErrors] = useState({});
     const [formError, setFormError] = useState('');
@@ -41,9 +39,7 @@ const AssemblyFormPage = () => {
         if (assembly && isEditMode) {
             setFormData({
                 title: assembly.title || '',
-                description: assembly.description || '',
-                scheduledDate: assembly.scheduledDate ? assembly.scheduledDate.split('T')[0] : '',
-                location: assembly.location || ''
+                scheduledDate: assembly.scheduledDate ? assembly.scheduledDate.split('T')[0] : ''
             });
         }
     }, [assembly, isEditMode]);
@@ -79,10 +75,6 @@ const AssemblyFormPage = () => {
             }
         }
 
-        if (!formData.location.trim()) {
-            newErrors.location = 'La ubicación es requerida';
-        }
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -101,9 +93,7 @@ const AssemblyFormPage = () => {
 
             const payload = {
                 title: formData.title.trim(),
-                description: formData.description.trim(),
-                scheduledDate: new Date(formData.scheduledDate).toISOString(),
-                location: formData.location.trim()
+                scheduledDate: new Date(formData.scheduledDate).toISOString()
             };
 
             if (isEditMode) {
@@ -152,23 +142,6 @@ const AssemblyFormPage = () => {
                         placeholder="Ej: Asamblea Mensual - Enero 2025"
                     />
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Descripción
-                        </label>
-                        <textarea
-                            name="description"
-                            value={formData.description}
-                            onChange={handleInputChange}
-                            rows={4}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Descripción de la asamblea..."
-                        />
-                        {errors.description && (
-                            <p className="mt-1 text-sm text-red-600">{errors.description}</p>
-                        )}
-                    </div>
-
                     <Input
                         label="Fecha Programada"
                         name="scheduledDate"
@@ -177,16 +150,6 @@ const AssemblyFormPage = () => {
                         onChange={handleInputChange}
                         error={errors.scheduledDate}
                         required
-                    />
-
-                    <Input
-                        label="Ubicación"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleInputChange}
-                        error={errors.location}
-                        required
-                        placeholder="Ej: Aula Principal - Sede San Carlos"
                     />
 
                     {/* Info Box */}

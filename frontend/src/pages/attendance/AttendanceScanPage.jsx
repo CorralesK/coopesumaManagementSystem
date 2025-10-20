@@ -190,7 +190,6 @@ const AttendanceScanPage = () => {
                             <div className="text-sm text-gray-600 space-y-1">
                                 <p><strong>Título:</strong> {activeAssembly.title}</p>
                                 <p><strong>Fecha:</strong> {new Date(activeAssembly.scheduledDate).toLocaleDateString('es-CR')}</p>
-                                <p><strong>Ubicación:</strong> {activeAssembly.location}</p>
                             </div>
                         </div>
                     </div>
