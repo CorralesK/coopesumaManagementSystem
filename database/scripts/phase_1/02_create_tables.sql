@@ -92,15 +92,10 @@ COMMENT ON COLUMN members.updated_at IS 'Fecha y hora de última actualización 
 CREATE TABLE assemblies (
     assembly_id SERIAL PRIMARY KEY,
     title VARCHAR(150) NOT NULL,
-    description TEXT,
     scheduled_date DATE NOT NULL,
     start_time TIME,
     end_time TIME,
-    location VARCHAR(255),
     is_active BOOLEAN DEFAULT false NOT NULL,
-    is_recurring BOOLEAN DEFAULT false NOT NULL,
-    recurrence_pattern VARCHAR(20) DEFAULT 'none' NOT NULL
-        CHECK (recurrence_pattern IN ('weekly', 'monthly', 'none')),
     created_by INTEGER NOT NULL REFERENCES users(user_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -108,24 +103,16 @@ CREATE TABLE assemblies (
     CONSTRAINT chk_title_not_empty CHECK (TRIM(title) != ''),
     CONSTRAINT chk_time_range CHECK (
         end_time IS NULL OR start_time IS NULL OR end_time > start_time
-    ),
-    CONSTRAINT chk_recurring_pattern CHECK (
-        (is_recurring = false AND recurrence_pattern = 'none') OR
-        (is_recurring = true AND recurrence_pattern IN ('weekly', 'monthly'))
     )
 );
 
 COMMENT ON TABLE assemblies IS 'Asambleas de la cooperativa (solo una activa a la vez)';
 COMMENT ON COLUMN assemblies.assembly_id IS 'ID único de la asamblea (clave primaria)';
 COMMENT ON COLUMN assemblies.title IS 'Título de la asamblea';
-COMMENT ON COLUMN assemblies.description IS 'Descripción detallada de la asamblea';
 COMMENT ON COLUMN assemblies.scheduled_date IS 'Fecha programada de la asamblea';
 COMMENT ON COLUMN assemblies.start_time IS 'Hora de inicio de la asamblea';
 COMMENT ON COLUMN assemblies.end_time IS 'Hora de finalización de la asamblea';
-COMMENT ON COLUMN assemblies.location IS 'Ubicación física de la asamblea';
 COMMENT ON COLUMN assemblies.is_active IS 'Indica si es la asamblea activa actual (solo una permitida)';
-COMMENT ON COLUMN assemblies.is_recurring IS 'Indica si la asamblea es recurrente';
-COMMENT ON COLUMN assemblies.recurrence_pattern IS 'Patrón de recurrencia: weekly, monthly o none';
 COMMENT ON COLUMN assemblies.created_by IS 'ID del usuario que creó la asamblea';
 COMMENT ON COLUMN assemblies.created_at IS 'Fecha y hora de creación del registro';
 COMMENT ON COLUMN assemblies.updated_at IS 'Fecha y hora de última actualización del registro';

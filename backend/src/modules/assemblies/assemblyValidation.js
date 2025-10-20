@@ -23,15 +23,6 @@ const createAssemblySchema = Joi.object({
             'any.required': 'El título es requerido'
         }),
 
-    description: Joi.string()
-        .trim()
-        .max(1000)
-        .optional()
-        .allow('', null)
-        .messages({
-            'string.max': 'La descripción no puede exceder 1000 caracteres'
-        }),
-
     scheduledDate: Joi.date()
         .required()
         .messages({
@@ -53,30 +44,8 @@ const createAssemblySchema = Joi.object({
         .allow('', null)
         .messages({
             'string.pattern.base': 'La hora de fin debe estar en formato HH:MM (24 horas)'
-        }),
-
-    isRecurring: Joi.boolean()
-        .optional()
-        .default(false)
-        .messages({
-            'boolean.base': 'isRecurring debe ser un valor booleano'
-        }),
-
-    recurrencePattern: Joi.string()
-        .valid('none', 'weekly', 'monthly')
-        .optional()
-        .default('none')
-        .messages({
-            'any.only': 'El patrón de recurrencia debe ser: none, weekly o monthly'
         })
 }).custom((value, helpers) => {
-    // If isRecurring is true, recurrencePattern must not be 'none'
-    if (value.isRecurring === true && value.recurrencePattern === 'none') {
-        return helpers.error('custom.recurringPattern', {
-            message: 'Si la asamblea es recurrente, debe especificar un patrón de recurrencia (weekly o monthly)'
-        });
-    }
-
     // If endTime is provided, it must be after startTime
     if (value.startTime && value.endTime && value.endTime <= value.startTime) {
         return helpers.error('custom.timeRange', {
@@ -102,15 +71,6 @@ const updateAssemblySchema = Joi.object({
             'string.max': 'El título no puede exceder 150 caracteres'
         }),
 
-    description: Joi.string()
-        .trim()
-        .max(1000)
-        .optional()
-        .allow('', null)
-        .messages({
-            'string.max': 'La descripción no puede exceder 1000 caracteres'
-        }),
-
     scheduledDate: Joi.date()
         .optional()
         .messages({
@@ -131,28 +91,8 @@ const updateAssemblySchema = Joi.object({
         .allow('', null)
         .messages({
             'string.pattern.base': 'La hora de fin debe estar en formato HH:MM (24 horas)'
-        }),
-
-    isRecurring: Joi.boolean()
-        .optional()
-        .messages({
-            'boolean.base': 'isRecurring debe ser un valor booleano'
-        }),
-
-    recurrencePattern: Joi.string()
-        .valid('none', 'weekly', 'monthly')
-        .optional()
-        .messages({
-            'any.only': 'El patrón de recurrencia debe ser: none, weekly o monthly'
         })
 }).min(1).custom((value, helpers) => {
-    // If isRecurring is true, recurrencePattern must not be 'none'
-    if (value.isRecurring === true && value.recurrencePattern === 'none') {
-        return helpers.error('custom.recurringPattern', {
-            message: 'Si la asamblea es recurrente, debe especificar un patrón de recurrencia (weekly o monthly)'
-        });
-    }
-
     // If endTime is provided, it must be after startTime
     if (value.startTime && value.endTime && value.endTime <= value.startTime) {
         return helpers.error('custom.timeRange', {

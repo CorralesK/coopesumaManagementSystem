@@ -20,13 +20,10 @@ const findById = async (assemblyId) => {
             SELECT
                 assembly_id,
                 title,
-                description,
                 scheduled_date,
                 start_time,
                 end_time,
                 is_active,
-                is_recurring,
-                recurrence_pattern,
                 created_by,
                 created_at,
                 updated_at
@@ -54,13 +51,10 @@ const findActive = async () => {
             SELECT
                 assembly_id,
                 title,
-                description,
                 scheduled_date,
                 start_time,
                 end_time,
                 is_active,
-                is_recurring,
-                recurrence_pattern,
                 created_by,
                 created_at,
                 updated_at
@@ -89,13 +83,10 @@ const findAll = async (filters = {}) => {
             SELECT
                 assembly_id,
                 title,
-                description,
                 scheduled_date,
                 start_time,
                 end_time,
                 is_active,
-                is_recurring,
-                recurrence_pattern,
                 created_by,
                 created_at,
                 updated_at
@@ -109,12 +100,6 @@ const findAll = async (filters = {}) => {
         if (filters.isActive !== undefined) {
             query += ` AND is_active = $${paramIndex}`;
             params.push(filters.isActive);
-            paramIndex++;
-        }
-
-        if (filters.isRecurring !== undefined) {
-            query += ` AND is_recurring = $${paramIndex}`;
-            params.push(filters.isRecurring);
             paramIndex++;
         }
 
@@ -177,12 +162,6 @@ const count = async (filters = {}) => {
             paramIndex++;
         }
 
-        if (filters.isRecurring !== undefined) {
-            query += ` AND is_recurring = $${paramIndex}`;
-            params.push(filters.isRecurring);
-            paramIndex++;
-        }
-
         if (filters.fromDate) {
             query += ` AND scheduled_date >= $${paramIndex}`;
             params.push(filters.fromDate);
@@ -219,39 +198,30 @@ const create = async (assemblyData) => {
         const query = `
             INSERT INTO assemblies (
                 title,
-                description,
                 scheduled_date,
                 start_time,
                 end_time,
                 is_active,
-                is_recurring,
-                recurrence_pattern,
                 created_by
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING
                 assembly_id,
                 title,
-                description,
                 scheduled_date,
                 start_time,
                 end_time,
                 is_active,
-                is_recurring,
-                recurrence_pattern,
                 created_by,
                 created_at
         `;
 
         const values = [
             assemblyData.title,
-            assemblyData.description || null,
             assemblyData.scheduledDate,
             assemblyData.startTime || null,
             assemblyData.endTime || null,
             assemblyData.isActive !== undefined ? assemblyData.isActive : false,
-            assemblyData.isRecurring !== undefined ? assemblyData.isRecurring : false,
-            assemblyData.recurrencePattern || 'none',
             assemblyData.createdBy
         ];
 
@@ -274,13 +244,10 @@ const update = async (assemblyId, updates) => {
     try {
         const allowedFields = [
             'title',
-            'description',
             'scheduled_date',
             'start_time',
             'end_time',
-            'is_active',
-            'is_recurring',
-            'recurrence_pattern'
+            'is_active'
         ];
         const fields = Object.keys(updates).filter(key => allowedFields.includes(key));
 
@@ -298,13 +265,10 @@ const update = async (assemblyId, updates) => {
             RETURNING
                 assembly_id,
                 title,
-                description,
                 scheduled_date,
                 start_time,
                 end_time,
                 is_active,
-                is_recurring,
-                recurrence_pattern,
                 created_by,
                 updated_at
         `;
@@ -333,13 +297,10 @@ const activate = async (assemblyId) => {
             RETURNING
                 assembly_id,
                 title,
-                description,
                 scheduled_date,
                 start_time,
                 end_time,
                 is_active,
-                is_recurring,
-                recurrence_pattern,
                 created_by,
                 updated_at
         `;
@@ -391,13 +352,10 @@ const findByIdWithStats = async (assemblyId) => {
             SELECT
                 a.assembly_id,
                 a.title,
-                a.description,
                 a.scheduled_date,
                 a.start_time,
                 a.end_time,
                 a.is_active,
-                a.is_recurring,
-                a.recurrence_pattern,
                 a.created_by,
                 a.created_at,
                 a.updated_at,
@@ -427,13 +385,10 @@ const findActiveWithStats = async () => {
             SELECT
                 a.assembly_id,
                 a.title,
-                a.description,
                 a.scheduled_date,
                 a.start_time,
                 a.end_time,
                 a.is_active,
-                a.is_recurring,
-                a.recurrence_pattern,
                 a.created_by,
                 a.created_at,
                 a.updated_at,

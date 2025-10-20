@@ -22,7 +22,6 @@ const getAllAssemblies = async (req, res) => {
     try {
         const filters = {
             isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : undefined,
-            isRecurring: req.query.isRecurring !== undefined ? req.query.isRecurring === 'true' : undefined,
             fromDate: req.query.fromDate,
             toDate: req.query.toDate,
             createdBy: req.query.createdBy,
@@ -159,12 +158,9 @@ const createAssembly = async (req, res) => {
     try {
         const assemblyData = {
             title: req.body.title,
-            description: req.body.description,
             scheduledDate: req.body.scheduledDate,
             startTime: req.body.startTime,
-            endTime: req.body.endTime,
-            isRecurring: req.body.isRecurring,
-            recurrencePattern: req.body.recurrencePattern
+            endTime: req.body.endTime
         };
 
         const newAssembly = await assemblyService.createAssembly(
@@ -214,12 +210,9 @@ const updateAssembly = async (req, res) => {
 
         const updates = {
             title: req.body.title,
-            description: req.body.description,
             scheduledDate: req.body.scheduledDate,
             startTime: req.body.startTime,
-            endTime: req.body.endTime,
-            isRecurring: req.body.isRecurring,
-            recurrencePattern: req.body.recurrencePattern
+            endTime: req.body.endTime
         };
 
         // Remove undefined fields

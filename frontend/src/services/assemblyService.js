@@ -43,9 +43,7 @@ export const getActiveAssembly = async () => {
  * Create a new assembly
  * @param {Object} assemblyData - Assembly data
  * @param {string} assemblyData.title - Assembly title
- * @param {string} assemblyData.description - Assembly description
  * @param {string} assemblyData.scheduledDate - Scheduled date (ISO format)
- * @param {string} assemblyData.location - Location
  * @returns {Promise<Object>} Created assembly data
  */
 export const createAssembly = async (assemblyData) => {
