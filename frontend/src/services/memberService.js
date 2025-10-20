@@ -96,3 +96,13 @@ export const batchGenerateQRCodes = async (memberIds) => {
     const response = await api.post('/members/qr/batch', { memberIds });
     return response;
 };
+
+/**
+ * Verify member by QR hash (for attendance confirmation)
+ * @param {string} qrHash - QR hash to verify
+ * @returns {Promise<Object>} Member data
+ */
+export const verifyMemberByQR = async (qrHash) => {
+    const response = await api.post('/members/qr/verify', { qrHash });
+    return response;
+};

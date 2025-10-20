@@ -611,7 +611,7 @@ const verifyMemberByQr = async (qrHash) => {
         }
 
         // Check if member is active
-        if (!member.is_active) {
+        if (!member.isActive) {
             throw new MemberError(
                 MESSAGES.MEMBER_INACTIVE,
                 ERROR_CODES.MEMBER_INACTIVE,
