@@ -172,7 +172,6 @@ const getAllAssemblies = async (filters = {}) => {
 
         const queryFilters = {
             isActive: filters.isActive,
-            isRecurring: filters.isRecurring,
             fromDate: filters.fromDate,
             toDate: filters.toDate,
             createdBy: filters.createdBy,
@@ -310,7 +309,7 @@ const deleteAssembly = async (assemblyId) => {
         }
 
         // Don't allow deleting active assembly
-        if (assembly.is_active) {
+        if (assembly.isActive) {
             throw new AssemblyError(
                 'No se puede eliminar una asamblea activa. Desactívela primero.',
                 ERROR_CODES.BAD_REQUEST,
@@ -363,7 +362,7 @@ const activateAssembly = async (assemblyId) => {
         }
 
         // Check if already active
-        if (assembly.is_active) {
+        if (assembly.isActive) {
             logger.info('Assembly is already active', { assemblyId });
             return assembly;
         }
@@ -412,7 +411,7 @@ const deactivateAssembly = async (assemblyId) => {
         }
 
         // Check if already inactive
-        if (!assembly.is_active) {
+        if (!assembly.isActive) {
             logger.info('Assembly is already inactive', { assemblyId });
             return assembly;
         }
