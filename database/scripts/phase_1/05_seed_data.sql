@@ -46,43 +46,43 @@ INSERT INTO users (full_name, email, microsoft_id, role, is_active) VALUES
 -- ============================================================================
 -- DATOS DE PRUEBA: members
 -- ============================================================================
--- Miembros estudiantiles de diferentes grados y secciones
+-- Miembros estudiantiles de diferentes grados
 -- QR hash generado de forma simple para testing (en producción se genera con crypto)
 -- ============================================================================
 
-INSERT INTO members (full_name, identification, grade, section, qr_hash, is_active) VALUES
+INSERT INTO members (full_name, identification, grade, qr_hash, is_active) VALUES
 -- Primer grado
-('Juan Pérez Rodríguez', '1-0234-0567', '1', 'A', 'qr_hash_juan_perez_001', true),
-('María González López', '1-0345-0678', '1', 'A', 'qr_hash_maria_gonzalez_002', true),
-('Carlos Mora Jiménez', '1-0456-0789', '1', 'B', 'qr_hash_carlos_mora_003', true),
+('Juan Pérez Rodríguez', '1-0234-0567', '1', 'qr_hash_juan_perez_001', true),
+('María González López', '1-0345-0678', '1', 'qr_hash_maria_gonzalez_002', true),
+('Carlos Mora Jiménez', '1-0456-0789', '1', 'qr_hash_carlos_mora_003', true),
 
 -- Segundo grado
-('Ana Ramírez Castro', '2-0123-0456', '2', 'A', 'qr_hash_ana_ramirez_004', true),
-('Pedro Sánchez Vargas', '2-0234-0567', '2', 'A', 'qr_hash_pedro_sanchez_005', true),
-('Laura Fernández Rojas', '2-0345-0678', '2', 'B', 'qr_hash_laura_fernandez_006', true),
+('Ana Ramírez Castro', '2-0123-0456', '2', 'qr_hash_ana_ramirez_004', true),
+('Pedro Sánchez Vargas', '2-0234-0567', '2', 'qr_hash_pedro_sanchez_005', true),
+('Laura Fernández Rojas', '2-0345-0678', '2', 'qr_hash_laura_fernandez_006', true),
 
 -- Tercer grado
-('Diego Hernández Solís', '3-0456-0789', '3', 'A', 'qr_hash_diego_hernandez_007', true),
-('Sofia Martínez Gómez', '3-0567-0890', '3', 'A', 'qr_hash_sofia_martinez_008', true),
-('Luis Castro Méndez', '3-0678-0901', '3', 'B', 'qr_hash_luis_castro_009', true),
+('Diego Hernández Solís', '3-0456-0789', '3', 'qr_hash_diego_hernandez_007', true),
+('Sofia Martínez Gómez', '3-0567-0890', '3', 'qr_hash_sofia_martinez_008', true),
+('Luis Castro Méndez', '3-0678-0901', '3', 'qr_hash_luis_castro_009', true),
 
 -- Cuarto grado
-('Gabriela Ruiz Navarro', '4-0789-0123', '4', 'A', 'qr_hash_gabriela_ruiz_010', true),
-('Miguel Ángel Vega Cruz', '4-0890-0234', '4', 'A', 'qr_hash_miguel_vega_011', true),
-('Daniela Torres Mora', '4-0901-0345', '4', 'B', 'qr_hash_daniela_torres_012', true),
+('Gabriela Ruiz Navarro', '4-0789-0123', '4', 'qr_hash_gabriela_ruiz_010', true),
+('Miguel Ángel Vega Cruz', '4-0890-0234', '4', 'qr_hash_miguel_vega_011', true),
+('Daniela Torres Mora', '4-0901-0345', '4', 'qr_hash_daniela_torres_012', true),
 
 -- Quinto grado
-('Andrés López Arias', '5-0123-0789', '5', 'A', 'qr_hash_andres_lopez_013', true),
-('Camila Jiménez Rojas', '5-0234-0890', '5', 'A', 'qr_hash_camila_jimenez_014', true),
-('Sebastián Vargas Luna', '5-0345-0901', '5', 'B', 'qr_hash_sebastian_vargas_015', true),
+('Andrés López Arias', '5-0123-0789', '5', 'qr_hash_andres_lopez_013', true),
+('Camila Jiménez Rojas', '5-0234-0890', '5', 'qr_hash_camila_jimenez_014', true),
+('Sebastián Vargas Luna', '5-0345-0901', '5', 'qr_hash_sebastian_vargas_015', true),
 
 -- Sexto grado
-('Valeria Chaves Mata', '6-0456-0123', '6', 'A', 'qr_hash_valeria_chaves_016', true),
-('Mateo Rojas Solano', '6-0567-0234', '6', 'A', 'qr_hash_mateo_rojas_017', true),
-('Isabella Mora Quesada', '6-0678-0345', '6', 'B', 'qr_hash_isabella_mora_018', true),
+('Valeria Chaves Mata', '6-0456-0123', '6', 'qr_hash_valeria_chaves_016', true),
+('Mateo Rojas Solano', '6-0567-0234', '6', 'qr_hash_mateo_rojas_017', true),
+('Isabella Mora Quesada', '6-0678-0345', '6', 'qr_hash_isabella_mora_018', true),
 
 -- Miembro inactivo (para testing soft delete)
-('Estudiante Inactivo Test', '1-9999-9999', '3', 'A', 'qr_hash_inactive_test_019', false);
+('Estudiante Inactivo Test', '1-9999-9999', '3', 'qr_hash_inactive_test_019', false);
 
 -- ============================================================================
 -- DATOS DE PRUEBA: assemblies
@@ -92,68 +92,48 @@ INSERT INTO members (full_name, identification, grade, section, qr_hash, is_acti
 
 INSERT INTO assemblies (
     title,
-    description,
     scheduled_date,
     start_time,
     end_time,
-    location,
     is_active,
-    is_recurring,
-    recurrence_pattern,
     created_by
 ) VALUES
 -- Asamblea activa (solo puede haber una)
 (
     'Asamblea Mensual de Noviembre 2025',
-    'Asamblea ordinaria mensual de la cooperativa CoopeSuma',
     '2025-11-15',
     '09:00:00',
     '11:00:00',
-    'Aula Magna',
     true,
-    false,
-    'none',
     1  -- Creada por Admin de Prueba
 ),
 
 -- Asambleas pasadas (inactivas)
 (
     'Asamblea Mensual de Octubre 2025',
-    'Asamblea ordinaria mensual de octubre',
     '2025-10-15',
     '09:00:00',
     '11:00:00',
-    'Aula Magna',
     false,
-    false,
-    'none',
     1
 ),
 
 (
     'Asamblea Mensual de Septiembre 2025',
-    'Asamblea ordinaria mensual de septiembre - Primera asamblea del ciclo escolar',
     '2025-09-15',
     '09:00:00',
     '11:00:00',
-    'Aula Magna',
     false,
-    false,
-    'none',
     1
 ),
 
 -- Asamblea futura (inactiva)
 (
     'Asamblea Mensual de Diciembre 2025',
-    'Asamblea ordinaria mensual de diciembre - Cierre del año',
     '2025-12-15',
     '09:00:00',
     '11:00:00',
-    'Aula Magna',
     false,
-    true,
-    'monthly',
     1
 );
 
@@ -205,7 +185,7 @@ INSERT INTO attendance_records (
 -- Resumen de datos de prueba insertados:
 -- - 3 usuarios (1 administrator, 1 registrar, 1 treasurer)
 -- - 19 miembros (18 activos, 1 inactivo)
---   * Distribuidos en grados 1-6 y secciones A-B
+--   * Distribuidos en grados 1-6
 -- - 4 asambleas (1 activa, 3 inactivas)
 -- - 20 registros de asistencia
 --
