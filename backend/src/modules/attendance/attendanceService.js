@@ -360,6 +360,43 @@ const deleteAttendance = async (attendanceId) => {
  * @param {number} assemblyId - Assembly ID
  * @returns {Promise<Object>} Attendance statistics
  */
+/**
+ * Get all attendance records for an assembly
+ *
+ * @param {number} assemblyId - Assembly ID
+ * @returns {Promise<Array>} Attendance records with member info
+ */
+const getAssemblyAttendance = async (assemblyId) => {
+    try {
+        // Verify assembly exists
+        const assembly = await assemblyRepository.findById(assemblyId);
+
+        if (!assembly) {
+            throw new AttendanceError(
+                MESSAGES.ASSEMBLY_NOT_FOUND,
+                ERROR_CODES.ASSEMBLY_NOT_FOUND,
+                404
+            );
+        }
+
+        // Get all attendance records for this assembly
+        const attendance = await attendanceRepository.findByAssembly(assemblyId);
+
+        return attendance;
+    } catch (error) {
+        if (error.isOperational) {
+            throw error;
+        }
+
+        logger.error('Error getting assembly attendance:', error);
+        throw new AttendanceError(
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    }
+};
+
 const getAssemblyAttendanceStats = async (assemblyId) => {
     try {
         // Verify assembly exists
@@ -454,6 +491,7 @@ module.exports = {
     getAttendanceById,
     getAllAttendance,
     deleteAttendance,
+    getAssemblyAttendance,
     getAssemblyAttendanceStats,
     getMemberAttendanceHistory,
     AttendanceError

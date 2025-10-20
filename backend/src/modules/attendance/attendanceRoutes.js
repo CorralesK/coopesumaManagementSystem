@@ -99,6 +99,22 @@ router.get(
 );
 
 /**
+ * GET /api/attendance/assembly/:assemblyId
+ * Get attendance records for a specific assembly
+ * Protected: Requires authentication
+ * Accessible by: All authenticated users
+ *
+ * Response: List of attendance records for the assembly
+ *
+ * IMPORTANT: This route must be before /:id to avoid route conflicts
+ */
+router.get(
+    '/assembly/:assemblyId',
+    authMiddleware,
+    attendanceController.getAssemblyAttendance
+);
+
+/**
  * GET /api/attendance/assembly/:assemblyId/stats
  * Get attendance statistics for a specific assembly
  * Protected: Requires authentication

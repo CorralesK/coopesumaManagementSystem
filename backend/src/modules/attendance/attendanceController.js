@@ -256,6 +256,48 @@ const deleteAttendance = async (req, res) => {
 };
 
 /**
+ * Get attendance records for an assembly
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const getAssemblyAttendance = async (req, res) => {
+    try {
+        const { assemblyId } = req.params;
+        const attendance = await attendanceService.getAssemblyAttendance(
+            parseInt(assemblyId, 10)
+        );
+
+        return successResponse(
+            res,
+            'Registros de asistencia obtenidos exitosamente',
+            attendance
+        );
+    } catch (error) {
+        if (error.isOperational) {
+            return errorResponse(
+                res,
+                error.message,
+                error.errorCode,
+                error.statusCode
+            );
+        }
+
+        logger.error('Unexpected error in getAssemblyAttendance controller', {
+            error: error.message,
+            stack: error.stack
+        });
+
+        return errorResponse(
+            res,
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    }
+};
+
+/**
  * Get attendance statistics for an assembly
  *
  * @param {Object} req - Express request object
@@ -348,6 +390,7 @@ module.exports = {
     getAllAttendance,
     getAttendanceById,
     deleteAttendance,
+    getAssemblyAttendance,
     getAssemblyStats,
     getMemberHistory
 };

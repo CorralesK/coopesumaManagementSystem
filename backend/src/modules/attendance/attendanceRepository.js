@@ -77,6 +77,40 @@ const findByMemberAndAssembly = async (memberId, assemblyId) => {
 };
 
 /**
+ * Find all attendance records for an assembly
+ *
+ * @param {number} assemblyId - Assembly ID
+ * @returns {Promise<Array>} Array of attendance objects with member info
+ */
+const findByAssembly = async (assemblyId) => {
+    try {
+        const query = `
+            SELECT
+                ar.attendance_id,
+                ar.member_id,
+                ar.assembly_id,
+                ar.registered_at AS recorded_at,
+                ar.registered_by,
+                ar.registration_method,
+                ar.notes,
+                m.full_name,
+                m.identification,
+                m.grade
+            FROM attendance_records ar
+            JOIN members m ON ar.member_id = m.member_id
+            WHERE ar.assembly_id = $1
+            ORDER BY ar.registered_at DESC
+        `;
+
+        const result = await db.query(query, [assemblyId]);
+        return result.rows;
+    } catch (error) {
+        logger.error('Error finding attendance by assembly:', error);
+        throw error;
+    }
+};
+
+/**
  * Find all attendance records with optional filters
  *
  * @param {Object} filters - Filter criteria
@@ -404,6 +438,7 @@ const getMemberAttendanceHistory = async (memberId, limit = 10) => {
 module.exports = {
     findById,
     findByMemberAndAssembly,
+    findByAssembly,
     findAll,
     count,
     create,
