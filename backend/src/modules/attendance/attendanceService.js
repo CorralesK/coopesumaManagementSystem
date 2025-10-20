@@ -59,7 +59,7 @@ const registerAttendanceByQr = async (qrHash, userId) => {
         }
 
         // Step 3: Check if member is active
-        if (!member.is_active) {
+        if (!member.isActive) {
             throw new AttendanceError(
                 MESSAGES.MEMBER_INACTIVE,
                 ERROR_CODES.MEMBER_INACTIVE,
@@ -69,8 +69,8 @@ const registerAttendanceByQr = async (qrHash, userId) => {
 
         // Step 4: Check if attendance already registered
         const existingAttendance = await attendanceRepository.findByMemberAndAssembly(
-            member.member_id,
-            activeAssembly.assembly_id
+            member.memberId,
+            activeAssembly.assemblyId
         );
 
         if (existingAttendance) {
@@ -83,34 +83,33 @@ const registerAttendanceByQr = async (qrHash, userId) => {
 
         // Step 5: Register attendance
         const attendance = await attendanceRepository.create({
-            memberId: member.member_id,
-            assemblyId: activeAssembly.assembly_id,
+            memberId: member.memberId,
+            assemblyId: activeAssembly.assemblyId,
             registeredBy: userId,
             registrationMethod: 'qr_scan',
             notes: null
         });
 
         logger.info('Attendance registered via QR scan', {
-            attendanceId: attendance.attendance_id,
-            memberId: member.member_id,
-            assemblyId: activeAssembly.assembly_id,
+            attendanceId: attendance.attendanceId,
+            memberId: member.memberId,
+            assemblyId: activeAssembly.assemblyId,
             registeredBy: userId
         });
 
         return {
             attendance,
             member: {
-                memberId: member.member_id,
-                fullName: member.full_name,
+                memberId: member.memberId,
+                fullName: member.fullName,
                 identification: member.identification,
                 grade: member.grade,
-                section: member.section,
-                photoUrl: member.photo_url
+                photoUrl: member.photoUrl
             },
             assembly: {
-                assemblyId: activeAssembly.assembly_id,
+                assemblyId: activeAssembly.assemblyId,
                 title: activeAssembly.title,
-                scheduledDate: activeAssembly.scheduled_date
+                scheduledDate: activeAssembly.scheduledDate
             }
         };
     } catch (error) {
@@ -162,7 +161,7 @@ const registerAttendanceManually = async (memberId, userId, notes = null) => {
         }
 
         // Step 3: Check if member is active
-        if (!member.is_active) {
+        if (!member.isActive) {
             throw new AttendanceError(
                 MESSAGES.MEMBER_INACTIVE,
                 ERROR_CODES.MEMBER_INACTIVE,
@@ -172,8 +171,8 @@ const registerAttendanceManually = async (memberId, userId, notes = null) => {
 
         // Step 4: Check if attendance already registered
         const existingAttendance = await attendanceRepository.findByMemberAndAssembly(
-            member.member_id,
-            activeAssembly.assembly_id
+            member.memberId,
+            activeAssembly.assemblyId
         );
 
         if (existingAttendance) {
@@ -186,34 +185,33 @@ const registerAttendanceManually = async (memberId, userId, notes = null) => {
 
         // Step 5: Register attendance
         const attendance = await attendanceRepository.create({
-            memberId: member.member_id,
-            assemblyId: activeAssembly.assembly_id,
+            memberId: member.memberId,
+            assemblyId: activeAssembly.assemblyId,
             registeredBy: userId,
             registrationMethod: 'manual',
             notes
         });
 
         logger.info('Attendance registered manually', {
-            attendanceId: attendance.attendance_id,
-            memberId: member.member_id,
-            assemblyId: activeAssembly.assembly_id,
+            attendanceId: attendance.attendanceId,
+            memberId: member.memberId,
+            assemblyId: activeAssembly.assemblyId,
             registeredBy: userId
         });
 
         return {
             attendance,
             member: {
-                memberId: member.member_id,
-                fullName: member.full_name,
+                memberId: member.memberId,
+                fullName: member.fullName,
                 identification: member.identification,
                 grade: member.grade,
-                section: member.section,
-                photoUrl: member.photo_url
+                photoUrl: member.photoUrl
             },
             assembly: {
-                assemblyId: activeAssembly.assembly_id,
+                assemblyId: activeAssembly.assemblyId,
                 title: activeAssembly.title,
-                scheduledDate: activeAssembly.scheduled_date
+                scheduledDate: activeAssembly.scheduledDate
             }
         };
     } catch (error) {
@@ -430,8 +428,8 @@ const getMemberAttendanceHistory = async (memberId, limit = 10) => {
 
         return {
             member: {
-                memberId: member.member_id,
-                fullName: member.full_name,
+                memberId: member.memberId,
+                fullName: member.fullName,
                 identification: member.identification
             },
             history

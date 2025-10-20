@@ -28,11 +28,22 @@ const AttendanceScanPage = () => {
     const { recordByQR, loading: recording, error: recordError, recordedAttendance, clearState } = useAttendanceRecording();
 
     // Handle QR scan success
-    const handleScanSuccess = async (qrHash) => {
+    const handleScanSuccess = async (scannedData) => {
         if (recording) return;
 
         try {
             clearState();
+
+            // Extract QR hash from URL if the scanned data is a verification URL
+            // Format: http://localhost:5173/verify?qr=HASH or just HASH
+            let qrHash = scannedData;
+
+            // Check if scanned data is a URL
+            if (scannedData.includes('verify?qr=')) {
+                const url = new URL(scannedData);
+                qrHash = url.searchParams.get('qr');
+            }
+
             const result = await recordByQR(qrHash, activeAssembly?.assemblyId);
 
             // Show confirmation modal with member info
