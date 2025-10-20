@@ -51,20 +51,12 @@ const DashboardPage = () => {
             </div>
 
             {/* Active Assembly Alert */}
-            {activeAssembly ? (
+            {activeAssembly && (
                 <Alert
                     type="info"
                     title="Asamblea Activa"
                     message={`"${activeAssembly.title}" - ${new Date(activeAssembly.scheduledDate).toLocaleDateString('es-CR')}`}
                 />
-            ) : (
-                isAdministrator && (
-                    <Alert
-                        type="warning"
-                        title="No hay asamblea activa"
-                        message="Debes activar una asamblea para poder registrar asistencia"
-                    />
-                )
             )}
 
             {/* Quick Actions */}
