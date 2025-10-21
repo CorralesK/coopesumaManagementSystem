@@ -7,6 +7,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAssemblies } from '../../hooks/useAssemblies';
 import { useReports, useReportStats } from '../../hooks/useReports';
+import { getAttendanceByAssembly } from '../../services/attendanceService';
+import { printAttendanceList } from '../../utils/printUtils';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Select from '../../components/common/Select';
@@ -54,10 +56,36 @@ const ReportsPage = () => {
         }
 
         try {
-            await generateAttendanceReport(selectedAssembly);
-            setSuccessMessage('Reporte PDF descargado exitosamente');
+            // Get attendance data for the selected assembly
+            const response = await getAttendanceByAssembly(selectedAssembly);
+
+            // Extract the actual data array (response.data.data or response.data)
+            const attendanceData = response.data?.data || response.data;
+
+            // Find the selected assembly details (convert to number for comparison)
+            const assembly = assemblies.find(a => a.assemblyId === parseInt(selectedAssembly));
+
+            if (!attendanceData || attendanceData.length === 0) {
+                alert('No hay asistentes registrados para esta asamblea');
+                return;
+            }
+
+            if (!assembly) {
+                alert('No se encontró información de la asamblea');
+                return;
+            }
+
+            // Use the print utility to generate and print the report
+            printAttendanceList({
+                attendees: attendanceData,
+                assembly: assembly,
+                title: 'Lista de Asistencia'
+            });
+
+            setSuccessMessage('Reporte generado y abierto para impresión');
         } catch (err) {
-            // Error handled by hook
+            console.error('Error generating report:', err);
+            alert(err.message || 'Error al generar el reporte');
         }
     };
 
@@ -109,9 +137,9 @@ const ReportsPage = () => {
                                 <p className="font-semibold mb-1">Información del Reporte:</p>
                                 <ul className="list-disc list-inside space-y-1">
                                     <li>El reporte incluye listado completo de asistentes</li>
-                                    <li>Muestra método de registro (QR o Manual)</li>
-                                    <li>Incluye hora de registro de cada miembro</li>
-                                    <li>PDF incluye espacio para firmas físicas</li>
+                                    <li>Muestra nombre completo e identificación</li>
+                                    <li>Incluye información de la asamblea</li>
+                                    <li>Columna de firma en blanco para firmas físicas</li>
                                 </ul>
                             </div>
                         </div>
@@ -134,9 +162,9 @@ const ReportsPage = () => {
                             ) : (
                                 <>
                                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                     </svg>
-                                    Descargar Reporte PDF
+                                    Generar e Imprimir Reporte
                                 </>
                             )}
                         </Button>

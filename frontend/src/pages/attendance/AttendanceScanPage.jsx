@@ -9,6 +9,7 @@ import { useActiveAssembly } from '../../hooks/useAssemblies';
 import { useAttendanceRecording, useAssemblyAttendance } from '../../hooks/useAttendance';
 import { useQrScanner } from '../../hooks/useQrScanner';
 import { verifyMemberByQR } from '../../services/memberService';
+import { printAttendanceList } from '../../utils/printUtils';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
@@ -96,6 +97,20 @@ const AttendanceScanPage = () => {
         setPendingQrHash(null);
     };
 
+    // Handle print attendance list
+    const handlePrintAttendanceList = () => {
+        if (!attendance || attendance.length === 0) {
+            alert('No hay asistentes registrados para imprimir.');
+            return;
+        }
+
+        printAttendanceList({
+            attendees: attendance,
+            assembly: activeAssembly,
+            title: 'Lista de Asistencia'
+        });
+    };
+
     // QR Scanner hook
     const {
         isScanning,
@@ -151,23 +166,46 @@ const AttendanceScanPage = () => {
     return (
         <div className="max-w-7xl mx-auto space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Registro de Asistencia</h1>
-                    <p className="text-gray-600 mt-1">
-                        Asamblea: <span className="font-semibold">{activeAssembly.title}</span>
-                    </p>
-                </div>
-                {/* Attendance Counter */}
-                <div className="bg-blue-50 border-2 border-blue-500 rounded-lg px-6 py-3">
-                    <div className="text-center">
-                        <p className="text-sm text-blue-600 font-medium">Asistentes</p>
-                        <p className="text-3xl font-bold text-blue-700">
-                            {loadingAttendance ? '...' : stats?.totalAttendance || 0}
-                        </p>
+            <div>
+                <h1 className="text-3xl font-bold text-gray-900">Registro de Asistencia</h1>
+                <p className="text-gray-600 mt-1">Escanea el código QR de los miembros</p>
+            </div>
+
+            {/* Assembly Info Card - Full Width */}
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-2">
+                    <div className="flex-1 w-full sm:w-auto">
+                        <div className="flex items-center space-x-4 sm:space-x-6">
+                            <div className="flex-shrink-0">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 truncate">{activeAssembly.title}</h2>
+                                <p className="text-xs sm:text-sm text-gray-600">
+                                    <span className="font-medium">Fecha:</span> {new Date(activeAssembly.scheduledDate).toLocaleDateString('es-CR', {
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    })}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white border-2 border-blue-500 rounded-lg px-4 py-2 sm:px-6 sm:py-2 shadow-md w-full sm:w-auto">
+                        <div className="text-center">
+                            <p className="text-xs text-blue-600 font-medium">Total Asistentes</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-blue-700">
+                                {loadingAttendance ? '...' : (attendance?.length || 0)}
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </Card>
 
             {/* Success Message */}
             {successMessage && (
@@ -186,7 +224,7 @@ const AttendanceScanPage = () => {
                 />
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* QR Scanner */}
                 <Card title="Escáner QR">
                     <div className="space-y-4">
@@ -224,40 +262,36 @@ const AttendanceScanPage = () => {
                                 <li>• Confirma o rechaza el registro</li>
                             </ul>
                         </div>
-                    </div>
-                </Card>
 
-                {/* Recent Scans / Info */}
-                <Card title="Información">
-                    <div className="space-y-4">
+                        {/* Status */}
                         {(verifying || recording) && (
-                            <div className="text-center py-8">
+                            <div className="text-center py-4">
                                 <Loading message={verifying ? "Verificando código QR..." : "Registrando asistencia..."} />
                             </div>
                         )}
-
-                        {!verifying && !recording && (
-                            <div className="text-center py-8 text-gray-500">
-                                <svg className="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                </svg>
-                                <p>Esperando escaneo de código QR...</p>
-                            </div>
-                        )}
-
-                        {/* Assembly Info */}
-                        <div className="bg-gray-50 rounded-lg p-4">
-                            <h4 className="font-medium text-gray-900 mb-2">Asamblea Activa</h4>
-                            <div className="text-sm text-gray-600 space-y-1">
-                                <p><strong>Título:</strong> {activeAssembly.title}</p>
-                                <p><strong>Fecha:</strong> {new Date(activeAssembly.scheduledDate).toLocaleDateString('es-CR')}</p>
-                            </div>
-                        </div>
                     </div>
                 </Card>
 
                 {/* Attendance List */}
-                <Card title="Lista de Asistentes" className="lg:col-span-1">
+                <Card
+                    title="Lista de Asistentes"
+                    className="lg:col-span-1"
+                    headerAction={
+                        attendance && attendance.length > 0 && (
+                            <Button
+                                onClick={handlePrintAttendanceList}
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center space-x-2"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                                <span>Imprimir</span>
+                            </Button>
+                        )
+                    }
+                >
                     <div className="space-y-4">
                         {loadingAttendance ? (
                             <div className="text-center py-8">
@@ -269,27 +303,14 @@ const AttendanceScanPage = () => {
                                     {attendance.map((record, index) => (
                                         <div
                                             key={record.attendanceId || index}
-                                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                                            className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                                         >
-                                            <div className="flex items-center space-x-3">
-                                                <div className="flex-shrink-0 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">
-                                                    {index + 1}
-                                                </div>
-                                                <div>
-                                                    <p className="font-medium text-gray-900">{record.member?.fullName || 'N/A'}</p>
-                                                    <p className="text-sm text-gray-500">Grado: {record.member?.grade}°</p>
-                                                </div>
+                                            <div className="flex-shrink-0 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">
+                                                {index + 1}
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-xs text-gray-500">
-                                                    {new Date(record.recordedAt).toLocaleTimeString('es-CR', {
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })}
-                                                </p>
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                    Registrado
-                                                </span>
+                                            <div>
+                                                <p className="font-medium text-gray-900">{record.fullName || 'N/A'}</p>
+                                                <p className="text-sm text-gray-500">{record.identification}</p>
                                             </div>
                                         </div>
                                     ))}

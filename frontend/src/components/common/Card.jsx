@@ -10,6 +10,7 @@ const Card = ({
     title,
     children,
     footer,
+    headerAction,
     className = '',
     padding = 'normal'
 }) => {
@@ -23,8 +24,13 @@ const Card = ({
     return (
         <div className={`bg-white rounded-lg shadow-md ${className}`}>
             {title && (
-                <div className="px-6 py-5 border-b border-gray-200">
+                <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
                     <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+                    {headerAction && (
+                        <div className="flex-shrink-0">
+                            {headerAction}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -45,6 +51,7 @@ Card.propTypes = {
     title: PropTypes.string,
     children: PropTypes.node.isRequired,
     footer: PropTypes.node,
+    headerAction: PropTypes.node,
     className: PropTypes.string,
     padding: PropTypes.oneOf(['none', 'sm', 'normal', 'lg'])
 };
