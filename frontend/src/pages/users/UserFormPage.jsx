@@ -36,6 +36,7 @@ const UserFormPage = () => {
     });
     const [errors, setErrors] = useState({});
     const [formError, setFormError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
     // Load user data in edit mode
     useEffect(() => {
@@ -98,6 +99,7 @@ const UserFormPage = () => {
 
         try {
             setFormError('');
+            setSuccessMessage('');
 
             const payload = {
                 fullName: formData.fullName.trim(),
@@ -107,11 +109,14 @@ const UserFormPage = () => {
 
             if (isEditMode) {
                 await update(id, payload);
+                setSuccessMessage('Usuario actualizado exitosamente');
+                // Wait a moment before redirecting to show the success message
+                setTimeout(() => navigate('/users'), 1500);
             } else {
                 await create(payload);
+                setSuccessMessage('Usuario creado exitosamente');
+                setTimeout(() => navigate('/users'), 1500);
             }
-
-            navigate('/users');
         } catch (err) {
             setFormError(err.message || `Error al ${isEditMode ? 'actualizar' : 'crear'} el usuario`);
         }
@@ -141,6 +146,11 @@ const UserFormPage = () => {
                 </p>
             </div>
 
+            {/* Success Alert */}
+            {successMessage && (
+                <Alert type="success" message={successMessage} onClose={() => setSuccessMessage('')} />
+            )}
+
             {/* Error Alert */}
             {(formError || operationError) && (
                 <Alert type="error" message={formError || operationError} onClose={() => { setFormError(''); }} />
@@ -157,6 +167,8 @@ const UserFormPage = () => {
                         error={errors.fullName}
                         required
                         placeholder="Ej: Juan Pérez García"
+                        maxLength={100}
+                        minLength={3}
                     />
 
                     <Input
@@ -168,16 +180,8 @@ const UserFormPage = () => {
                         error={errors.email}
                         required
                         placeholder="Ej: juan.perez@example.com"
-                        disabled={isEditMode}
+                        maxLength={255}
                     />
-
-                    {isEditMode && (
-                        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                            <p className="text-sm text-yellow-700">
-                                <strong>Nota:</strong> El correo electrónico no puede ser modificado. Si necesitas cambiar el email, debes crear un nuevo usuario.
-                            </p>
-                        </div>
-                    )}
 
                     <Select
                         label="Rol"

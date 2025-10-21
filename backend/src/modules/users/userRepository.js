@@ -221,14 +221,42 @@ const linkMicrosoftAccount = async (userId, microsoftId, email) => {
 };
 
 /**
- * Get all users with optional filters
+ * Get all users with optional filters and pagination
  *
  * @param {Object} filters - Filter criteria
- * @returns {Promise<Array>} Array of user objects
+ * @param {number} limit - Number of items per page
+ * @param {number} offset - Number of items to skip
+ * @returns {Promise<Object>} Object with users array and total count
  */
-const findAll = async (filters = {}) => {
+const findAll = async (filters = {}, limit = 20, offset = 0) => {
     try {
-        let query = `
+        let baseQuery = `
+            FROM users
+            WHERE 1=1
+        `;
+
+        const params = [];
+        let paramIndex = 1;
+
+        if (filters.role) {
+            baseQuery += ` AND role = $${paramIndex}`;
+            params.push(filters.role);
+            paramIndex++;
+        }
+
+        if (filters.isActive !== undefined) {
+            baseQuery += ` AND is_active = $${paramIndex}`;
+            params.push(filters.isActive);
+            paramIndex++;
+        }
+
+        // Get total count
+        const countQuery = `SELECT COUNT(*) as total ${baseQuery}`;
+        const countResult = await db.query(countQuery, params);
+        const total = parseInt(countResult.rows[0].total, 10);
+
+        // Get paginated results
+        const dataQuery = `
             SELECT
                 user_id,
                 full_name,
@@ -238,29 +266,17 @@ const findAll = async (filters = {}) => {
                 email,
                 created_at,
                 updated_at
-            FROM users
-            WHERE 1=1
+            ${baseQuery}
+            ORDER BY created_at DESC
+            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
         `;
 
-        const params = [];
-        let paramIndex = 1;
+        const dataResult = await db.query(dataQuery, [...params, limit, offset]);
 
-        if (filters.role) {
-            query += ` AND role = $${paramIndex}`;
-            params.push(filters.role);
-            paramIndex++;
-        }
-
-        if (filters.isActive !== undefined) {
-            query += ` AND is_active = $${paramIndex}`;
-            params.push(filters.isActive);
-            paramIndex++;
-        }
-
-        query += ' ORDER BY created_at DESC';
-
-        const result = await db.query(query, params);
-        return result.rows;
+        return {
+            users: dataResult.rows,
+            total
+        };
     } catch (error) {
         logger.error('Error finding all users:', error);
         throw error;

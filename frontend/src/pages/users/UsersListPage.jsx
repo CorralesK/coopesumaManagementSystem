@@ -56,16 +56,6 @@ const UsersListPage = () => {
         }
     };
 
-    // Format date helper
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('es-CR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
     // Get role label
     const getRoleLabel = (role) => {
         const roleLabels = {
@@ -81,12 +71,16 @@ const UsersListPage = () => {
     const tableColumns = [
         {
             key: 'fullName',
-            label: 'Nombre Completo',
+            label: 'Nombre',
             render: (user) => (
-                <div>
-                    <p className="font-medium text-gray-900">{user.fullName}</p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
-                </div>
+                <p className="font-medium text-gray-900">{user.fullName}</p>
+            )
+        },
+        {
+            key: 'email',
+            label: 'Correo',
+            render: (user) => (
+                <p className="text-sm text-gray-700">{user.email}</p>
             )
         },
         {
@@ -117,15 +111,6 @@ const UsersListPage = () => {
                 }`}>
                     {user.isActive ? 'Activo' : 'Inactivo'}
                 </span>
-            )
-        },
-        {
-            key: 'lastLogin',
-            label: 'Último Acceso',
-            render: (user) => (
-                <div className="text-sm text-gray-600">
-                    {user.lastLogin ? formatDate(user.lastLogin) : 'Nunca'}
-                </div>
             )
         },
         {

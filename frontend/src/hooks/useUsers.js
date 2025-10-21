@@ -40,16 +40,16 @@ export const useUsers = (params = {}) => {
                 page: currentPage
             });
 
-            setUsers(response.data.data || []);
+            setUsers(response.data || []);
             setPagination({
-                currentPage: response.data.pagination.currentPage,
-                totalPages: response.data.pagination.totalPages,
-                totalItems: response.data.pagination.totalItems,
-                total: response.data.pagination.totalItems,
-                limit: response.data.pagination.limit
+                currentPage: response.pagination.currentPage,
+                totalPages: response.pagination.totalPages,
+                totalItems: response.pagination.totalItems,
+                total: response.pagination.totalItems,
+                limit: response.pagination.limit
             });
         } catch (err) {
-            setError(err.response?.data?.message || 'Error al cargar usuarios');
+            setError(err.message || 'Error al cargar usuarios');
         } finally {
             setLoading(false);
         }
@@ -89,9 +89,9 @@ export const useUser = (userId) => {
             setLoading(true);
             setError(null);
             const response = await userService.getUserById(userId);
-            setUser(response.data.data);
+            setUser(response.data);
         } catch (err) {
-            setError(err.response?.data?.message || 'Error al cargar usuario');
+            setError(err.message || 'Error al cargar usuario');
         } finally {
             setLoading(false);
         }
@@ -117,9 +117,9 @@ export const useUserOperations = () => {
             setLoading(true);
             setError(null);
             const response = await userService.createUser(userData);
-            return response.data;
+            return response;
         } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Error al crear usuario';
+            const errorMessage = err.message || 'Error al crear usuario';
             setError(errorMessage);
             throw new Error(errorMessage);
         } finally {
@@ -132,9 +132,9 @@ export const useUserOperations = () => {
             setLoading(true);
             setError(null);
             const response = await userService.updateUser(userId, userData);
-            return response.data;
+            return response;
         } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Error al actualizar usuario';
+            const errorMessage = err.message || 'Error al actualizar usuario';
             setError(errorMessage);
             throw new Error(errorMessage);
         } finally {
@@ -147,9 +147,9 @@ export const useUserOperations = () => {
             setLoading(true);
             setError(null);
             const response = await userService.deactivateUser(userId);
-            return response.data;
+            return response;
         } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Error al desactivar usuario';
+            const errorMessage = err.message || 'Error al desactivar usuario';
             setError(errorMessage);
             throw new Error(errorMessage);
         } finally {
@@ -162,9 +162,9 @@ export const useUserOperations = () => {
             setLoading(true);
             setError(null);
             const response = await userService.activateUser(userId);
-            return response.data;
+            return response;
         } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Error al activar usuario';
+            const errorMessage = err.message || 'Error al activar usuario';
             setError(errorMessage);
             throw new Error(errorMessage);
         } finally {
@@ -177,9 +177,9 @@ export const useUserOperations = () => {
             setLoading(true);
             setError(null);
             const response = await userService.updateUserRole(userId, newRole);
-            return response.data;
+            return response;
         } catch (err) {
-            const errorMessage = err.response?.data?.message || 'Error al actualizar rol';
+            const errorMessage = err.message || 'Error al actualizar rol';
             setError(errorMessage);
             throw new Error(errorMessage);
         } finally {
@@ -209,5 +209,5 @@ export const useUserStats = () => {
         execute();
     }, []);
 
-    return { stats: data?.data, loading, error };
+    return { stats: data, loading, error };
 };

@@ -60,7 +60,7 @@ export const updateUser = async (userId, userData) => {
  * @returns {Promise<Object>} Response message
  */
 export const deactivateUser = async (userId) => {
-    const response = await api.delete(`/users/${userId}`);
+    const response = await api.post(`/users/${userId}/deactivate`);
     return response;
 };
 
