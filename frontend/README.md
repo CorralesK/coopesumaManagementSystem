@@ -1,6 +1,6 @@
 # CoopeSuma Frontend - React + Vite + Tailwind CSS
 
-Frontend application for the CoopeSuma Management System (Phase 1 - Attendance Control).
+Frontend application for the Coopesuma Management System (Phase 1 - Attendance Control).
 
 ---
 
@@ -86,20 +86,6 @@ frontend/
 ```bash
 npm run dev          # Start development server with hot reload
 ```
-
-### Build
-
-```bash
-npm run build        # Build for production
-npm run preview      # Preview production build locally
-```
-
-### Linting
-
-```bash
-npm run lint         # Run ESLint
-```
-
 ---
 
 ## 🔐 Authentication Flow
