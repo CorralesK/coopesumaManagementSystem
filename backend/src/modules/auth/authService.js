@@ -9,7 +9,6 @@
 const userRepository = require('../users/userRepository');
 const { generateToken, verifyToken } = require('../../utils/jwtUtils');
 const { completeOAuthFlow } = require('../../utils/microsoftOAuthUtils');
-const { isEmailAuthorized, getRoleByEmail, getFullNameByEmail } = require('../../config/authorizedUsers');
 const ERROR_CODES = require('../../constants/errorCodes');
 const MESSAGES = require('../../constants/messages');
 const logger = require('../../utils/logger');
@@ -46,27 +45,7 @@ const authenticateWithMicrosoft = async (code) => {
             microsoftId: microsoftProfile.microsoftId
         });
 
-        // Step 2: Check if email is authorized
-        const authorizedUser = isEmailAuthorized(microsoftProfile.email);
-
-        if (!authorizedUser) {
-            logger.warn('Unauthorized email attempted to login', {
-                email: microsoftProfile.email
-            });
-
-            throw new AuthError(
-                'No tiene autorización para acceder al sistema. Contacte al administrador.',
-                ERROR_CODES.FORBIDDEN,
-                403
-            );
-        }
-
-        logger.info('Email is authorized', {
-            email: microsoftProfile.email,
-            role: authorizedUser.role
-        });
-
-        // Step 3: Check if user exists in database
+        // Step 2: Check if user exists in database by Microsoft ID
         let user = await userRepository.findByMicrosoftId(microsoftProfile.microsoftId);
 
         if (!user) {
@@ -74,7 +53,7 @@ const authenticateWithMicrosoft = async (code) => {
             user = await userRepository.findByEmail(microsoftProfile.email);
 
             if (user) {
-                // User exists but doesn't have Microsoft account linked
+                // User exists in database but doesn't have Microsoft account linked
                 logger.info('Linking Microsoft account to existing user', {
                     userId: user.userId,
                     email: microsoftProfile.email
@@ -86,29 +65,21 @@ const authenticateWithMicrosoft = async (code) => {
                     microsoftProfile.email
                 );
             } else {
-                // User doesn't exist, create new user
-                logger.info('Creating new user from Microsoft OAuth', {
+                // User doesn't exist in database - deny access
+                logger.warn('User not found in database attempted to login', {
                     email: microsoftProfile.email,
-                    role: authorizedUser.role
+                    microsoftId: microsoftProfile.microsoftId
                 });
 
-                user = await userRepository.create({
-                    fullName: microsoftProfile.displayName || authorizedUser.fullName,
-                    role: authorizedUser.role,
-                    isActive: true,
-                    microsoftId: microsoftProfile.microsoftId,
-                    email: microsoftProfile.email
-                });
-
-                logger.info('New user created successfully', {
-                    userId: user.userId,
-                    email: user.email,
-                    role: user.role
-                });
+                throw new AuthError(
+                    'Usuario no registrado en el sistema. Contacte al administrador para crear su cuenta.',
+                    ERROR_CODES.FORBIDDEN,
+                    403
+                );
             }
         }
 
-        // Step 4: Check if user is active
+        // Step 3: Check if user is active
         if (!user.isActive) {
             logger.warn('Inactive user attempted to login', {
                 userId: user.userId,
@@ -122,7 +93,7 @@ const authenticateWithMicrosoft = async (code) => {
             );
         }
 
-        // Step 5: Generate internal JWT token
+        // Step 4: Generate internal JWT token
         const tokenPayload = {
             userId: user.userId,
             email: user.email,
@@ -132,7 +103,7 @@ const authenticateWithMicrosoft = async (code) => {
 
         const token = generateToken(tokenPayload);
 
-        // Step 6: Prepare user data for response
+        // Step 5: Prepare user data for response
         const userData = {
             userId: user.userId,
             fullName: user.fullName,
