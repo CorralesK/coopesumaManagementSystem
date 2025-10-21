@@ -7,7 +7,6 @@
  */
 
 const userRepository = require('./userRepository');
-const bcrypt = require('bcrypt');
 const ERROR_CODES = require('../../constants/errorCodes');
 const MESSAGES = require('../../constants/messages');
 const logger = require('../../utils/logger');
@@ -25,27 +24,41 @@ class UserError extends Error {
 }
 
 /**
- * Get all users with optional filters
+ * Get all users with optional filters and pagination
  *
  * @param {Object} filters - Filter criteria
- * @returns {Promise<Array>} Array of users
+ * @param {number} page - Page number (default: 1)
+ * @param {number} limit - Items per page (default: 20)
+ * @returns {Promise<Object>} Object with users array and pagination info
  */
-const getAllUsers = async (filters = {}) => {
+const getAllUsers = async (filters = {}, page = 1, limit = 20) => {
     try {
-        const users = await userRepository.findAll(filters);
+        const offset = (page - 1) * limit;
+        const result = await userRepository.findAll(filters, limit, offset);
 
         // Remove sensitive information
-        return users.map(user => ({
-            userId: user.user_id,
-            fullName: user.full_name,
+        const users = result.users.map(user => ({
+            userId: user.userId,
+            fullName: user.fullName,
             username: user.username,
             email: user.email,
             role: user.role,
-            isActive: user.is_active,
-            hasMicrosoftAccount: !!user.microsoft_id,
-            createdAt: user.created_at,
-            updatedAt: user.updated_at
+            isActive: user.isActive,
+            hasMicrosoftAccount: !!user.microsoftId,
+            lastLogin: user.lastLogin || null,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
         }));
+
+        return {
+            users,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(result.total / limit),
+                totalItems: result.total,
+                limit
+            }
+        };
     } catch (error) {
         logger.error('Error getting all users:', error);
         throw new UserError(
@@ -76,15 +89,15 @@ const getUserById = async (userId) => {
         }
 
         return {
-            userId: user.user_id,
-            fullName: user.full_name,
+            userId: user.userId,
+            fullName: user.fullName,
             username: user.username,
             email: user.email,
             role: user.role,
-            isActive: user.is_active,
-            hasMicrosoftAccount: !!user.microsoft_id,
-            createdAt: user.created_at,
-            updatedAt: user.updated_at
+            isActive: user.isActive,
+            hasMicrosoftAccount: !!user.microsoftId,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
         };
     } catch (error) {
         if (error.isOperational) {
@@ -133,16 +146,10 @@ const createUser = async (userData) => {
             }
         }
 
-        // Hash password if provided
-        let passwordHash = null;
-        if (userData.password) {
-            passwordHash = await bcrypt.hash(userData.password, 10);
-        }
-
-        // Validate that at least one authentication method is provided
-        if (!passwordHash && !userData.microsoftId) {
+        // Validate that Microsoft ID is provided (required for OAuth authentication)
+        if (!userData.microsoftId) {
             throw new UserError(
-                'Se requiere al menos un método de autenticación (contraseña o cuenta de Microsoft)',
+                'Se requiere Microsoft ID para la autenticación',
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );
@@ -151,28 +158,28 @@ const createUser = async (userData) => {
         const newUser = await userRepository.create({
             fullName: userData.fullName,
             username: userData.username,
-            passwordHash,
+            passwordHash: null, // No password authentication
             role: userData.role,
             isActive: userData.isActive !== undefined ? userData.isActive : true,
-            microsoftId: userData.microsoftId || null,
+            microsoftId: userData.microsoftId,
             email: userData.email || null
         });
 
         logger.info('User created successfully', {
-            userId: newUser.user_id,
+            userId: newUser.userId,
             username: newUser.username,
             role: newUser.role
         });
 
         return {
-            userId: newUser.user_id,
-            fullName: newUser.full_name,
+            userId: newUser.userId,
+            fullName: newUser.fullName,
             username: newUser.username,
             email: newUser.email,
             role: newUser.role,
-            isActive: newUser.is_active,
-            hasMicrosoftAccount: !!newUser.microsoft_id,
-            createdAt: newUser.created_at
+            isActive: newUser.isActive,
+            hasMicrosoftAccount: !!newUser.microsoftId,
+            createdAt: newUser.createdAt
         };
     } catch (error) {
         if (error.isOperational) {
@@ -251,10 +258,6 @@ const updateUser = async (userId, updates) => {
             updateData.role = updates.role;
         }
 
-        if (updates.password) {
-            updateData.password_hash = await bcrypt.hash(updates.password, 10);
-        }
-
         if (Object.keys(updateData).length === 0) {
             throw new UserError(
                 'No hay campos para actualizar',
@@ -266,19 +269,19 @@ const updateUser = async (userId, updates) => {
         const updatedUser = await userRepository.update(userId, updateData);
 
         logger.info('User updated successfully', {
-            userId: updatedUser.user_id,
+            userId: updatedUser.userId,
             updatedFields: Object.keys(updateData)
         });
 
         return {
-            userId: updatedUser.user_id,
-            fullName: updatedUser.full_name,
+            userId: updatedUser.userId,
+            fullName: updatedUser.fullName,
             username: updatedUser.username,
             email: updatedUser.email,
             role: updatedUser.role,
-            isActive: updatedUser.is_active,
-            hasMicrosoftAccount: !!updatedUser.microsoft_id,
-            updatedAt: updatedUser.updated_at
+            isActive: updatedUser.isActive,
+            hasMicrosoftAccount: !!updatedUser.microsoftId,
+            updatedAt: updatedUser.updatedAt
         };
     } catch (error) {
         if (error.isOperational) {
@@ -314,7 +317,7 @@ const deactivateUser = async (userId) => {
             );
         }
 
-        if (!user.is_active) {
+        if (!user.isActive) {
             throw new UserError(
                 'El usuario ya está inactivo',
                 ERROR_CODES.VALIDATION_ERROR,
@@ -337,17 +340,17 @@ const deactivateUser = async (userId) => {
         const deactivatedUser = await userRepository.deactivate(userId);
 
         logger.info('User deactivated successfully', {
-            userId: deactivatedUser.user_id
+            userId: deactivatedUser.userId
         });
 
         return {
-            userId: deactivatedUser.user_id,
-            fullName: deactivatedUser.full_name,
+            userId: deactivatedUser.userId,
+            fullName: deactivatedUser.fullName,
             username: deactivatedUser.username,
             email: deactivatedUser.email,
             role: deactivatedUser.role,
-            isActive: deactivatedUser.is_active,
-            updatedAt: deactivatedUser.updated_at
+            isActive: deactivatedUser.isActive,
+            updatedAt: deactivatedUser.updatedAt
         };
     } catch (error) {
         if (error.isOperational) {
@@ -382,7 +385,7 @@ const activateUser = async (userId) => {
             );
         }
 
-        if (user.is_active) {
+        if (user.isActive) {
             throw new UserError(
                 'El usuario ya está activo',
                 ERROR_CODES.VALIDATION_ERROR,
@@ -393,17 +396,17 @@ const activateUser = async (userId) => {
         const activatedUser = await userRepository.activate(userId);
 
         logger.info('User activated successfully', {
-            userId: activatedUser.user_id
+            userId: activatedUser.userId
         });
 
         return {
-            userId: activatedUser.user_id,
-            fullName: activatedUser.full_name,
+            userId: activatedUser.userId,
+            fullName: activatedUser.fullName,
             username: activatedUser.username,
             email: activatedUser.email,
             role: activatedUser.role,
-            isActive: activatedUser.is_active,
-            updatedAt: activatedUser.updated_at
+            isActive: activatedUser.isActive,
+            updatedAt: activatedUser.updatedAt
         };
     } catch (error) {
         if (error.isOperational) {
@@ -419,73 +422,6 @@ const activateUser = async (userId) => {
     }
 };
 
-/**
- * Change user password
- *
- * @param {number} userId - User ID
- * @param {string} currentPassword - Current password
- * @param {string} newPassword - New password
- * @returns {Promise<boolean>} True if password changed
- * @throws {UserError} If validation fails
- */
-const changePassword = async (userId, currentPassword, newPassword) => {
-    try {
-        const user = await userRepository.findById(userId);
-
-        if (!user) {
-            throw new UserError(
-                MESSAGES.USER_NOT_FOUND,
-                ERROR_CODES.USER_NOT_FOUND,
-                404
-            );
-        }
-
-        // Get user with password hash
-        const userWithPassword = await userRepository.findByUsername(user.username);
-
-        if (!userWithPassword.password_hash) {
-            throw new UserError(
-                'Este usuario utiliza autenticación de Microsoft y no tiene contraseña',
-                ERROR_CODES.VALIDATION_ERROR,
-                400
-            );
-        }
-
-        // Verify current password
-        const isPasswordValid = await bcrypt.compare(currentPassword, userWithPassword.password_hash);
-        if (!isPasswordValid) {
-            throw new UserError(
-                'Contraseña actual incorrecta',
-                ERROR_CODES.INVALID_CREDENTIALS,
-                401
-            );
-        }
-
-        // Hash new password
-        const newPasswordHash = await bcrypt.hash(newPassword, 10);
-
-        // Update password
-        await userRepository.update(userId, { password_hash: newPasswordHash });
-
-        logger.info('User password changed successfully', {
-            userId
-        });
-
-        return true;
-    } catch (error) {
-        if (error.isOperational) {
-            throw error;
-        }
-
-        logger.error('Error changing password:', error);
-        throw new UserError(
-            MESSAGES.INTERNAL_ERROR,
-            ERROR_CODES.INTERNAL_ERROR,
-            500
-        );
-    }
-};
-
 module.exports = {
     getAllUsers,
     getUserById,
@@ -493,6 +429,5 @@ module.exports = {
     updateUser,
     deactivateUser,
     activateUser,
-    changePassword,
     UserError
 };

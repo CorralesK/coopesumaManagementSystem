@@ -1,6 +1,7 @@
 /**
  * User Validation Schemas
  * Joi validation schemas for user management endpoints
+ * Note: Only Microsoft OAuth authentication is supported
  *
  * @module modules/users/userValidation
  */
@@ -9,6 +10,7 @@ const Joi = require('joi');
 
 /**
  * Schema for creating a new user
+ * Note: All users must authenticate via Microsoft OAuth
  */
 const createUserSchema = Joi.object({
     fullName: Joi.string()
@@ -33,16 +35,6 @@ const createUserSchema = Joi.object({
             'string.pattern.base': 'El nombre de usuario solo puede contener letras, números y guiones bajos',
             'any.required': 'El nombre de usuario es requerido'
         }),
-    password: Joi.string()
-        .min(8)
-        .max(100)
-        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-        .optional()
-        .messages({
-            'string.min': 'La contraseña debe tener al menos 8 caracteres',
-            'string.max': 'La contraseña no puede exceder 100 caracteres',
-            'string.pattern.base': 'La contraseña debe contener al menos una letra mayúscula, una minúscula y un número'
-        }),
     email: Joi.string()
         .email()
         .max(255)
@@ -66,22 +58,16 @@ const createUserSchema = Joi.object({
         }),
     microsoftId: Joi.string()
         .max(255)
-        .optional()
+        .required()
         .messages({
-            'string.max': 'El Microsoft ID no puede exceder 255 caracteres'
+            'string.max': 'El Microsoft ID no puede exceder 255 caracteres',
+            'any.required': 'El Microsoft ID es requerido para la autenticación'
         })
-}).custom((value, helpers) => {
-    // Validate that at least one authentication method is provided
-    if (!value.password && !value.microsoftId) {
-        return helpers.error('any.invalid', {
-            message: 'Se requiere al menos un método de autenticación (password o microsoftId)'
-        });
-    }
-    return value;
 });
 
 /**
  * Schema for updating a user
+ * Note: Password updates are not supported (Microsoft OAuth only)
  */
 const updateUserSchema = Joi.object({
     fullName: Joi.string()
@@ -102,16 +88,6 @@ const updateUserSchema = Joi.object({
             'string.max': 'El nombre de usuario no puede exceder 50 caracteres',
             'string.pattern.base': 'El nombre de usuario solo puede contener letras, números y guiones bajos'
         }),
-    password: Joi.string()
-        .min(8)
-        .max(100)
-        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-        .optional()
-        .messages({
-            'string.min': 'La contraseña debe tener al menos 8 caracteres',
-            'string.max': 'La contraseña no puede exceder 100 caracteres',
-            'string.pattern.base': 'La contraseña debe contener al menos una letra mayúscula, una minúscula y un número'
-        }),
     email: Joi.string()
         .email()
         .max(255)
@@ -128,32 +104,6 @@ const updateUserSchema = Joi.object({
         })
 }).min(1).messages({
     'object.min': 'Se debe proporcionar al menos un campo para actualizar'
-});
-
-/**
- * Schema for changing password
- */
-const changePasswordSchema = Joi.object({
-    currentPassword: Joi.string()
-        .required()
-        .messages({
-            'string.empty': 'La contraseña actual es requerida',
-            'any.required': 'La contraseña actual es requerida'
-        }),
-    newPassword: Joi.string()
-        .min(8)
-        .max(100)
-        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-        .required()
-        .invalid(Joi.ref('currentPassword'))
-        .messages({
-            'string.empty': 'La nueva contraseña es requerida',
-            'string.min': 'La nueva contraseña debe tener al menos 8 caracteres',
-            'string.max': 'La nueva contraseña no puede exceder 100 caracteres',
-            'string.pattern.base': 'La nueva contraseña debe contener al menos una letra mayúscula, una minúscula y un número',
-            'any.required': 'La nueva contraseña es requerida',
-            'any.invalid': 'La nueva contraseña debe ser diferente a la contraseña actual'
-        })
 });
 
 /**
@@ -177,6 +127,5 @@ const userFiltersSchema = Joi.object({
 module.exports = {
     createUserSchema,
     updateUserSchema,
-    changePasswordSchema,
     userFiltersSchema
 };

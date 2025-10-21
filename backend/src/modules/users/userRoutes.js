@@ -12,7 +12,6 @@ const userController = require('./userController');
 const {
     createUserSchema,
     updateUserSchema,
-    changePasswordSchema,
     userFiltersSchema
 } = require('./userValidation');
 const { validate, validateQuery } = require('../../middlewares/validationMiddleware');
@@ -149,34 +148,6 @@ router.post(
     authMiddleware,
     requireRole([USER_ROLES.ADMINISTRATOR]),
     userController.activateUser
-);
-
-// ============================================================================
-// Password Management Routes
-// ============================================================================
-
-/**
- * POST /api/users/change-password
- * Change current user's password
- * Protected: Requires authentication
- * Accessible by: All authenticated users
- *
- * Request body:
- * {
- *   "currentPassword": "string" (required),
- *   "newPassword": "string" (required, min 8 chars, must contain uppercase, lowercase, number)
- * }
- *
- * Note: Only works for users with password authentication (not Microsoft OAuth only)
- * New password must be different from current password
- *
- * Response: Success message
- */
-router.post(
-    '/change-password',
-    authMiddleware,
-    validate(changePasswordSchema),
-    userController.changePassword
 );
 
 module.exports = router;

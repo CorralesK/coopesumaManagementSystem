@@ -24,12 +24,17 @@ const getAllUsers = async (req, res) => {
             isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : undefined
         };
 
-        const users = await userService.getAllUsers(filters);
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 20;
+
+        const result = await userService.getAllUsers(filters, page, limit);
 
         return successResponse(
             res,
             'Usuarios obtenidos exitosamente',
-            users
+            result.users,
+            200,
+            result.pagination
         );
     } catch (error) {
         if (error.isOperational) {
@@ -280,58 +285,11 @@ const activateUser = async (req, res) => {
     }
 };
 
-/**
- * Change user password
- *
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-const changePassword = async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-        const userId = req.user.userId;
-
-        await userService.changePassword(
-            userId,
-            currentPassword,
-            newPassword
-        );
-
-        return successResponse(
-            res,
-            'Contraseña actualizada exitosamente',
-            null
-        );
-    } catch (error) {
-        if (error.isOperational) {
-            return errorResponse(
-                res,
-                error.message,
-                error.errorCode,
-                error.statusCode
-            );
-        }
-
-        logger.error('Unexpected error in changePassword controller', {
-            error: error.message,
-            stack: error.stack
-        });
-
-        return errorResponse(
-            res,
-            MESSAGES.INTERNAL_ERROR,
-            ERROR_CODES.INTERNAL_ERROR,
-            500
-        );
-    }
-};
-
 module.exports = {
     getAllUsers,
     getUserById,
     createUser,
     updateUser,
     deactivateUser,
-    activateUser,
-    changePassword
+    activateUser
 };
