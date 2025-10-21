@@ -2,12 +2,18 @@
  * Standardized API Response Formatter
  */
 
-const successResponse = (res, message, data = null, statusCode = 200) => {
-    return res.status(statusCode).json({
+const successResponse = (res, message, data = null, statusCode = 200, pagination = null) => {
+    const response = {
         success: true,
         message,
         data
-    });
+    };
+
+    if (pagination) {
+        response.pagination = pagination;
+    }
+
+    return res.status(statusCode).json(response);
 };
 
 const errorResponse = (res, message, errorCode = 'INTERNAL_ERROR', statusCode = 500, details = null) => {

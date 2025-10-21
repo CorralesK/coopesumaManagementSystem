@@ -25,7 +25,7 @@ const NotFoundPage = () => {
                     Lo sentimos, la página que buscas no existe o ha sido movida.
                 </p>
 
-                <div className="space-y-3">
+                <div className="flex flex-col gap-4">
                     <Button
                         onClick={() => navigate('/dashboard')}
                         variant="primary"

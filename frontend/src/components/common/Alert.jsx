@@ -3,7 +3,7 @@
  * Reusable alert/notification component
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 const Alert = ({
@@ -11,8 +11,20 @@ const Alert = ({
     message,
     title,
     onClose,
-    className = ''
+    className = '',
+    autoClose = true,
+    autoCloseDuration = 5000
 }) => {
+    // Auto-close for success and error alerts
+    useEffect(() => {
+        if (autoClose && onClose && (type === 'success' || type === 'error')) {
+            const timer = setTimeout(() => {
+                onClose();
+            }, autoCloseDuration);
+
+            return () => clearTimeout(timer);
+        }
+    }, [autoClose, type, onClose, autoCloseDuration]);
     const typeConfig = {
         success: {
             bgColor: 'bg-green-50',
@@ -100,7 +112,9 @@ Alert.propTypes = {
     message: PropTypes.string.isRequired,
     title: PropTypes.string,
     onClose: PropTypes.func,
-    className: PropTypes.string
+    className: PropTypes.string,
+    autoClose: PropTypes.bool,
+    autoCloseDuration: PropTypes.number
 };
 
 export default Alert;
