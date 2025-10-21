@@ -1,29 +1,29 @@
 # CoopeSuma Backend API
 
-Backend API para el Sistema de Gestión Cooperativa CoopeSuma
+REST API for CoopeSuma Student Cooperative Management System
 
-## Requisitos
+## Requirements
 
 - Node.js 18+
 - PostgreSQL 14+
-- npm o yarn
+- npm or yarn
 
-## Instalación
+## Installation
 
 ```bash
-# Instalar dependencias
+# Install dependencies
 npm install
 
-# Copiar archivo de configuración
+# Copy configuration file
 cp .env.example .env
 
-# Editar .env con tus valores
+# Edit .env with your values
 nano .env
 ```
 
-## Configuración
+## Configuration
 
-Editar `.env` con los valores correctos para tu entorno:
+Edit `.env` with the correct values for your environment:
 
 ```env
 # Server
@@ -35,31 +35,34 @@ DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_NAME=coopesuma_db
 DATABASE_USER=postgres
-DATABASE_PASSWORD=tu_contraseña
+DATABASE_PASSWORD=your_password
 
 # JWT
-JWT_SECRET=tu_clave_secreta
+JWT_SECRET=your_secret_key
 JWT_EXPIRES_IN=24h
-
-# Bcrypt
-BCRYPT_ROUNDS=10
 
 # CORS
 CORS_ORIGIN=http://localhost:5173
 
 # Logging
 LOG_LEVEL=debug
+
+# Microsoft OAuth
+MICROSOFT_CLIENT_ID=your_client_id
+MICROSOFT_CLIENT_SECRET=your_client_secret
+MICROSOFT_TENANT_ID=common
+MICROSOFT_REDIRECT_URI=http://localhost:5000/api/auth/callback
 ```
 
-## Base de Datos
+## Database Setup
 
-Antes de iniciar el servidor, asegúrate de tener la base de datos configurada:
+Before starting the server, make sure you have the database configured:
 
 ```bash
-# Crear base de datos
+# Create database
 createdb coopesuma_db
 
-# Ejecutar scripts SQL en orden
+# Execute SQL scripts in order
 cd ../database/scripts/phase_1
 psql -U postgres -d coopesuma_db -f 01_create_functions.sql
 psql -U postgres -d coopesuma_db -f 02_create_tables.sql
@@ -68,53 +71,54 @@ psql -U postgres -d coopesuma_db -f 04_create_triggers.sql
 psql -U postgres -d coopesuma_db -f 05_seed_initial_data.sql
 ```
 
-## Scripts Disponibles
+## Available Scripts
 
 ```bash
-npm start        # Iniciar en producción
-npm run dev      # Iniciar en desarrollo (con nodemon)
-npm test         # Ejecutar tests
-npm run lint     # Verificar código
+npm start        # Start in production
+npm run dev      # Start in development (with nodemon)
+npm test         # Run tests
+npm run lint     # Check code
 ```
 
-## Estructura del Proyecto
+## Project Structure
 
 ```
 backend/
 ├── src/
-│   ├── config/          # Configuración (database, environment, CORS)
-│   ├── constants/       # Constantes (roles, errorCodes, messages)
+│   ├── config/          # Configuration (database, environment, CORS)
+│   ├── constants/       # Constants (roles, errorCodes, messages)
 │   ├── middlewares/     # Middlewares (auth, validation, errorHandler)
-│   ├── modules/         # Módulos por funcionalidad
-│   │   ├── auth/        # Autenticación
-│   │   ├── members/     # Gestión de miembros
-│   │   ├── assemblies/  # Gestión de asambleas
-│   │   ├── attendance/  # Control de asistencia
-│   │   ├── users/       # Gestión de usuarios
-│   │   └── reports/     # Generación de reportes
-│   ├── utils/           # Utilidades (JWT, password, QR, logger)
-│   ├── app.js           # Configuración de Express
-│   └── server.js        # Punto de entrada
+│   ├── modules/         # Modules by functionality
+│   │   ├── auth/        # Authentication
+│   │   ├── members/     # Member management
+│   │   ├── assemblies/  # Assembly management
+│   │   ├── attendance/  # Attendance control
+│   │   ├── users/       # User management
+│   │   └── reports/     # Report generation
+│   ├── utils/           # Utilities (JWT, OAuth, QR, logger, PDF)
+│   ├── app.js           # Express configuration
+│   └── server.js        # Entry point
 ├── tests/
-│   ├── unit/            # Tests unitarios
-│   └── integration/     # Tests de integración
-├── .env.example         # Ejemplo de variables de entorno
-├── .gitignore           # Archivos ignorados por Git
-├── package.json         # Dependencias y scripts
-└── README.md            # Este archivo
+│   ├── unit/            # Unit tests
+│   └── integration/     # Integration tests
+├── logs/                # Application logs
+├── .env.example         # Environment variables example
+├── .gitignore           # Files ignored by Git
+├── package.json         # Dependencies and scripts
+└── README.md            # This file
 ```
 
-## Arquitectura de Módulos
+## Module Architecture
 
-Cada módulo sigue una arquitectura de 3 capas:
+Each module follows a 3-layer architecture:
 
-1. **Controller** (`*Controller.js`): Maneja requests HTTP
-2. **Service** (`*Service.js`): Contiene lógica de negocio
-3. **Repository** (`*Repository.js`): Interactúa con la base de datos
+1. **Controller** (`*Controller.js`): Handles HTTP requests
+2. **Service** (`*Service.js`): Contains business logic
+3. **Repository** (`*Repository.js`): Interacts with database
 
-Adicionalmente:
-- **Routes** (`*Routes.js`): Define las rutas del módulo
-- **Validation** (`*Validation.js`): Esquemas de validación con Joi
+Additionally:
+- **Routes** (`*Routes.js`): Defines module routes
+- **Validation** (`*Validation.js`): Validation schemas with Joi
 
 ## API Endpoints
 
@@ -123,116 +127,244 @@ Adicionalmente:
 GET /health
 ```
 
-### Autenticación (Próximamente)
+### Authentication
 ```
-POST /api/auth/login
-POST /api/auth/logout
+GET  /api/auth/login      # Initiate Microsoft OAuth login
+GET  /api/auth/callback   # OAuth callback
+GET  /api/auth/me         # Get current user info
+POST /api/auth/logout     # Logout (optional)
 ```
 
-### Módulos (En desarrollo)
-Los endpoints de los módulos se documentarán aquí conforme se implementen.
+### Users
+```
+GET    /api/users              # Get all users (with pagination)
+GET    /api/users/:id          # Get user by ID
+POST   /api/users              # Create user
+PUT    /api/users/:id          # Update user
+POST   /api/users/:id/deactivate  # Deactivate user
+POST   /api/users/:id/activate    # Activate user
+```
 
-## Respuestas de la API
+### Members
+```
+GET    /api/members            # Get all members
+GET    /api/members/:id        # Get member by ID
+POST   /api/members            # Create member
+PUT    /api/members/:id        # Update member
+DELETE /api/members/:id        # Delete member
+GET    /api/members/:id/qr     # Generate member QR code
+POST   /api/members/verify     # Verify member by QR code
+```
 
-### Respuesta Exitosa
+### Assemblies
+```
+GET    /api/assemblies         # Get all assemblies
+GET    /api/assemblies/:id     # Get assembly by ID
+POST   /api/assemblies         # Create assembly
+PUT    /api/assemblies/:id     # Update assembly
+DELETE /api/assemblies/:id     # Delete assembly
+POST   /api/assemblies/:id/activate    # Activate assembly
+POST   /api/assemblies/:id/deactivate  # Deactivate assembly
+GET    /api/assemblies/:id/stats       # Get assembly statistics
+GET    /api/assemblies/active          # Get active assembly
+```
+
+### Attendance
+```
+POST   /api/attendance/scan               # Register attendance by QR scan
+POST   /api/attendance/manual             # Register attendance manually
+GET    /api/attendance/assembly/:id       # Get attendance by assembly
+GET    /api/attendance/assembly/:id/stats # Get assembly attendance statistics
+DELETE /api/attendance/:id                # Delete attendance record
+```
+
+### Reports
+```
+POST   /api/reports/attendance # Generate attendance report
+GET    /api/reports/members/stats      # Get member statistics
+```
+
+## API Responses
+
+### Success Response
 ```json
 {
   "success": true,
-  "message": "Mensaje en español",
-  "data": { ... }
+  "message": "Message in Spanish",
+  "data": { ... },
+  "pagination": {  // Optional, for paginated responses
+    "currentPage": 1,
+    "totalPages": 5,
+    "totalItems": 100,
+    "limit": 20
+  }
 }
 ```
 
-### Respuesta de Error
+### Error Response
 ```json
 {
   "success": false,
-  "message": "Mensaje de error en español",
+  "message": "Error message in Spanish",
   "error": "ERROR_CODE",
   "details": { ... }
 }
 ```
 
-## Manejo de Errores
+## Error Handling
 
-El sistema incluye manejo global de errores que captura:
-- Errores operacionales (esperados)
-- Errores de base de datos
-- Errores de JWT
-- Errores de validación
+The system includes global error handling that captures:
+- Operational errors (expected)
+- Database errors
+- JWT errors
+- Validation errors
+- Not found errors (404)
 
-## Seguridad
+## Security
 
-- Contraseñas hasheadas con bcrypt (10 rounds)
-- Autenticación mediante JWT
-- CORS configurado
-- Helmet para headers de seguridad
-- Validación de entrada con Joi
-- Rate limiting (pendiente de implementar)
+### Authentication
+- Microsoft OAuth 2.0 for user authentication
+- JWT tokens for session management
+- Role-based access control (RBAC)
+
+### Data Protection
+- SQL injection protection (parameterized queries)
+- Input validation with Joi schemas
+- XSS protection (no eval, no innerHTML)
+- Secure user authentication via Microsoft OAuth only
+
+### HTTP Security
+- Helmet.js for security headers
+- CORS configured
+- Request logging
+- Error sanitization
+
+### Input Validation
+All endpoints validate input data with Joi schemas:
+- Email format validation
+- String length limits
+- Required field validation
+- Type checking
+- Role validation
 
 ## Testing
 
 ```bash
-# Ejecutar todos los tests
+# Run all tests
 npm test
 
-# Ejecutar tests con cobertura
+# Run tests with coverage
 npm test -- --coverage
 
-# Ejecutar tests en modo watch
+# Run tests in watch mode
 npm test -- --watch
 ```
 
-## Desarrollo
+## Development
 
-### Agregar un Nuevo Módulo
+### Adding a New Module
 
-1. Crear carpeta en `src/modules/nombre-modulo/`
-2. Crear archivos:
-   - `nombreModuloController.js`
-   - `nombreModuloService.js`
-   - `nombreModuloRepository.js`
-   - `nombreModuloRoutes.js`
-   - `nombreModuloValidation.js`
-3. Registrar rutas en `src/app.js`
+1. Create folder in `src/modules/module-name/`
+2. Create files:
+   - `moduleNameController.js`
+   - `moduleNameService.js`
+   - `moduleNameRepository.js`
+   - `moduleNameRoutes.js`
+   - `moduleNameValidation.js`
+3. Register routes in `src/app.js`
+4. Add tests in `tests/`
 
-### Convenciones de Código
+### Code Conventions
 
-- **Nombres técnicos**: Inglés
-- **Mensajes de usuario**: Español
-- **Archivos/funciones**: camelCase
-- **Clases**: PascalCase
-- **Constantes**: UPPER_SNAKE_CASE
+- **Technical names**: English
+- **User messages**: Spanish
+- **Files/functions**: camelCase
+- **Classes**: PascalCase
+- **Constants**: UPPER_SNAKE_CASE
 - **Database**: snake_case
 
-## Variables de Entorno Requeridas
+### Logging
 
-En producción, asegúrate de configurar:
-- `JWT_SECRET`: Clave secreta para JWT
-- `DATABASE_PASSWORD`: Contraseña de la base de datos
-- `NODE_ENV`: Debe ser "production"
-- `CORS_ORIGIN`: Origen del frontend en producción
+The application uses Winston for logging with different levels:
+- `error`: Error messages
+- `warn`: Warning messages
+- `info`: Informational messages
+- `debug`: Debug messages (development only)
+
+Logs are stored in:
+- `logs/application-YYYY-MM-DD.log`: All logs
+- `logs/error-YYYY-MM-DD.log`: Error logs only
+
+## Required Environment Variables
+
+In production, make sure to configure:
+- `JWT_SECRET`: Secret key for JWT
+- `DATABASE_PASSWORD`: Database password
+- `NODE_ENV`: Must be "production"
+- `CORS_ORIGIN`: Frontend origin in production
+- `MICROSOFT_CLIENT_ID`: Microsoft OAuth client ID
+- `MICROSOFT_CLIENT_SECRET`: Microsoft OAuth client secret
 
 ## Troubleshooting
 
-### Error de conexión a la base de datos
-- Verifica que PostgreSQL esté corriendo
-- Verifica las credenciales en `.env`
-- Verifica que la base de datos `coopesuma_db` exista
+### Database Connection Error
+- Verify PostgreSQL is running
+- Check credentials in `.env`
+- Verify database `coopesuma_db` exists
+- Check database logs
 
-### Error al iniciar el servidor
-- Verifica que el puerto 5000 esté disponible
-- Verifica que todas las dependencias estén instaladas
-- Revisa los logs para más detalles
+### Server Start Error
+- Verify port 5000 is available
+- Check all dependencies are installed
+- Review logs for details
+- Verify `.env` file exists and is properly configured
 
-### Error de JWT
-- Verifica que `JWT_SECRET` esté configurado en `.env`
-- Verifica que el token no haya expirado
+### JWT Error
+- Verify `JWT_SECRET` is configured in `.env`
+- Check token hasn't expired
+- Verify token format in Authorization header
 
-## Licencia
+### OAuth Error
+- Verify Microsoft OAuth credentials are correct in `.env`
+- Check redirect URI matches the configuration in Azure
+- Verify the user exists in the `users` table in the database
+- Check that the user's `is_active` status is `true`
 
-ISC
+## Database Notes
 
-## Autor
+### Snake Case to Camel Case
+The database uses `snake_case` for column names, but the API converts them to `camelCase` automatically using a middleware.
 
-Kimberly Corrales - Proyecto de Graduación UTN 2025
+Example:
+- Database: `full_name`, `created_at`
+- API: `fullName`, `createdAt`
+
+### Parameterized Queries
+All database queries use parameterized statements to prevent SQL injection:
+
+```javascript
+// Good
+db.query('SELECT * FROM users WHERE user_id = $1', [userId]);
+
+// Bad (never do this)
+db.query(`SELECT * FROM users WHERE user_id = ${userId}`);
+```
+
+## Performance
+
+- Connection pooling with `pg-pool`
+- Database indexes on frequently queried fields
+- Pagination for large datasets
+- Query result limiting
+
+## License
+
+This project is developed as a Final Graduation Project for Universidad Técnica Nacional.
+
+## Author
+
+Kimberly Corrales - UTN Graduation Project 2025
+
+---
+
+For more information, see the main project README.md at the repository root.

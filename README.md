@@ -1,110 +1,73 @@
 # CoopeSuma Management System
 
-Sistema de Control de Asistencia y Gestión Cooperativa Estudiantil
+Student Cooperative Attendance Control and Management System
 
 ---
 
-## Información del Proyecto
+## Project Information
 
-**Nombre**: SISTEMA DE CONTROL DE ASISTENCIA Y GESTIÓN COOPERATIVA ESTUDIANTIL - COOPESUMA
+**Name**: ATTENDANCE CONTROL AND STUDENT COOPERATIVE MANAGEMENT SYSTEM - COOPESUMA
 
-**Contexto Académico**: Proyecto Final de Graduación para optar por el grado de Bachiller en Ingeniería del Software
+**Academic Context**: Final Graduation Project to obtain the Bachelor's Degree in Software Engineering
 
-**Universidad**: Universidad Técnica Nacional, Sede San Carlos
+**University**: Universidad Técnica Nacional, San Carlos Campus
 
-**Estudiante**: Kimberly Stacy Corrales Vega
+**Student**: Kimberly Stacy Corrales Vega
 
-**Período**: Septiembre - Diciembre 2025
-
----
-
-## Descripción
-
-CoopeSuma es una cooperativa estudiantil de primaria respaldada por la entidad financiera Coocique. Este sistema digitaliza y moderniza los principales procesos de la cooperativa, incluyendo:
-
-1. **Control de Asistencia** (Fase 1): Registro rápido mediante códigos QR en asambleas mensuales
-2. **Gestión de Ahorros** (Fase 2): Administración de depósitos, retiros y consulta de saldos
-3. **Sistema de Votaciones** (Fase 3 - Opcional): Votaciones electrónicas internas
+**Period**: September - December 2025
 
 ---
 
-## Tecnologías
+## Description
+
+CoopeSuma is an elementary school student cooperative backed by the financial entity Coocique. This system digitalizes and modernizes the cooperative's main processes, including:
+
+1. **Attendance Control** (Phase 1): Quick registration via QR codes at monthly assemblies
+2. **Savings Management** (Phase 2): Administration of deposits, withdrawals and balance inquiries
+3. **Voting System** (Phase 3 - Optional): Internal electronic voting
+
+---
+
+## Technologies
 
 ### Frontend
-- React.js 19+ con Vite 7
+- React.js 19+ with Vite 7
 - React Router DOM 7
 - Tailwind CSS 4
-- Axios para comunicación HTTP
-- PropTypes para validación
+- Axios for HTTP communication
+- PropTypes for validation
 
 ### Backend
-- Node.js 18+ con Express
+- Node.js 18+ with Express
 - PostgreSQL 14+
-- JWT para autenticación
-- Bcrypt para encriptación
+- JWT for authentication
+- Microsoft OAuth 2.0 for user authentication
+- Joi for validation
+- Helmet for security
 
-### Herramientas
+### Tools
 - Git / GitHub
-- jsPDF / SheetJS para reportes
-- Render / Railway para despliegue
+- jsPDF / SheetJS for reports
+- Render / Railway for deployment
 
 ---
 
-## Estructura del Proyecto
+## Project Structure
 
 ```
 coopesumaManagementSystem/
-├── frontend/           # Aplicación React PWA
-├── backend/            # API REST con Node.js
-├── database/           # Scripts SQL
-├── docs/               # Documentación completa
-│   ├── specs/         # Especificaciones técnicas
-│   ├── weekly_reports/ # Bitácoras semanales
-│   └── ...
+├── frontend/           # React PWA Application
+├── backend/            # REST API with Node.js
+├── database/           # SQL Scripts
 ├── .gitignore
 └── README.md
 ```
 
 ---
 
-## Documentación Importante
+## Initial Setup
 
-### Para Desarrolladores / IA
-
-**DEBE LEER ESTOS DOCUMENTOS ANTES DE ESCRIBIR CÓDIGO:**
-
-1. **[docs/specs/00_project_context.md](docs/specs/00_project_context.md)**
-   - Contexto completo del proyecto
-   - Arquitectura del sistema
-   - Plan de desarrollo por fases
-   - Reglas de negocio críticas
-
-2. **[docs/specs/conventions.md](docs/specs/conventions.md)**
-   - Convenciones de nombres
-   - Estándares de código
-   - Patrones de diseño
-   - Buenas prácticas
-
-3. **[docs/specs/01_database_specification.md](docs/specs/01_database_specification.md)**
-   - Esquema completo de base de datos
-   - Reglas de integridad
-   - Scripts de creación
-
-### Documentación por Módulo
-
-Cada módulo tiene su propio documento de especificación en `docs/specs/`:
-- `02_auth_module_spec.md` - Autenticación
-- `03_members_module_spec.md` - Gestión de Miembros
-- `04_assemblies_module_spec.md` - Gestión de Asambleas
-- `05_attendance_module_spec.md` - Control de Asistencia
-- `06_users_module_spec.md` - Gestión de Usuarios
-- `07_reports_module_spec.md` - Generación de Reportes
-
----
-
-## Configuración Inicial
-
-### Pre-requisitos
+### Prerequisites
 
 ```bash
 # Node.js 18+
@@ -117,20 +80,20 @@ psql --version
 git --version
 ```
 
-### Clonar Repositorio
+### Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone <https://github.com/cooplinkcr/cooplinkcr.git>
 cd coopesumaManagementSystem
 ```
 
-### Configurar Base de Datos
+### Setup Database
 
 ```bash
-# 1. Crear base de datos
+# 1. Create database
 createdb coopesuma_db
 
-# 2. Ejecutar scripts en orden
+# 2. Execute scripts in order
 cd database/scripts/phase_1
 psql -d coopesuma_db -f 01_create_functions.sql
 psql -d coopesuma_db -f 02_create_tables.sql
@@ -139,53 +102,53 @@ psql -d coopesuma_db -f 04_create_triggers.sql
 psql -d coopesuma_db -f 05_seed_initial_data.sql
 ```
 
-### Configurar Backend
+### Setup Backend
 
 ```bash
 cd backend
 npm install
 
-# Copiar archivo de configuración
+# Copy configuration file
 cp .env.example .env
 
-# Editar .env con tus valores
+# Edit .env with your values
 nano .env
 ```
 
-### Configurar Frontend
+### Setup Frontend
 
 ```bash
 cd frontend
 npm install
 
-# Copiar archivo de configuración
+# Copy configuration file
 cp .env.example .env
 
-# Editar .env con tus valores
+# Edit .env with your values
 nano .env
 ```
 
 ---
 
-## Ejecución en Desarrollo
+## Development Execution
 
 ### Backend
 ```bash
 cd backend
 npm run dev
-# Servidor corriendo en http://localhost:5000
+# Server running on http://localhost:5000
 ```
 
 ### Frontend
 ```bash
 cd frontend
 npm run dev
-# Aplicación corriendo en http://localhost:5173
+# Application running on http://localhost:5173
 ```
 
 ---
 
-## Variables de Entorno
+## Environment Variables
 
 ### Backend (.env)
 ```
@@ -194,8 +157,13 @@ PORT=5000
 DATABASE_URL=postgresql://user:password@localhost:5432/coopesuma_db
 JWT_SECRET=your-secret-key-here
 JWT_EXPIRES_IN=24h
-BCRYPT_ROUNDS=10
 CORS_ORIGIN=http://localhost:5173
+
+# Microsoft OAuth Configuration
+MICROSOFT_CLIENT_ID=your-client-id
+MICROSOFT_CLIENT_SECRET=your-client-secret
+MICROSOFT_TENANT_ID=common
+MICROSOFT_REDIRECT_URI=http://localhost:5000/api/auth/callback
 ```
 
 ### Frontend (.env)
@@ -206,59 +174,62 @@ VITE_APP_NAME=CoopeSuma
 
 ---
 
-## Roles y Permisos
+## Roles and Permissions
 
-| Funcionalidad | Administrador | Registrador | Tesorera |
-|---------------|---------------|-------------|----------|
-| Iniciar/cerrar asamblea | ✅ | ❌ | ❌ |
-| Escanear QR | ✅ | ✅ | ❌ |
-| Administrar miembros | ✅ | ❌ | ❌ |
-| Administrar usuarios | ✅ | ❌ | ❌ |
-| Generar reportes | ✅ | ❌ | ❌ |
-| Gestionar ahorros | ✅ | ❌ | ✅ |
-
----
-
-## Desarrollo por Fases
-
-### Fase 1: Control de Asistencia (Semanas 1-10)
-- ✅ Base de datos
-- ✅ Autenticación (Microsoft OAuth 2.0)
-- ✅ Gestión de miembros (CRUD + QR codes)
-- 🔄 Gestión de asambleas
-- 🔄 Registro de asistencia (QR scanner)
-- 🔄 Reportes PDF
-
-### Fase 2: Gestión de Ahorros (Semanas 11-14)
-- ⏳ Transacciones de ahorro
-- ⏳ Consulta de saldos
-- ⏳ Reportes de ahorros
-- ⏳ Migración de datos Excel
-
-### Fase 3: Votaciones (Opcional - Futuro)
-- ⏳ Sistema de votaciones
-- ⏳ Gestión de propuestas
-- ⏳ Resultados en tiempo real
+| Functionality | Administrator | Registrar | Treasurer |
+|---------------|---------------|-----------|-----------|
+| Start/close assembly | ✅ | ❌ | ❌ |
+| Scan QR | ✅ | ✅ | ❌ |
+| Manage members | ✅ | ❌ | ❌ |
+| Manage users | ✅ | ❌ | ❌ |
+| Generate reports | ✅ | ❌ | ❌ |
+| Manage savings | ✅ | ❌ | ✅ |
 
 ---
 
-## Scripts Disponibles
+## Development Phases
+
+### Phase 1: Attendance Control (Weeks 1-10)
+- ✅ Database (PostgreSQL with complete schema)
+- ✅ Authentication (Microsoft OAuth 2.0)
+- ✅ User management (CRUD + role-based access)
+- ✅ Member management (CRUD + QR codes)
+- ✅ Assembly management (CRUD + activation/deactivation)
+- ✅ Attendance registration (QR scanner + manual)
+- ✅ Real-time attendance list
+- ✅ Attendance reports (printable PDF)
+- ✅ Public member verification page
+
+### Phase 2: Savings Management (Weeks 11-14)
+- ⏳ Savings transactions
+- ⏳ Balance inquiry
+- ⏳ Savings reports
+- ⏳ Excel data migration
+
+### Phase 3: Voting (Optional - Future)
+- ⏳ Voting system
+- ⏳ Proposal management
+- ⏳ Real-time results
+
+---
+
+## Available Scripts
 
 ### Backend
 ```bash
-npm start        # Producción
-npm run dev      # Desarrollo con nodemon
-npm test         # Ejecutar tests
-npm run lint     # Verificar código
+npm start        # Production
+npm run dev      # Development with nodemon
+npm test         # Run tests
+npm run lint     # Check code
 ```
 
 ### Frontend
 ```bash
-npm run dev      # Desarrollo
-npm run build    # Build para producción
-npm run preview  # Preview del build
-npm test         # Ejecutar tests
-npm run lint     # Verificar código
+npm run dev      # Development
+npm run build    # Build for production
+npm run preview  # Preview build
+npm test         # Run tests
+npm run lint     # Check code
 ```
 
 ---
@@ -279,127 +250,170 @@ npm test
 
 ---
 
-## Despliegue
+## Deployment
 
-### Preparación
-1. Completar variables de entorno de producción
-2. Ejecutar build del frontend: `npm run build`
-3. Configurar base de datos en Railway/Render
-4. Ejecutar scripts SQL en base de datos de producción
+### Preparation
+1. Complete production environment variables
+2. Run frontend build: `npm run build`
+3. Setup database on Railway/Render
+4. Execute SQL scripts on production database
 
 ### Railway / Render
-Seguir la guía en `docs/guides/deployment_guide.md`
+Configure the production environment variables and deploy both frontend and backend services.
 
 ---
 
-## Contribución
+## Contribution
 
-### Workflow de Git
+### Git Workflow
 
-1. Crear rama feature
+1. Create feature branch
 ```bash
 git checkout -b feature/module-name
 ```
 
-2. Hacer commits descriptivos
+2. Make descriptive commits
 ```bash
 git commit -m "feat(members): add QR generation"
 ```
 
-3. Push y crear Pull Request
+3. Push and create Pull Request
 ```bash
 git push origin feature/module-name
 ```
 
-### Convenciones de Commits
+### Commit Conventions
 
 ```
-feat(scope): descripción     # Nueva funcionalidad
-fix(scope): descripción      # Corrección de bug
-docs(scope): descripción     # Cambios en documentación
-refactor(scope): descripción # Refactorización
-test(scope): descripción     # Agregar tests
+feat(scope): description     # New feature
+fix(scope): description      # Bug fix
+docs(scope): description     # Documentation changes
+refactor(scope): description # Refactoring
+test(scope): description     # Add tests
 ```
 
 ---
 
-## Reglas Críticas del Proyecto
+## Authentication
 
-### Para Desarrolladores y Asistentes IA:
+The system uses **Microsoft OAuth 2.0** exclusively for user authentication. There is no traditional username/password login.
 
-1. **LEER DOCUMENTACIÓN PRIMERO**: Siempre revisar `docs/specs/` antes de escribir código
-2. **Inglés para código**: Variables, funciones, clases, archivos
-3. **Español para usuarios**: Mensajes de error, UI, notificaciones
-4. **Database-first**: Escribir scripts SQL, NO usar migraciones ORM
-5. **Backend primero**: Completar lógica backend antes de frontend
-6. **Módulo por módulo**: No intentar hacer todo a la vez
-7. **Nunca localStorage**: Usar React state o sesiones backend
-8. **Documentar cambios**: Actualizar `development_log.md` después de cada cambio significativo
+### How Authentication Works
 
----
+1. Users must be registered in the `users` table in the database by an administrator
+2. When a user attempts to login via Microsoft OAuth:
+   - The system verifies their Microsoft account
+   - Checks if the user exists in the database (by Microsoft ID or email)
+   - If the user exists and is active, they are granted access
+   - If the user doesn't exist, access is denied
 
-## Autenticación
+### Adding New Users
 
-El sistema utiliza **Microsoft OAuth 2.0** exclusivamente. No hay login tradicional con usuario/contraseña.
+Only administrators can create new users through:
+- The user management interface in the frontend
+- The API endpoint: `POST /api/users`
 
-### Usuarios Autorizados
-
-Los usuarios autorizados se configuran en `backend/src/config/authorizedUsers.js`:
-
-```javascript
-{
-  email: 'kicorralesve@est.utn.ac.cr',
-  role: 'administrator',
-  fullName: 'Kimberly Corrales'
-}
-```
-
-Solo los emails en esta whitelist pueden autenticarse en el sistema.
+Required fields when creating a user:
+- Full name
+- Username
+- Email
+- Microsoft ID (obtained from their Microsoft account)
+- Role (administrator, registrar, or treasurer)
 
 ---
 
-## Soporte y Contacto
+## Security Features
 
-Para preguntas sobre el proyecto:
-- Revisar documentación en `docs/`
-- Consultar especificaciones en `docs/specs/`
-- Ver bitácoras en `docs/weekly_reports/`
+### SQL Injection Protection
+- ✅ Parameterized queries throughout the system
+- ✅ No string concatenation in SQL statements
+- ✅ PostgreSQL native escaping
 
----
+### Input Validation
+- ✅ Backend validation with Joi schemas
+- ✅ Frontend validation on all forms
+- ✅ Length limits and format validation
+- ✅ Role-based access control
 
-## Licencia
+### XSS Protection
+- ✅ React automatic escaping
+- ✅ No use of dangerouslySetInnerHTML
+- ✅ No eval() usage
 
-Este proyecto es desarrollado como Proyecto Final de Graduación para la Universidad Técnica Nacional.
-
----
-
-## Estado del Proyecto
-
-**Última actualización**: Octubre 2025
-
-**Fase actual**: Fase 1 - Desarrollo de Control de Asistencia
-
-**Progreso**: 40% (Base de datos + Autenticación + Módulo Members completo)
-
----
-
-## Checklist de Configuración
-
-Para verificar que todo está configurado correctamente:
-
-- [ ] Node.js 18+ instalado
-- [ ] PostgreSQL 14+ instalado y corriendo
-- [ ] Base de datos `coopesuma_db` creada
-- [ ] Scripts SQL ejecutados exitosamente
-- [ ] Backend `.env` configurado
-- [ ] Frontend `.env` configurado
-- [ ] Dependencias de backend instaladas (`npm install`)
-- [ ] Dependencias de frontend instaladas (`npm install`)
-- [ ] Backend corriendo en puerto 5000
-- [ ] Frontend corriendo en puerto 5173
-- [ ] Usuario admin puede hacer login
-- [ ] Documentación leída y comprendida
+### HTTP Security
+- ✅ Helmet.js middleware
+- ✅ CORS configuration
+- ✅ JWT token authentication
+- ✅ Microsoft OAuth 2.0 authentication
 
 ---
 
-**Desarrollado con ❤️ para CoopeSuma**
+## License
+
+This project is developed as a Final Graduation Project for Universidad Técnica Nacional.
+
+---
+
+## Project Status
+
+**Last updated**: October 2025
+
+**Current phase**: Phase 1 - Attendance Control (COMPLETED ✅)
+
+**Progress**: 95% Phase 1 Complete
+
+**Completed Modules**:
+- ✅ Database schema and migrations
+- ✅ Authentication (Microsoft OAuth 2.0)
+- ✅ User management with role-based access
+- ✅ Member management with QR code generation
+- ✅ Assembly management with activation control
+- ✅ Attendance recording (QR scan + manual)
+- ✅ Real-time attendance tracking
+- ✅ Printable attendance reports
+- ✅ Public member verification
+- ✅ Security implementation (SQL injection, XSS, CORS)
+
+**Next Steps**: Phase 2 - Savings Management
+
+---
+
+## Setup Checklist
+
+To verify everything is configured correctly:
+
+- [ ] Node.js 18+ installed
+- [ ] PostgreSQL 14+ installed and running
+- [ ] Database `coopesuma_db` created
+- [ ] SQL scripts executed successfully
+- [ ] Backend `.env` configured
+- [ ] Frontend `.env` configured
+- [ ] Backend dependencies installed (`npm install`)
+- [ ] Frontend dependencies installed (`npm install`)
+- [ ] Backend running on port 5000
+- [ ] Frontend running on port 5173
+- [ ] Admin user can login
+- [ ] Documentation read and understood
+
+---
+
+## User Interface Features
+
+### Alerts System
+- ✅ Auto-close success messages (5 seconds)
+- ✅ Auto-close error messages (5 seconds)
+- ✅ Manual close option for all alerts
+- ✅ Customizable duration
+
+### Form Validation
+- ✅ Real-time validation
+- ✅ Clear error messages in Spanish
+- ✅ Length limits enforced
+- ✅ Email format validation
+
+### User Management
+- ✅ CRUD operations for users
+- ✅ Role-based access control
+- ✅ Activate/Deactivate users
+- ✅ Paginated user list
+- ✅ Search and filter functionality
