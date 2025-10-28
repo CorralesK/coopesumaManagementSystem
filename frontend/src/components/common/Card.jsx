@@ -17,15 +17,15 @@ const Card = ({
     const paddingClasses = {
         none: '',
         sm: 'p-4',
-        normal: 'p-6 sm:p-7 lg:p-8',
+        normal: 'p-5',
         lg: 'p-8 sm:p-9 lg:p-10'
     };
 
     return (
-        <div className={`bg-white rounded-lg shadow-md ${className}`}>
+        <div className={`bg-white rounded-lg ${className}`}>
             {title && (
-                <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+                <div className="px-5 py-2 border-b border-gray-200 flex justify-between items-center">
+                    <h3 className="text-base font-semibold text-gray-900">{title}</h3>
                     {headerAction && (
                         <div className="flex-shrink-0">
                             {headerAction}
