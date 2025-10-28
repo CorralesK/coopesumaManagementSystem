@@ -134,8 +134,8 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterGrade }) => {
                     ) : (
                         <>
                             {/* Instructions */}
-                            <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
-                                <p className="text-sm text-blue-700">
+                            <div className="bg-primary-50 border-l-4 border-primary-500 p-4">
+                                <p className="text-sm text-primary-700">
                                     Selecciona los miembros para los cuales deseas imprimir carnets estudiantiles.
                                     Los carnets se ordenarán por grado y nombre alfabético.
                                 </p>
@@ -191,7 +191,7 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterGrade }) => {
                                             type="checkbox"
                                             checked={selectedMembers.includes(member.memberId)}
                                             onChange={() => handleToggleMember(member.memberId)}
-                                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                            className="w-4 h-4 text-primary-600 rounded focus:ring-blue-500"
                                         />
                                         <div className="ml-3 flex items-center flex-1">
                                             {member.photoUrl && (

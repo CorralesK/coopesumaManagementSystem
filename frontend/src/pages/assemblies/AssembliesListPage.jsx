@@ -27,46 +27,40 @@ const AssembliesListPage = () => {
     const { activate, deactivate, remove, loading: operating } = useAssemblyOperations();
 
     // Event handlers
-    const handleActivate = async (assemblyId) => {
-        if (!window.confirm('¿Activar esta asamblea? La asamblea activa actual será desactivada.')) {
+    const handleStartAssembly = async (assemblyId) => {
+        if (!window.confirm('¿Iniciar esta asamblea? La asamblea activa actual será concluida automáticamente.')) {
             return;
         }
 
         try {
             await activate(assemblyId);
-            setSuccessMessage('Asamblea activada exitosamente');
+            setSuccessMessage('Asamblea iniciada exitosamente');
             await refetch();
         } catch (err) {
             // Error handled by hook
         }
     };
 
-    const handleDeactivate = async (assemblyId) => {
-        if (!window.confirm('¿Desactivar esta asamblea?')) {
+    const handleConcludeAssembly = async (assemblyId) => {
+        if (!window.confirm('¿Concluir esta asamblea? Esta acción no se puede deshacer.')) {
             return;
         }
 
         try {
             await deactivate(assemblyId);
-            setSuccessMessage('Asamblea desactivada exitosamente');
+            setSuccessMessage('Asamblea concluida exitosamente');
             await refetch();
         } catch (err) {
             // Error handled by hook
         }
     };
 
-    const handleDelete = async (assemblyId) => {
-        if (!window.confirm('¿Eliminar esta asamblea? Esta acción no se puede deshacer.')) {
-            return;
-        }
-
-        try {
-            await remove(assemblyId);
-            setSuccessMessage('Asamblea eliminada exitosamente');
-            await refetch();
-        } catch (err) {
-            // Error handled by hook
-        }
+    // Check if assembly is concluded (not active and has attendance records)
+    // An assembly is concluded if it was started (has attendance) and is now inactive
+    const isAssemblyConcluded = (assembly) => {
+        if (assembly.isActive) return false;
+        // If it has attendance records, it means it was started and is now concluded
+        return assembly.attendanceCount > 0;
     };
 
     // Format date helper
@@ -83,80 +77,88 @@ const AssembliesListPage = () => {
         {
             key: 'title',
             label: 'Título',
-            render: (assembly) => assembly.title
+            render: (assembly) => (
+                <div className="text-left">
+                    <button
+                        onClick={() => navigate(`/assemblies/${assembly.assemblyId}`)}
+                        className="font-semibold text-base text-primary-600 hover:text-primary-800 hover:underline text-left"
+                    >
+                        {assembly.title}
+                    </button>
+                    {assembly.isActive && (
+                        <span className="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            En curso
+                        </span>
+                    )}
+                </div>
+            )
         },
         {
             key: 'scheduledDate',
             label: 'Fecha Programada',
-            render: (assembly) => formatDate(assembly.scheduledDate)
-        },
-        {
-            key: 'isActive',
-            label: 'Estado',
-            render: (assembly) => {
-                const isActive = assembly.isActive;
-                const statusConfig = isActive
-                    ? { label: 'Activa', class: 'bg-green-100 text-green-800' }
-                    : { label: 'Inactiva', class: 'bg-gray-100 text-gray-800' };
-
-                return (
-                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${statusConfig.class}`}>
-                        {statusConfig.label}
-                    </span>
-                );
-            }
+            render: (assembly) => (
+                <span className="text-gray-700 font-medium">
+                    {formatDate(assembly.scheduledDate)}
+                </span>
+            )
         },
         {
             key: 'actions',
             label: 'Acciones',
-            render: (assembly) => (
-                <div className="inline-flex items-center justify-center gap-2 my-2">
-                    <Button
-                        onClick={() => navigate(`/assemblies/${assembly.assemblyId}`)}
-                        variant="outline-gray"
-                        size="sm"
-                    >
-                        Ver
-                    </Button>
-                    <Button
-                        onClick={() => navigate(`/assemblies/${assembly.assemblyId}/edit`)}
-                        variant="outline"
-                        size="sm"
-                    >
-                        Editar
-                    </Button>
-                    {!assembly.isActive && (
+            render: (assembly) => {
+                const isConcluded = isAssemblyConcluded(assembly);
+
+                return (
+                    <div className="inline-flex items-center justify-center gap-3 my-2">
                         <Button
-                            onClick={() => handleActivate(assembly.assemblyId)}
-                            variant="success"
+                            onClick={() => navigate(`/assemblies/${assembly.assemblyId}/edit`)}
+                            variant="outline"
                             size="sm"
-                            disabled={operating}
                         >
-                            Activar
+                            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Editar
                         </Button>
-                    )}
-                    {assembly.isActive && (
-                        <Button
-                            onClick={() => handleDeactivate(assembly.assemblyId)}
-                            variant="warning"
-                            size="sm"
-                            disabled={operating}
-                        >
-                            Desactivar
-                        </Button>
-                    )}
-                    {!assembly.isActive && (
-                        <Button
-                            onClick={() => handleDelete(assembly.assemblyId)}
-                            variant="danger"
-                            size="sm"
-                            disabled={operating}
-                        >
-                            Eliminar
-                        </Button>
-                    )}
-                </div>
-            )
+
+                        {!assembly.isActive && !isConcluded && (
+                            <Button
+                                onClick={() => handleStartAssembly(assembly.assemblyId)}
+                                variant="primary"
+                                size="sm"
+                                disabled={operating}
+                                className="!px-4"
+                            >
+                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Iniciar Asamblea
+                            </Button>
+                        )}
+
+                        {assembly.isActive && (
+                            <Button
+                                onClick={() => handleConcludeAssembly(assembly.assemblyId)}
+                                variant="secondary"
+                                size="sm"
+                                disabled={operating}
+                            >
+                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Concluir
+                            </Button>
+                        )}
+
+                        {isConcluded && (
+                            <span className="text-sm font-semibold text-gray-700">
+                                Concluida
+                            </span>
+                        )}
+                    </div>
+                );
+            }
         }
     ];
 
@@ -167,14 +169,9 @@ const AssembliesListPage = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Gestión de Asambleas</h1>
-                    <p className="text-gray-600 mt-1">
-                        Total: {pagination.total} asamblea{pagination.total !== 1 ? 's' : ''}
-                    </p>
-                </div>
-                <Button onClick={() => navigate('/assemblies/new')} variant="primary" className="whitespace-nowrap">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Asambleas</h1>
+                <Button onClick={() => navigate('/assemblies/new')} variant="primary" className="whitespace-nowrap w-full sm:w-auto">
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
@@ -196,6 +193,7 @@ const AssembliesListPage = () => {
                             columns={tableColumns}
                             data={assemblies}
                             emptyMessage="No se encontraron asambleas"
+                            isRowActive={(assembly) => assembly.isActive}
                         />
                         {pagination.totalPages > 1 && (
                             <Pagination

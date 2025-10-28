@@ -38,7 +38,7 @@ const MembersListPage = () => {
         setPage,
         resetFilters,
         refetch
-    } = useMembers({ isActive: 'true', limit: 20 });
+    } = useMembers({ isActive: '', limit: 20 });
 
     const { deactivate, loading: deactivating } = useMemberOperations();
 
@@ -75,7 +75,12 @@ const MembersListPage = () => {
                             className="w-10 h-10 rounded-full mr-3 object-cover"
                         />
                     )}
-                    <span className="font-medium">{member.fullName}</span>
+                    <button
+                        onClick={() => navigate(`/members/${member.memberId}`)}
+                        className="font-medium text-primary-600 hover:text-primary-800 hover:underline text-left"
+                    >
+                        {member.fullName}
+                    </button>
                 </div>
             )
         },
@@ -106,9 +111,6 @@ const MembersListPage = () => {
             label: 'Acciones',
             render: (member) => (
                 <div className="inline-flex items-center justify-center gap-2 my-2">
-                    <Button onClick={() => navigate(`/members/${member.memberId}`)} variant="outline-gray" size="sm">
-                        Ver
-                    </Button>
                     <Button onClick={() => navigate(`/members/${member.memberId}/edit`)} variant="outline" size="sm">
                         Editar
                     </Button>
@@ -124,9 +126,9 @@ const MembersListPage = () => {
 
     const gradeOptions = GRADES.map(grade => ({ value: grade, label: `${grade}° grado` }));
     const statusOptions = [
+        { value: '', label: 'Todos' },
         { value: 'true', label: 'Activos' },
-        { value: 'false', label: 'Inactivos' },
-        { value: '', label: 'Todos' }
+        { value: 'false', label: 'Inactivos' }
     ];
 
     if (loading && members.length === 0) {
@@ -136,14 +138,9 @@ const MembersListPage = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Gestión de Miembros</h1>
-                    <p className="text-gray-600 mt-1">
-                        Total: {pagination.total} miembro{pagination.total !== 1 ? 's' : ''}
-                    </p>
-                </div>
-                <Button onClick={() => navigate('/members/new')} variant="primary" className="whitespace-nowrap">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Miembros</h1>
+                <Button onClick={() => navigate('/members/new')} variant="primary" className="whitespace-nowrap w-full sm:w-auto">
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                     </svg>
@@ -180,6 +177,7 @@ const MembersListPage = () => {
                         value={filters.isActive}
                         onChange={(e) => handleFilterChange('isActive', e.target.value)}
                         options={statusOptions}
+                        placeholder=""
                     />
                 </div>
                 <div className="mt-6 flex flex-wrap gap-3">

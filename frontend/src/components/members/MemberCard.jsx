@@ -18,16 +18,17 @@ import PropTypes from 'prop-types';
  * @param {number} props.member.grade - Member's grade
  * @param {string} props.member.photoUrl - Member's photo URL
  * @param {string} props.member.qrCodeDataUrl - QR code data URL
+ * @param {string} props.cooperativeName - Cooperative trade name (optional, defaults to 'Coopesuma')
  * @param {boolean} props.showCutLines - Whether to show cutting guide lines (default: false)
  */
-const MemberCard = ({ member, showCutLines = false }) => {
+const MemberCard = ({ member, cooperativeName = 'Coopesuma', showCutLines = false }) => {
     return (
         <div className={`member-card-container ${showCutLines ? 'with-cut-lines' : ''}`}>
             {/* ID Card */}
             <div className="member-card">
                 {/* Header */}
                 <div className="card-header">
-                    <h1 className="card-title">Coopesuma</h1>
+                    <h1 className="card-title">{cooperativeName}</h1>
                 </div>
 
                 {/* Main Content */}
@@ -281,6 +282,7 @@ MemberCard.propTypes = {
         photoUrl: PropTypes.string,
         qrCodeDataUrl: PropTypes.string
     }).isRequired,
+    cooperativeName: PropTypes.string,
     showCutLines: PropTypes.bool
 };
 
