@@ -160,7 +160,8 @@ const createAssembly = async (req, res) => {
             title: req.body.title,
             scheduledDate: req.body.scheduledDate,
             startTime: req.body.startTime,
-            endTime: req.body.endTime
+            endTime: req.body.endTime,
+            cooperativeId: 1 // Default cooperative ID (temporary until multi-cooperative is fully implemented)
         };
 
         const newAssembly = await assemblyService.createAssembly(

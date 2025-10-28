@@ -81,16 +81,18 @@ const findAll = async (filters = {}) => {
     try {
         let query = `
             SELECT
-                assembly_id,
-                title,
-                scheduled_date,
-                start_time,
-                end_time,
-                is_active,
-                created_by,
-                created_at,
-                updated_at
-            FROM assemblies
+                a.assembly_id,
+                a.title,
+                a.scheduled_date,
+                a.start_time,
+                a.end_time,
+                a.is_active,
+                a.created_by,
+                a.created_at,
+                a.updated_at,
+                COUNT(ar.attendance_id) as attendance_count
+            FROM assemblies a
+            LEFT JOIN attendance_records ar ON a.assembly_id = ar.assembly_id
             WHERE 1=1
         `;
 
@@ -98,30 +100,30 @@ const findAll = async (filters = {}) => {
         let paramIndex = 1;
 
         if (filters.isActive !== undefined) {
-            query += ` AND is_active = $${paramIndex}`;
+            query += ` AND a.is_active = $${paramIndex}`;
             params.push(filters.isActive);
             paramIndex++;
         }
 
         if (filters.fromDate) {
-            query += ` AND scheduled_date >= $${paramIndex}`;
+            query += ` AND a.scheduled_date >= $${paramIndex}`;
             params.push(filters.fromDate);
             paramIndex++;
         }
 
         if (filters.toDate) {
-            query += ` AND scheduled_date <= $${paramIndex}`;
+            query += ` AND a.scheduled_date <= $${paramIndex}`;
             params.push(filters.toDate);
             paramIndex++;
         }
 
         if (filters.createdBy) {
-            query += ` AND created_by = $${paramIndex}`;
+            query += ` AND a.created_by = $${paramIndex}`;
             params.push(filters.createdBy);
             paramIndex++;
         }
 
-        query += ' ORDER BY scheduled_date DESC, created_at DESC';
+        query += ' GROUP BY a.assembly_id ORDER BY a.scheduled_date DESC, a.created_at DESC';
 
         // Pagination
         if (filters.limit) {
@@ -202,9 +204,10 @@ const create = async (assemblyData) => {
                 start_time,
                 end_time,
                 is_active,
-                created_by
+                created_by,
+                cooperative_id
             )
-            VALUES ($1, $2, $3, $4, $5, $6)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING
                 assembly_id,
                 title,
@@ -213,6 +216,7 @@ const create = async (assemblyData) => {
                 end_time,
                 is_active,
                 created_by,
+                cooperative_id,
                 created_at
         `;
 
@@ -222,7 +226,8 @@ const create = async (assemblyData) => {
             assemblyData.startTime || null,
             assemblyData.endTime || null,
             assemblyData.isActive !== undefined ? assemblyData.isActive : false,
-            assemblyData.createdBy
+            assemblyData.createdBy,
+            assemblyData.cooperativeId || 1 // Default to cooperative 1
         ];
 
         const result = await db.query(query, values);
