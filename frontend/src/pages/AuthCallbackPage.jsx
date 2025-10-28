@@ -110,7 +110,7 @@ const AuthCallbackPage = () => {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-700 px-4 py-8">
             <div className="bg-white rounded-xl shadow-2xl p-6 sm:p-8 md:p-10 w-full max-w-md mx-auto text-center">
                 <div className="flex justify-center mb-6">
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
+                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary-200 border-t-blue-600"></div>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">
                     Autenticando...
@@ -119,9 +119,9 @@ const AuthCallbackPage = () => {
                     Por favor espera mientras procesamos tu inicio de sesión
                 </p>
                 <div className="flex justify-center gap-2">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
-                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+                    <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
+                    <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
                 </div>
             </div>
         </div>
