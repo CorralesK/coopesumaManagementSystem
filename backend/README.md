@@ -33,7 +33,7 @@ PORT=5000
 # Database
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
-DATABASE_NAME=coopesuma_db
+DATABASE_NAME=cooplinkcr
 DATABASE_USER=postgres
 DATABASE_PASSWORD=your_password
 
@@ -60,15 +60,15 @@ Before starting the server, make sure you have the database configured:
 
 ```bash
 # Create database
-createdb coopesuma_db
+createdb cooplinkcr
 
 # Execute SQL scripts in order
 cd ../database/scripts/phase_1
-psql -U postgres -d coopesuma_db -f 01_create_functions.sql
-psql -U postgres -d coopesuma_db -f 02_create_tables.sql
-psql -U postgres -d coopesuma_db -f 03_create_indexes.sql
-psql -U postgres -d coopesuma_db -f 04_create_triggers.sql
-psql -U postgres -d coopesuma_db -f 05_seed_initial_data.sql
+psql -U postgres -d cooplinkcr -f 01_create_functions.sql
+psql -U postgres -d cooplinkcr -f 02_create_tables.sql
+psql -U postgres -d cooplinkcr -f 03_create_indexes.sql
+psql -U postgres -d cooplinkcr -f 04_create_triggers.sql
+psql -U postgres -d cooplinkcr -f 05_seed_initial_data.sql
 ```
 
 ## Available Scripts
@@ -310,7 +310,7 @@ In production, make sure to configure:
 ### Database Connection Error
 - Verify PostgreSQL is running
 - Check credentials in `.env`
-- Verify database `coopesuma_db` exists
+- Verify database `cooplinkcr` exists
 - Check database logs
 
 ### Server Start Error

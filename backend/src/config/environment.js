@@ -14,7 +14,7 @@ const config = {
     database: {
         host: process.env.DATABASE_HOST || 'localhost',
         port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
-        name: process.env.DATABASE_NAME || 'coopesuma_db',
+        name: process.env.DATABASE_NAME || 'cooplinkcr',
         user: process.env.DATABASE_USER || 'postgres',
         password: process.env.DATABASE_PASSWORD || '',
         url: process.env.DATABASE_URL ||

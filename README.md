@@ -91,15 +91,15 @@ cd coopesumaManagementSystem
 
 ```bash
 # 1. Create database
-createdb coopesuma_db
+createdb cooplinkcr
 
 # 2. Execute scripts in order
 cd database/scripts/phase_1
-psql -d coopesuma_db -f 01_create_functions.sql
-psql -d coopesuma_db -f 02_create_tables.sql
-psql -d coopesuma_db -f 03_create_indexes.sql
-psql -d coopesuma_db -f 04_create_triggers.sql
-psql -d coopesuma_db -f 05_seed_initial_data.sql
+psql -d cooplinkcr -f 01_create_functions.sql
+psql -d cooplinkcr -f 02_create_tables.sql
+psql -d cooplinkcr -f 03_create_indexes.sql
+psql -d cooplinkcr -f 04_create_triggers.sql
+psql -d cooplinkcr -f 05_seed_initial_data.sql
 ```
 
 ### Setup Backend
@@ -154,7 +154,7 @@ npm run dev
 ```
 NODE_ENV=development
 PORT=5000
-DATABASE_URL=postgresql://user:password@localhost:5432/coopesuma_db
+DATABASE_URL=postgresql://user:password@localhost:5432/cooplinkcr
 JWT_SECRET=your-secret-key-here
 JWT_EXPIRES_IN=24h
 CORS_ORIGIN=http://localhost:5173
@@ -384,7 +384,7 @@ To verify everything is configured correctly:
 
 - [ ] Node.js 18+ installed
 - [ ] PostgreSQL 14+ installed and running
-- [ ] Database `coopesuma_db` created
+- [ ] Database `cooplinkcr` created
 - [ ] SQL scripts executed successfully
 - [ ] Backend `.env` configured
 - [ ] Frontend `.env` configured

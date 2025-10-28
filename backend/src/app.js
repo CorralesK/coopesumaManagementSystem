@@ -52,6 +52,7 @@ const assemblyRoutes = require('./modules/assemblies/assemblyRoutes');
 const attendanceRoutes = require('./modules/attendance/attendanceRoutes');
 const userRoutes = require('./modules/users/userRoutes');
 const reportRoutes = require('./modules/reports/reportRoutes');
+const cooperativeRoutes = require('./modules/cooperatives/cooperativeRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/members', memberRoutes);
@@ -59,6 +60,7 @@ app.use('/api/assemblies', assemblyRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/cooperatives', cooperativeRoutes);
 
 // 404 handler
 app.use((req, res) => {
