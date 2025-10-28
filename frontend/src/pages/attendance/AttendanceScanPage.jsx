@@ -172,12 +172,12 @@ const AttendanceScanPage = () => {
             </div>
 
             {/* Assembly Info Card - Full Width */}
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-primary-200">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-2">
                     <div className="flex-1 w-full sm:w-auto">
                         <div className="flex items-center space-x-4 sm:space-x-6">
                             <div className="flex-shrink-0">
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-500 rounded-lg flex items-center justify-center">
                                     <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
@@ -196,10 +196,10 @@ const AttendanceScanPage = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="bg-white border-2 border-blue-500 rounded-lg px-4 py-2 sm:px-6 sm:py-2 shadow-md w-full sm:w-auto">
+                    <div className="bg-white border-2 border-primary-500 rounded-lg px-4 py-2 sm:px-6 sm:py-2 shadow-md w-full sm:w-auto">
                         <div className="text-center">
-                            <p className="text-xs text-blue-600 font-medium">Total Asistentes</p>
-                            <p className="text-2xl sm:text-3xl font-bold text-blue-700">
+                            <p className="text-xs text-primary-600 font-medium">Total Asistentes</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-primary-700">
                                 {loadingAttendance ? '...' : (attendance?.length || 0)}
                             </p>
                         </div>
@@ -253,9 +253,9 @@ const AttendanceScanPage = () => {
                         </div>
 
                         {/* Instructions */}
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
-                            <h4 className="font-medium text-blue-900 mb-2">Instrucciones:</h4>
-                            <ul className="text-sm text-blue-800 space-y-1">
+                        <div className="bg-primary-50 border-l-4 border-primary-500 p-4">
+                            <h4 className="font-medium text-primary-900 mb-2">Instrucciones:</h4>
+                            <ul className="text-sm text-primary-800 space-y-1">
                                 <li>• Coloca el código QR frente a la cámara</li>
                                 <li>• Mantén el código dentro del marco de escaneo</li>
                                 <li>• Verifica la información del miembro</li>
@@ -305,7 +305,7 @@ const AttendanceScanPage = () => {
                                             key={record.attendanceId || index}
                                             className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                                         >
-                                            <div className="flex-shrink-0 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">
+                                            <div className="flex-shrink-0 w-10 h-10 bg-primary-500 text-white rounded-full flex items-center justify-center font-semibold">
                                                 {index + 1}
                                             </div>
                                             <div>
@@ -343,10 +343,10 @@ const AttendanceScanPage = () => {
                                 <img
                                     src={pendingMember.photoUrl}
                                     alt={pendingMember.fullName}
-                                    className="w-40 h-40 rounded-full object-cover border-4 border-blue-500 shadow-lg"
+                                    className="w-40 h-40 rounded-full object-cover border-4 border-primary-500 shadow-lg"
                                 />
                             ) : (
-                                <div className="w-40 h-40 rounded-full bg-gray-200 flex items-center justify-center border-4 border-blue-500 shadow-lg">
+                                <div className="w-40 h-40 rounded-full bg-gray-200 flex items-center justify-center border-4 border-primary-500 shadow-lg">
                                     <svg className="w-20 h-20 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                                     </svg>
@@ -365,8 +365,8 @@ const AttendanceScanPage = () => {
                             </p>
                         </div>
 
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
-                            <p className="text-sm text-blue-800 text-center">
+                        <div className="bg-primary-50 border-l-4 border-primary-500 p-4">
+                            <p className="text-sm text-primary-800 text-center">
                                 ¿Deseas registrar la asistencia de este miembro a la asamblea "{activeAssembly.title}"?
                             </p>
                         </div>

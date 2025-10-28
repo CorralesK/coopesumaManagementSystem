@@ -89,7 +89,7 @@ const UsersListPage = () => {
             render: (user) => {
                 const roleConfig = {
                     [USER_ROLES.ADMINISTRATOR]: { class: 'bg-purple-100 text-purple-800' },
-                    [USER_ROLES.REGISTRAR]: { class: 'bg-blue-100 text-blue-800' },
+                    [USER_ROLES.REGISTRAR]: { class: 'bg-primary-100 text-primary-800' },
                     [USER_ROLES.TREASURER]: { class: 'bg-green-100 text-green-800' },
                     [USER_ROLES.STUDENT]: { class: 'bg-gray-100 text-gray-800' }
                 };
@@ -156,14 +156,9 @@ const UsersListPage = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
-                    <p className="text-gray-600 mt-1">
-                        Total: {pagination.total} usuario{pagination.total !== 1 ? 's' : ''}
-                    </p>
-                </div>
-                <Button onClick={() => navigate('/users/new')} variant="primary" className="whitespace-nowrap">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Usuarios</h1>
+                <Button onClick={() => navigate('/users/new')} variant="primary" className="whitespace-nowrap w-full sm:w-auto">
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
@@ -206,9 +201,9 @@ const UsersListPage = () => {
                             Acceso completo al sistema. Puede gestionar miembros, asambleas, usuarios y reportes.
                         </p>
                     </div>
-                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
-                        <h4 className="font-semibold text-blue-900">Registrador</h4>
-                        <p className="text-sm text-blue-700 mt-1">
+                    <div className="bg-primary-50 border-l-4 border-primary-500 p-4">
+                        <h4 className="font-semibold text-primary-900">Registrador</h4>
+                        <p className="text-sm text-primary-700 mt-1">
                             Puede registrar asistencia mediante escaneo de códigos QR durante asambleas.
                         </p>
                     </div>
