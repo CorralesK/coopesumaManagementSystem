@@ -8,6 +8,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { useAuth } from '../../context/AuthContext';
 import { USER_ROLES } from '../../utils/constants';
+import UserDropdown from './UserDropdown';
 
 const Layout = ({ children }) => {
     const { user, logout } = useAuth();
@@ -86,62 +87,98 @@ const Layout = ({ children }) => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-blue-800 text-white transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-                <div className="flex flex-col h-full">
-                    {/* Logo/Brand */}
-                    <div className="flex items-center justify-end h-16 px-6 bg-blue-900">
-                        <button
-                            onClick={() => setIsSidebarOpen(false)}
-                            className="lg:hidden text-white hover:text-gray-300"
-                        >
+        <div className="min-h-screen bg-white">
+            {/* Top Header */}
+            <header className="fixed top-0 left-0 right-0 w-full bg-white shadow-sm z-40">
+                <div className="flex items-center justify-between h-16 px-4 lg:px-6 max-w-full">
+                    {/* Mobile Menu Button */}
+                    <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="lg:hidden text-gray-600 hover:text-gray-900 p-3 transition-all duration-200"
+                    >
+                        {isSidebarOpen ? (
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                        </button>
-                    </div>
+                        ) : (
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        )}
+                    </button>
 
+                    {/* Header Content */}
+                    <div className="flex items-center justify-end flex-1 ml-2 lg:ml-0">
+                        {/* User Dropdown - Desktop Only */}
+                        <div className="hidden lg:block">
+                            <UserDropdown user={user} onLogout={handleLogout} />
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            {/* Sidebar */}
+            <aside className={`fixed top-16 bottom-0 left-0 z-30 w-64 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:shadow-lg`}>
+                <div className="flex flex-col h-full px-6 pb-8 pt-4">
                     {/* Navigation */}
-                    <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                    <nav className="flex-1 space-y-2 overflow-y-auto">
                         {visibleMenuItems.map((item) => (
                             <Link
                                 key={item.path}
                                 to={item.path}
                                 onClick={() => setIsSidebarOpen(false)}
-                                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                                className={`group flex items-center gap-4 px-6 py-5 rounded-lg transition-all duration-200 ${
                                     isCurrentPath(item.path)
-                                        ? 'bg-blue-700 text-white'
-                                        : 'text-blue-100 hover:bg-blue-700 hover:text-white'
+                                        ? 'bg-gray-100 text-gray-900 shadow-md font-semibold'
+                                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md hover:font-semibold'
                                 }`}
                             >
-                                {item.icon}
-                                <span className="font-medium">{item.name}</span>
+                                <div className={`flex-shrink-0 transition-transform duration-200 ${
+                                    isCurrentPath(item.path) ? '' : 'group-hover:scale-110'
+                                }`}>
+                                    {item.icon}
+                                </div>
+                                <span className="font-medium text-sm">{item.name}</span>
                             </Link>
                         ))}
                     </nav>
 
-                    {/* User Info */}
-                    <div className="px-4 py-4 border-t border-blue-700">
-                        <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-white truncate">
-                                    {user?.fullName}
-                                </p>
-                                <p className="text-xs text-blue-200 truncate">
-                                    {user?.role === USER_ROLES.ADMINISTRATOR && 'Administrador'}
-                                    {user?.role === USER_ROLES.REGISTRAR && 'Registrador'}
-                                    {user?.role === USER_ROLES.TREASURER && 'Tesorero'}
-                                </p>
+                    {/* User Info & Logout - Mobile Only */}
+                    <div className="lg:hidden pt-4 space-y-4 border-t border-gray-200">
+                        {/* User Info */}
+                        <div className="pt-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0">
+                                    <div className="w-12 h-12 rounded-full flex items-center justify-center">
+                                        <svg className="w-7 h-7 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                                            <path fillRule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-gray-900 truncate">
+                                        {user?.fullName}
+                                    </p>
+                                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                                        {user?.role === USER_ROLES.ADMINISTRATOR && 'Administrador'}
+                                        {user?.role === USER_ROLES.REGISTRAR && 'Registrador'}
+                                        {user?.role === USER_ROLES.TREASURER && 'Tesorero'}
+                                        {user?.role === USER_ROLES.STUDENT && 'Estudiante'}
+                                    </p>
+                                </div>
                             </div>
+                        </div>
+
+                        {/* Logout Button */}
+                        <div className="pb-2">
                             <button
                                 onClick={handleLogout}
-                                className="ml-2 p-2 text-blue-200 hover:text-white hover:bg-blue-700 rounded-lg transition-colors"
-                                title="Cerrar sesión"
+                                className="group w-full flex items-center gap-4 px-5 py-3.5 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg font-medium transition-all duration-200 hover:shadow-md hover:font-semibold"
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                <svg className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
                                 </svg>
+                                <span className="text-sm">Cerrar sesión</span>
                             </button>
                         </div>
                     </div>
@@ -149,37 +186,17 @@ const Layout = ({ children }) => {
             </aside>
 
             {/* Main Content */}
-            <div className="main-content">
-                {/* Top Header */}
-                <header className="bg-white shadow-sm">
-                    <div className="flex items-center justify-between h-16 px-6 sm:px-8 lg:px-10">
-                        <button
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="lg:hidden text-gray-600 hover:text-gray-900 focus:outline-none"
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-
-                        <div className="flex items-center space-x-4">
-                            <span className="text-xs sm:text-sm text-gray-600 text-right">
-                                Cooperativa Estudiantil Unida Motivando el Ahorro
-                            </span>
-                        </div>
-                    </div>
-                </header>
-
+            <div className="main-content pt-16">
                 {/* Page Content */}
                 <main className="p-6 sm:p-8 lg:p-10">
                     {children}
                 </main>
             </div>
 
-            {/* Overlay for mobile */}
+            {/* Overlay for mobile - Blurred backdrop */}
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
+                    className="fixed top-16 bottom-0 left-0 right-0 z-20 bg-black/20 backdrop-blur-sm lg:hidden"
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
