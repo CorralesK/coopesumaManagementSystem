@@ -24,6 +24,7 @@ const findById = async (userId) => {
                 is_active,
                 microsoft_id,
                 email,
+                cooperative_id,
                 created_at,
                 updated_at
             FROM users
@@ -57,6 +58,7 @@ const findByMicrosoftId = async (microsoftId) => {
                 is_active,
                 microsoft_id,
                 email,
+                cooperative_id,
                 created_at,
                 updated_at
             FROM users
@@ -87,6 +89,7 @@ const findByEmail = async (email) => {
                 is_active,
                 microsoft_id,
                 email,
+                cooperative_id,
                 created_at,
                 updated_at
             FROM users
@@ -115,9 +118,10 @@ const create = async (userData) => {
                 role,
                 is_active,
                 microsoft_id,
-                email
+                email,
+                cooperative_id
             )
-            VALUES ($1, $2, $3, $4, $5)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING
                 user_id,
                 full_name,
@@ -125,6 +129,7 @@ const create = async (userData) => {
                 is_active,
                 microsoft_id,
                 email,
+                cooperative_id,
                 created_at
         `;
 
@@ -133,7 +138,8 @@ const create = async (userData) => {
             userData.role,
             userData.isActive !== undefined ? userData.isActive : true,
             userData.microsoftId || null,
-            userData.email || null
+            userData.email || null,
+            userData.cooperativeId || 1 // Default to cooperative 1
         ];
 
         const result = await db.query(query, values);
@@ -174,6 +180,7 @@ const update = async (userId, updates) => {
                 is_active,
                 microsoft_id,
                 email,
+                cooperative_id,
                 updated_at
         `;
 
@@ -209,6 +216,7 @@ const linkMicrosoftAccount = async (userId, microsoftId, email) => {
                 is_active,
                 microsoft_id,
                 email,
+                cooperative_id,
                 updated_at
         `;
 
@@ -264,6 +272,7 @@ const findAll = async (filters = {}, limit = 20, offset = 0) => {
                 is_active,
                 microsoft_id,
                 email,
+                cooperative_id,
                 created_at,
                 updated_at
             ${baseQuery}

@@ -115,7 +115,8 @@ const createUser = async (req, res) => {
             email: req.body.email,
             role: req.body.role,
             isActive: req.body.isActive,
-            microsoftId: req.body.microsoftId
+            microsoftId: req.body.microsoftId,
+            cooperativeId: 1 // Default cooperative ID (temporary until multi-cooperative is fully implemented)
         };
 
         const newUser = await userService.createUser(userData);
