@@ -7,7 +7,7 @@
 -- ============================================================================
 --
 -- INSTRUCCIONES DE USO:
--- psql -U postgres -d coopesuma_db -f 05_seed_data.sql
+-- psql -U postgres -d cooplinkcr -f 05_seed_data.sql
 --
 -- PREREQUISITOS:
 -- - Ejecutar 01_create_functions.sql
@@ -24,6 +24,19 @@
 -- ============================================================================
 
 -- ============================================================================
+-- DATOS INICIALES: schools y cooperatives
+-- ============================================================================
+-- IMPORTANTE: Estos datos SON necesarios para el funcionamiento del sistema
+-- y deben insertarse incluso en producción
+-- ============================================================================
+
+INSERT INTO schools (name) VALUES
+('Escuela Los Chiles Aguas Zarcas');
+
+INSERT INTO cooperatives (school_id, trade_name, legal_name) VALUES
+(1, 'Coopesuma R.L.', 'Cooperativa Estudiantil Unida Motivando el Ahorro');
+
+-- ============================================================================
 -- DATOS DE PRUEBA: users
 -- ============================================================================
 -- NOTA: En producción, los usuarios se crean automáticamente al hacer login
@@ -33,15 +46,15 @@
 -- En producción real, estos valores vendrán de Microsoft Azure AD.
 -- ============================================================================
 
-INSERT INTO users (full_name, email, microsoft_id, role, is_active) VALUES
+INSERT INTO users (cooperative_id, full_name, email, microsoft_id, role, is_active) VALUES
 -- Usuario administrador de prueba
-('Kimberly Corrales', 'kicorralesve@est.utn.ac.cr', 'test-ms-id-001', 'administrator', true),
+(1, 'Kimberly Corrales', 'kicorralesve@est.utn.ac.cr', 'test-ms-id-001', 'administrator', true),
 
 -- Usuario registrador de prueba
-('Registrador de Prueba', 'registrar@escuela.ed.cr', 'test-ms-id-002', 'registrar', true),
+(1, 'Registrador de Prueba', 'registrar@escuela.ed.cr', 'test-ms-id-002', 'registrar', true),
 
 -- Usuario tesorero de prueba
-('Tesorero de Prueba', 'treasurer@escuela.ed.cr', 'test-ms-id-003', 'treasurer', true);
+(1, 'Tesorero de Prueba', 'treasurer@escuela.ed.cr', 'test-ms-id-003', 'treasurer', true);
 
 -- ============================================================================
 -- DATOS DE PRUEBA: members
@@ -50,39 +63,11 @@ INSERT INTO users (full_name, email, microsoft_id, role, is_active) VALUES
 -- QR hash generado de forma simple para testing (en producción se genera con crypto)
 -- ============================================================================
 
-INSERT INTO members (full_name, identification, grade, qr_hash, is_active) VALUES
--- Primer grado
-('Juan Pérez Rodríguez', '1-0234-0567', '1', 'qr_hash_juan_perez_001', true),
-('María González López', '1-0345-0678', '1', 'qr_hash_maria_gonzalez_002', true),
-('Carlos Mora Jiménez', '1-0456-0789', '1', 'qr_hash_carlos_mora_003', true),
-
--- Segundo grado
-('Ana Ramírez Castro', '2-0123-0456', '2', 'qr_hash_ana_ramirez_004', true),
-('Pedro Sánchez Vargas', '2-0234-0567', '2', 'qr_hash_pedro_sanchez_005', true),
-('Laura Fernández Rojas', '2-0345-0678', '2', 'qr_hash_laura_fernandez_006', true),
-
--- Tercer grado
-('Diego Hernández Solís', '3-0456-0789', '3', 'qr_hash_diego_hernandez_007', true),
-('Sofia Martínez Gómez', '3-0567-0890', '3', 'qr_hash_sofia_martinez_008', true),
-('Luis Castro Méndez', '3-0678-0901', '3', 'qr_hash_luis_castro_009', true),
-
--- Cuarto grado
-('Gabriela Ruiz Navarro', '4-0789-0123', '4', 'qr_hash_gabriela_ruiz_010', true),
-('Miguel Ángel Vega Cruz', '4-0890-0234', '4', 'qr_hash_miguel_vega_011', true),
-('Daniela Torres Mora', '4-0901-0345', '4', 'qr_hash_daniela_torres_012', true),
-
--- Quinto grado
-('Andrés López Arias', '5-0123-0789', '5', 'qr_hash_andres_lopez_013', true),
-('Camila Jiménez Rojas', '5-0234-0890', '5', 'qr_hash_camila_jimenez_014', true),
-('Sebastián Vargas Luna', '5-0345-0901', '5', 'qr_hash_sebastian_vargas_015', true),
-
--- Sexto grado
-('Valeria Chaves Mata', '6-0456-0123', '6', 'qr_hash_valeria_chaves_016', true),
-('Mateo Rojas Solano', '6-0567-0234', '6', 'qr_hash_mateo_rojas_017', true),
-('Isabella Mora Quesada', '6-0678-0345', '6', 'qr_hash_isabella_mora_018', true),
-
--- Miembro inactivo (para testing soft delete)
-('Estudiante Inactivo Test', '1-9999-9999', '3', 'qr_hash_inactive_test_019', false);
+INSERT INTO members (cooperative_id, full_name, identification, grade, qr_hash, is_active) VALUES
+-- Datos mínimos de prueba
+(1, 'Juan Pérez Rodríguez', '1-0234-0567', '1', 'qr_hash_juan_perez_001', true),
+(1, 'María González López', '1-0345-0678', '2', 'qr_hash_maria_gonzalez_002', true),
+(1, 'Carlos Mora Jiménez', '1-0456-0789', '3', 'qr_hash_carlos_mora_003', true);
 
 -- ============================================================================
 -- DATOS DE PRUEBA: assemblies
@@ -91,6 +76,7 @@ INSERT INTO members (full_name, identification, grade, qr_hash, is_active) VALUE
 -- ============================================================================
 
 INSERT INTO assemblies (
+    cooperative_id,
     title,
     scheduled_date,
     start_time,
@@ -98,43 +84,15 @@ INSERT INTO assemblies (
     is_active,
     created_by
 ) VALUES
--- Asamblea activa (solo puede haber una)
+-- Asamblea activa de prueba
 (
+    1,
     'Asamblea Mensual de Noviembre 2025',
     '2025-11-15',
     '09:00:00',
     '11:00:00',
     true,
     1  -- Creada por Admin de Prueba
-),
-
--- Asambleas pasadas (inactivas)
-(
-    'Asamblea Mensual de Octubre 2025',
-    '2025-10-15',
-    '09:00:00',
-    '11:00:00',
-    false,
-    1
-),
-
-(
-    'Asamblea Mensual de Septiembre 2025',
-    '2025-09-15',
-    '09:00:00',
-    '11:00:00',
-    false,
-    1
-),
-
--- Asamblea futura (inactiva)
-(
-    'Asamblea Mensual de Diciembre 2025',
-    '2025-12-15',
-    '09:00:00',
-    '11:00:00',
-    false,
-    1
 );
 
 -- ============================================================================
@@ -150,44 +108,23 @@ INSERT INTO attendance_records (
     registration_method,
     notes
 ) VALUES
--- Registros de asistencia para la asamblea activa (assembly_id = 1)
--- Método QR scan
-(1, 1, 2, 'qr_scan', NULL),  -- Juan Pérez - registrado por Registrador
-(2, 1, 2, 'qr_scan', NULL),  -- María González - registrado por Registrador
-(3, 1, 2, 'qr_scan', NULL),  -- Carlos Mora - registrado por Registrador
-(4, 1, 1, 'qr_scan', NULL),  -- Ana Ramírez - registrado por Admin
-(5, 1, 1, 'qr_scan', NULL),  -- Pedro Sánchez - registrado por Admin
-(6, 1, 2, 'qr_scan', NULL),  -- Laura Fernández - registrado por Registrador
-
--- Método manual (con notas)
-(7, 1, 1, 'manual', 'Olvidó su código QR, verificado manualmente'),
-(8, 1, 1, 'manual', 'Código QR dañado, verificado por foto'),
-
--- Registros de asistencia para asamblea pasada (assembly_id = 2)
-(1, 2, 2, 'qr_scan', NULL),
-(2, 2, 2, 'qr_scan', NULL),
-(4, 2, 1, 'qr_scan', NULL),
-(5, 2, 2, 'qr_scan', NULL),
-(7, 2, 1, 'qr_scan', NULL),
-(9, 2, 2, 'qr_scan', NULL),
-
--- Registros de asistencia para otra asamblea pasada (assembly_id = 3)
-(1, 3, 1, 'qr_scan', NULL),
-(3, 3, 2, 'qr_scan', NULL),
-(4, 3, 1, 'qr_scan', NULL),
-(6, 3, 2, 'qr_scan', NULL),
-(8, 3, 1, 'qr_scan', NULL),
-(10, 3, 2, 'qr_scan', NULL);
+-- Registros mínimos de asistencia para testing
+(1, 1, 1, 'qr_scan', NULL),  -- Juan Pérez
+(2, 1, 1, 'qr_scan', NULL);  -- María González
 
 -- ============================================================================
 -- FIN DEL SCRIPT
 -- ============================================================================
--- Resumen de datos de prueba insertados:
+-- Resumen de datos insertados:
+-- DATOS INICIALES (necesarios en producción):
+-- - 1 escuela
+-- - 1 cooperativa
+--
+-- DATOS DE PRUEBA (solo para testing):
 -- - 3 usuarios (1 administrator, 1 registrar, 1 treasurer)
--- - 19 miembros (18 activos, 1 inactivo)
---   * Distribuidos en grados 1-6
--- - 4 asambleas (1 activa, 3 inactivas)
--- - 20 registros de asistencia
+-- - 3 miembros activos
+-- - 1 asamblea activa
+-- - 2 registros de asistencia
 --
 -- IMPORTANTE:
 -- Estos datos son SOLO para desarrollo y testing.

@@ -7,7 +7,7 @@
 -- ============================================================================
 --
 -- INSTRUCCIONES DE USO:
--- psql -U postgres -d coopesuma_db -f 03_create_indexes.sql
+-- psql -U postgres -d cooplinkcr -f 03_create_indexes.sql
 --
 -- PREREQUISITOS:
 -- - Ejecutar 01_create_functions.sql
@@ -16,8 +16,32 @@
 -- ============================================================================
 
 -- ============================================================================
+-- ÍNDICES PARA TABLA: schools
+-- ============================================================================
+
+-- Índice para búsqueda por nombre de escuela
+CREATE INDEX idx_schools_name ON schools(name);
+COMMENT ON INDEX idx_schools_name IS 'Optimiza búsquedas por nombre de escuela';
+
+-- ============================================================================
+-- ÍNDICES PARA TABLA: cooperatives
+-- ============================================================================
+
+-- Índice para relación con escuela
+CREATE INDEX idx_cooperatives_school_id ON cooperatives(school_id);
+COMMENT ON INDEX idx_cooperatives_school_id IS 'Optimiza JOIN con tabla schools';
+
+-- Índice para búsqueda por nombre comercial
+CREATE INDEX idx_cooperatives_trade_name ON cooperatives(trade_name);
+COMMENT ON INDEX idx_cooperatives_trade_name IS 'Optimiza búsquedas por nombre comercial';
+
+-- ============================================================================
 -- ÍNDICES PARA TABLA: users
 -- ============================================================================
+
+-- Índice para relación con cooperativa
+CREATE INDEX idx_users_cooperative_id ON users(cooperative_id);
+COMMENT ON INDEX idx_users_cooperative_id IS 'Optimiza JOIN con tabla cooperatives';
 
 -- Índice para búsqueda por email (usado en login y verificación)
 CREATE INDEX idx_users_email ON users(email);
@@ -38,6 +62,10 @@ COMMENT ON INDEX idx_users_is_active IS 'Optimiza filtrado de usuarios activos v
 -- ============================================================================
 -- ÍNDICES PARA TABLA: members
 -- ============================================================================
+
+-- Índice para relación con cooperativa
+CREATE INDEX idx_members_cooperative_id ON members(cooperative_id);
+COMMENT ON INDEX idx_members_cooperative_id IS 'Optimiza JOIN con tabla cooperatives';
 
 -- Índice para búsqueda por número de identificación
 CREATE INDEX idx_members_identification ON members(identification);
@@ -68,6 +96,10 @@ COMMENT ON INDEX idx_members_institutional_email IS 'Optimiza búsquedas por cor
 -- ÍNDICES PARA TABLA: assemblies
 -- ============================================================================
 
+-- Índice para relación con cooperativa
+CREATE INDEX idx_assemblies_cooperative_id ON assemblies(cooperative_id);
+COMMENT ON INDEX idx_assemblies_cooperative_id IS 'Optimiza JOIN con tabla cooperatives';
+
 -- Índice para ordenamiento y filtrado por fecha
 CREATE INDEX idx_assemblies_scheduled_date ON assemblies(scheduled_date);
 COMMENT ON INDEX idx_assemblies_scheduled_date IS 'Optimiza ordenamiento y filtrado por fecha programada';
@@ -76,12 +108,12 @@ COMMENT ON INDEX idx_assemblies_scheduled_date IS 'Optimiza ordenamiento y filtr
 CREATE INDEX idx_assemblies_is_active ON assemblies(is_active);
 COMMENT ON INDEX idx_assemblies_is_active IS 'Optimiza búsqueda de asamblea activa';
 
--- Índice único parcial para garantizar solo una asamblea activa
+-- Índice único parcial para garantizar solo una asamblea activa por cooperativa
 -- Este índice también sirve como constraint a nivel de base de datos
-CREATE UNIQUE INDEX idx_assemblies_single_active ON assemblies(is_active)
+CREATE UNIQUE INDEX idx_assemblies_single_active ON assemblies(cooperative_id, is_active)
     WHERE is_active = true;
 COMMENT ON INDEX idx_assemblies_single_active IS
-'Garantiza que solo una asamblea pueda estar activa simultáneamente (constraint a nivel DB)';
+'Garantiza que solo una asamblea pueda estar activa simultáneamente por cooperativa (constraint a nivel DB)';
 
 -- Índice para filtrado por usuario creador
 CREATE INDEX idx_assemblies_created_by ON assemblies(created_by);

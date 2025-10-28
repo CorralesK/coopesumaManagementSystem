@@ -7,7 +7,7 @@
 -- ============================================================================
 --
 -- INSTRUCCIONES DE USO:
--- psql -U postgres -d coopesuma_db -f 01_create_functions.sql
+-- psql -U postgres -d cooplinkcr -f 01_create_functions.sql
 --
 -- ============================================================================
 
@@ -41,6 +41,7 @@ BEGIN
         UPDATE assemblies
         SET is_active = false
         WHERE assembly_id != NEW.assembly_id
+        AND cooperative_id = NEW.cooperative_id
         AND is_active = true;
     END IF;
     RETURN NEW;

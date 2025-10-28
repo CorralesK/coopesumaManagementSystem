@@ -23,16 +23,16 @@ Este directorio contiene los scripts SQL divididos por función:
 
 - PostgreSQL 14+
 - Usuario con permisos de creación de tablas
-- Base de datos `coopesuma_db` creada
+- Base de datos `cooplinkcr` creada
 
 ### Paso 1: Crear la base de datos (si no existe)
 
 ```bash
 # Opción A: Usando createdb (recomendado)
-createdb coopesuma_db
+createdb cooplinkcr
 
 # Opción B: Usando psql
-psql -U postgres -c "CREATE DATABASE coopesuma_db WITH ENCODING='UTF8';"
+psql -U postgres -c "CREATE DATABASE cooplinkcr WITH ENCODING='UTF8';"
 ```
 
 ### Paso 2: Ejecutar scripts en orden
@@ -41,20 +41,20 @@ psql -U postgres -c "CREATE DATABASE coopesuma_db WITH ENCODING='UTF8';"
 cd database/scripts/phase_1
 
 # Ejecutar cada script en orden
-psql -U postgres -d coopesuma_db -f 01_create_functions.sql
-psql -U postgres -d coopesuma_db -f 02_create_tables.sql
-psql -U postgres -d coopesuma_db -f 03_create_indexes.sql
-psql -U postgres -d coopesuma_db -f 04_create_triggers.sql
+psql -U postgres -d cooplinkcr -f 01_create_functions.sql
+psql -U postgres -d cooplinkcr -f 02_create_tables.sql
+psql -U postgres -d cooplinkcr -f 03_create_indexes.sql
+psql -U postgres -d cooplinkcr -f 04_create_triggers.sql
 
 # Opcional: Solo para testing/desarrollo
-psql -U postgres -d coopesuma_db -f 05_seed_data.sql
+psql -U postgres -d cooplinkcr -f 05_seed_data.sql
 ```
 
 ### Paso 3: Verificar instalación
 
 ```bash
 # Conectar a la base de datos
-psql -U postgres -d coopesuma_db
+psql -U postgres -d cooplinkcr
 
 # Verificar tablas
 \dt
@@ -141,30 +141,30 @@ Script de rollback completo que elimina:
 
 ```bash
 # Con datos de prueba
-psql -U postgres -d coopesuma_db -f 01_create_functions.sql && \
-psql -U postgres -d coopesuma_db -f 02_create_tables.sql && \
-psql -U postgres -d coopesuma_db -f 03_create_indexes.sql && \
-psql -U postgres -d coopesuma_db -f 04_create_triggers.sql && \
-psql -U postgres -d coopesuma_db -f 05_seed_data.sql
+psql -U postgres -d cooplinkcr -f 01_create_functions.sql && \
+psql -U postgres -d cooplinkcr -f 02_create_tables.sql && \
+psql -U postgres -d cooplinkcr -f 03_create_indexes.sql && \
+psql -U postgres -d cooplinkcr -f 04_create_triggers.sql && \
+psql -U postgres -d cooplinkcr -f 05_seed_data.sql
 
 # Sin datos de prueba (producción)
-psql -U postgres -d coopesuma_db -f 01_create_functions.sql && \
-psql -U postgres -d coopesuma_db -f 02_create_tables.sql && \
-psql -U postgres -d coopesuma_db -f 03_create_indexes.sql && \
-psql -U postgres -d coopesuma_db -f 04_create_triggers.sql
+psql -U postgres -d cooplinkcr -f 01_create_functions.sql && \
+psql -U postgres -d cooplinkcr -f 02_create_tables.sql && \
+psql -U postgres -d cooplinkcr -f 03_create_indexes.sql && \
+psql -U postgres -d cooplinkcr -f 04_create_triggers.sql
 ```
 
 ### Rollback y recreación
 
 ```bash
 # Eliminar todo
-psql -U postgres -d coopesuma_db -f 99_rollback.sql
+psql -U postgres -d cooplinkcr -f 99_rollback.sql
 
 # Recrear estructura
-psql -U postgres -d coopesuma_db -f 01_create_functions.sql && \
-psql -U postgres -d coopesuma_db -f 02_create_tables.sql && \
-psql -U postgres -d coopesuma_db -f 03_create_indexes.sql && \
-psql -U postgres -d coopesuma_db -f 04_create_triggers.sql
+psql -U postgres -d cooplinkcr -f 01_create_functions.sql && \
+psql -U postgres -d cooplinkcr -f 02_create_tables.sql && \
+psql -U postgres -d cooplinkcr -f 03_create_indexes.sql && \
+psql -U postgres -d cooplinkcr -f 04_create_triggers.sql
 ```
 
 ---
@@ -287,26 +287,26 @@ assemblies
 ### Error: "database does not exist"
 ```bash
 # Crear la base de datos primero
-createdb coopesuma_db
+createdb cooplinkcr
 ```
 
 ### Error: "relation already exists"
 ```bash
 # Ejecutar rollback primero
-psql -U postgres -d coopesuma_db -f 99_rollback.sql
+psql -U postgres -d cooplinkcr -f 99_rollback.sql
 ```
 
 ### Error: "permission denied"
 ```bash
 # Asegurarse de tener permisos
 psql -U postgres -d postgres
-GRANT ALL PRIVILEGES ON DATABASE coopesuma_db TO your_user;
+GRANT ALL PRIVILEGES ON DATABASE cooplinkcr TO your_user;
 ```
 
 ### Error: "function does not exist" al crear triggers
 ```bash
 # Ejecutar 01_create_functions.sql primero
-psql -U postgres -d coopesuma_db -f 01_create_functions.sql
+psql -U postgres -d cooplinkcr -f 01_create_functions.sql
 ```
 
 ---

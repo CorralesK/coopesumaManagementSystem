@@ -7,7 +7,7 @@
 -- ============================================================================
 --
 -- INSTRUCCIONES DE USO:
--- psql -U postgres -d coopesuma_db -f 02_create_tables.sql
+-- psql -U postgres -d cooplinkcr -f 02_create_tables.sql
 --
 -- PREREQUISITOS:
 -- - Ejecutar 01_create_functions.sql antes de este script
@@ -15,12 +15,58 @@
 -- ============================================================================
 
 -- ============================================================================
--- TABLA 1: users
+-- TABLA 1: schools
+-- Descripción: Escuelas que utilizan el sistema
+-- ============================================================================
+
+CREATE TABLE schools (
+    school_id SERIAL PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    CONSTRAINT chk_school_name_not_empty CHECK (TRIM(name) != '')
+);
+
+COMMENT ON TABLE schools IS 'Escuelas que utilizan el sistema CoopLink';
+COMMENT ON COLUMN schools.school_id IS 'ID único de la escuela (clave primaria)';
+COMMENT ON COLUMN schools.name IS 'Nombre de la escuela';
+COMMENT ON COLUMN schools.created_at IS 'Fecha y hora de creación del registro';
+COMMENT ON COLUMN schools.updated_at IS 'Fecha y hora de última actualización del registro';
+
+-- ============================================================================
+-- TABLA 2: cooperatives
+-- Descripción: Cooperativas estudiantiles asociadas a escuelas
+-- ============================================================================
+
+CREATE TABLE cooperatives (
+    cooperative_id SERIAL PRIMARY KEY,
+    school_id INTEGER NOT NULL REFERENCES schools(school_id) ON DELETE RESTRICT,
+    trade_name VARCHAR(150) NOT NULL,
+    legal_name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    CONSTRAINT chk_trade_name_not_empty CHECK (TRIM(trade_name) != ''),
+    CONSTRAINT chk_legal_name_not_empty CHECK (TRIM(legal_name) != '')
+);
+
+COMMENT ON TABLE cooperatives IS 'Cooperativas estudiantiles del sistema';
+COMMENT ON COLUMN cooperatives.cooperative_id IS 'ID único de la cooperativa (clave primaria)';
+COMMENT ON COLUMN cooperatives.school_id IS 'ID de la escuela a la que pertenece la cooperativa';
+COMMENT ON COLUMN cooperatives.trade_name IS 'Nombre comercial/fantasía de la cooperativa (ej: Coopesuma R.L.)';
+COMMENT ON COLUMN cooperatives.legal_name IS 'Nombre legal completo de la cooperativa';
+COMMENT ON COLUMN cooperatives.created_at IS 'Fecha y hora de creación del registro';
+COMMENT ON COLUMN cooperatives.updated_at IS 'Fecha y hora de última actualización del registro';
+
+-- ============================================================================
+-- TABLA 3: users
 -- Descripción: Usuarios del sistema autenticados con Microsoft OAuth
 -- Nota: NO incluye password_hash (autenticación solo con Microsoft)
 -- ============================================================================
 
 CREATE TABLE users (
+    cooperative_id INTEGER NOT NULL REFERENCES cooperatives(cooperative_id) ON DELETE RESTRICT,
     user_id SERIAL PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -35,6 +81,7 @@ CREATE TABLE users (
 );
 
 COMMENT ON TABLE users IS 'Usuarios del sistema autenticados con Microsoft OAuth';
+COMMENT ON COLUMN users.cooperative_id IS 'ID de la cooperativa a la que pertenece el usuario';
 COMMENT ON COLUMN users.user_id IS 'ID único del usuario (clave primaria)';
 COMMENT ON COLUMN users.full_name IS 'Nombre completo del usuario';
 COMMENT ON COLUMN users.email IS 'Email del usuario obtenido de Microsoft OAuth';
@@ -45,11 +92,12 @@ COMMENT ON COLUMN users.created_at IS 'Fecha y hora de creación del registro';
 COMMENT ON COLUMN users.updated_at IS 'Fecha y hora de última actualización del registro';
 
 -- ============================================================================
--- TABLA 2: members
+-- TABLA 4: members
 -- Descripción: Miembros estudiantiles de la cooperativa con QR único
 -- ============================================================================
 
 CREATE TABLE members (
+    cooperative_id INTEGER NOT NULL REFERENCES cooperatives(cooperative_id) ON DELETE RESTRICT,
     member_id SERIAL PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     identification VARCHAR(20) UNIQUE NOT NULL,
@@ -72,6 +120,7 @@ CREATE TABLE members (
 );
 
 COMMENT ON TABLE members IS 'Miembros estudiantiles de la cooperativa CoopeSuma';
+COMMENT ON COLUMN members.cooperative_id IS 'ID de la cooperativa a la que pertenece el miembro';
 COMMENT ON COLUMN members.member_id IS 'ID único del miembro (clave primaria)';
 COMMENT ON COLUMN members.full_name IS 'Nombre completo del estudiante';
 COMMENT ON COLUMN members.identification IS 'Número de identificación del estudiante (cédula o pasaporte)';
@@ -84,12 +133,13 @@ COMMENT ON COLUMN members.created_at IS 'Fecha y hora de creación del registro'
 COMMENT ON COLUMN members.updated_at IS 'Fecha y hora de última actualización del registro';
 
 -- ============================================================================
--- TABLA 3: assemblies
+-- TABLA 5: assemblies
 -- Descripción: Asambleas de la cooperativa (solo una puede estar activa)
 -- Regla de negocio crítica: Solo una asamblea puede tener is_active = true
 -- ============================================================================
 
 CREATE TABLE assemblies (
+    cooperative_id INTEGER NOT NULL REFERENCES cooperatives(cooperative_id) ON DELETE RESTRICT,
     assembly_id SERIAL PRIMARY KEY,
     title VARCHAR(150) NOT NULL,
     scheduled_date DATE NOT NULL,
@@ -107,6 +157,7 @@ CREATE TABLE assemblies (
 );
 
 COMMENT ON TABLE assemblies IS 'Asambleas de la cooperativa (solo una activa a la vez)';
+COMMENT ON COLUMN assemblies.cooperative_id IS 'ID de la cooperativa a la que pertenece la asamblea';
 COMMENT ON COLUMN assemblies.assembly_id IS 'ID único de la asamblea (clave primaria)';
 COMMENT ON COLUMN assemblies.title IS 'Título de la asamblea';
 COMMENT ON COLUMN assemblies.scheduled_date IS 'Fecha programada de la asamblea';
@@ -118,7 +169,7 @@ COMMENT ON COLUMN assemblies.created_at IS 'Fecha y hora de creación del regist
 COMMENT ON COLUMN assemblies.updated_at IS 'Fecha y hora de última actualización del registro';
 
 -- ============================================================================
--- TABLA 4: attendance_records
+-- TABLA 6: attendance_records
 -- Descripción: Registros de asistencia de miembros a asambleas
 -- Regla de negocio: Un miembro solo puede registrar asistencia una vez por asamblea
 -- ============================================================================

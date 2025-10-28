@@ -7,7 +7,7 @@
 -- ============================================================================
 --
 -- INSTRUCCIONES DE USO:
--- psql -U postgres -d coopesuma_db -f 99_rollback.sql
+-- psql -U postgres -d cooplinkcr -f 99_rollback.sql
 --
 -- ⚠️  ADVERTENCIA ⚠️
 -- Este script elimina TODA la estructura de la base de datos de Phase 1,
@@ -39,6 +39,8 @@ DROP TRIGGER IF EXISTS ensure_single_active_assembly ON assemblies;
 DROP TRIGGER IF EXISTS update_assemblies_updated_at ON assemblies;
 DROP TRIGGER IF EXISTS update_members_updated_at ON members;
 DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+DROP TRIGGER IF EXISTS update_cooperatives_updated_at ON cooperatives;
+DROP TRIGGER IF EXISTS update_schools_updated_at ON schools;
 
 \echo '✅ Triggers eliminados'
 
@@ -60,19 +62,30 @@ DROP INDEX IF EXISTS idx_assemblies_created_by;
 DROP INDEX IF EXISTS idx_assemblies_single_active;
 DROP INDEX IF EXISTS idx_assemblies_is_active;
 DROP INDEX IF EXISTS idx_assemblies_scheduled_date;
+DROP INDEX IF EXISTS idx_assemblies_cooperative_id;
 
 -- Índices de members
+DROP INDEX IF EXISTS idx_members_institutional_email;
 DROP INDEX IF EXISTS idx_members_full_name;
 DROP INDEX IF EXISTS idx_members_is_active;
-DROP INDEX IF EXISTS idx_members_grade_section;
+DROP INDEX IF EXISTS idx_members_grade;
 DROP INDEX IF EXISTS idx_members_qr_hash;
 DROP INDEX IF EXISTS idx_members_identification;
+DROP INDEX IF EXISTS idx_members_cooperative_id;
 
 -- Índices de users
 DROP INDEX IF EXISTS idx_users_is_active;
 DROP INDEX IF EXISTS idx_users_role;
 DROP INDEX IF EXISTS idx_users_microsoft_id;
 DROP INDEX IF EXISTS idx_users_email;
+DROP INDEX IF EXISTS idx_users_cooperative_id;
+
+-- Índices de cooperatives
+DROP INDEX IF EXISTS idx_cooperatives_trade_name;
+DROP INDEX IF EXISTS idx_cooperatives_school_id;
+
+-- Índices de schools
+DROP INDEX IF EXISTS idx_schools_name;
 
 \echo '✅ Índices eliminados'
 
@@ -94,9 +107,17 @@ DROP TABLE IF EXISTS assemblies CASCADE;
 DROP TABLE IF EXISTS members CASCADE;
 \echo '  ✓ members eliminada'
 
--- Eliminar users (base, sin foreign keys a otras tablas de negocio)
+-- Eliminar users (tiene foreign key a cooperatives)
 DROP TABLE IF EXISTS users CASCADE;
 \echo '  ✓ users eliminada'
+
+-- Eliminar cooperatives (tiene foreign key a schools)
+DROP TABLE IF EXISTS cooperatives CASCADE;
+\echo '  ✓ cooperatives eliminada'
+
+-- Eliminar schools (tabla base)
+DROP TABLE IF EXISTS schools CASCADE;
+\echo '  ✓ schools eliminada'
 
 \echo '✅ Todas las tablas eliminadas'
 
@@ -121,12 +142,12 @@ DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 \echo '======================================================================'
 \echo ''
 \echo 'Toda la estructura de Phase 1 ha sido eliminada:'
-\echo '  - 4 tablas eliminadas'
-\echo '  - 22 índices eliminados'
-\echo '  - 4 triggers eliminados'
+\echo '  - 6 tablas eliminadas'
+\echo '  - 30+ índices eliminados'
+\echo '  - 6 triggers eliminados'
 \echo '  - 2 funciones eliminadas'
 \echo ''
-\echo 'La base de datos coopesuma_db está ahora vacía.'
+\echo 'La base de datos cooplinkcr está ahora vacía.'
 \echo ''
 \echo 'Para recrear la estructura, ejecutar en orden:'
 \echo '  1. 01_create_functions.sql'
