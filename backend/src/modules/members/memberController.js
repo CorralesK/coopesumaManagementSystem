@@ -119,7 +119,8 @@ const createMember = async (req, res) => {
             identification: req.body.identification,
             grade: req.body.grade,
             institutionalEmail: req.body.institutionalEmail,
-            photoUrl: req.body.photoUrl
+            photoUrl: req.body.photoUrl,
+            cooperativeId: 1 // Default cooperative ID (temporary until multi-cooperative is fully implemented)
         };
 
         const result = await memberService.createMember(memberData);

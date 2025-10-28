@@ -211,9 +211,10 @@ const createMember = async (memberData) => {
                 institutional_email,
                 photo_url,
                 qr_hash,
-                is_active
+                is_active,
+                cooperative_id
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING
                 member_id,
                 full_name,
@@ -223,6 +224,7 @@ const createMember = async (memberData) => {
                 photo_url,
                 qr_hash,
                 is_active,
+                cooperative_id,
                 created_at
         `;
 
@@ -233,7 +235,8 @@ const createMember = async (memberData) => {
             memberData.institutionalEmail || null,
             memberData.photoUrl || null,
             qrHash,
-            true
+            true,
+            memberData.cooperativeId || 1 // Default to cooperative 1
         ];
 
         const memberResult = await client.query(insertMemberQuery, memberValues);
@@ -249,15 +252,17 @@ const createMember = async (memberData) => {
                     email,
                     microsoft_id,
                     role,
-                    is_active
+                    is_active,
+                    cooperative_id
                 )
-                VALUES ($1, $2, $3, $4, $5)
+                VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING
                     user_id,
                     full_name,
                     email,
                     role,
                     is_active,
+                    cooperative_id,
                     created_at
             `;
 
@@ -266,7 +271,8 @@ const createMember = async (memberData) => {
                 memberData.institutionalEmail,
                 null,  // microsoft_id will be set when student logs in
                 USER_ROLES.STUDENT,
-                true
+                true,
+                memberData.cooperativeId || 1 // Default to cooperative 1
             ];
 
             try {

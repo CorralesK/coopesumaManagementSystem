@@ -26,6 +26,7 @@ const findById = async (memberId) => {
                 photo_url,
                 qr_hash,
                 is_active,
+                cooperative_id,
                 created_at,
                 updated_at
             FROM members
@@ -58,6 +59,7 @@ const findByIdentification = async (identification) => {
                 photo_url,
                 qr_hash,
                 is_active,
+                cooperative_id,
                 created_at,
                 updated_at
             FROM members
@@ -90,6 +92,7 @@ const findByQrHash = async (qrHash) => {
                 photo_url,
                 qr_hash,
                 is_active,
+                cooperative_id,
                 created_at,
                 updated_at
             FROM members
@@ -122,6 +125,7 @@ const findAll = async (filters = {}) => {
                 photo_url,
                 qr_hash,
                 is_active,
+                cooperative_id,
                 created_at,
                 updated_at
             FROM members
@@ -232,9 +236,10 @@ const create = async (memberData) => {
                 institutional_email,
                 photo_url,
                 qr_hash,
-                is_active
+                is_active,
+                cooperative_id
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING
                 member_id,
                 full_name,
@@ -244,6 +249,7 @@ const create = async (memberData) => {
                 photo_url,
                 qr_hash,
                 is_active,
+                cooperative_id,
                 created_at
         `;
 
@@ -254,7 +260,8 @@ const create = async (memberData) => {
             memberData.institutionalEmail || null,
             memberData.photoUrl || null,
             memberData.qrHash,
-            memberData.isActive !== undefined ? memberData.isActive : true
+            memberData.isActive !== undefined ? memberData.isActive : true,
+            memberData.cooperativeId || 1 // Default to cooperative 1
         ];
 
         const result = await db.query(query, values);
@@ -296,6 +303,7 @@ const update = async (memberId, updates) => {
                 photo_url,
                 qr_hash,
                 is_active,
+                cooperative_id,
                 updated_at
         `;
 
@@ -328,6 +336,7 @@ const updateQrHash = async (memberId, qrHash) => {
                 photo_url,
                 qr_hash,
                 is_active,
+                cooperative_id,
                 updated_at
         `;
 
