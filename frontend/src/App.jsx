@@ -27,9 +27,10 @@ import MembersListPage from './pages/members/MembersListPage';
 import MemberFormPage from './pages/members/MemberFormPage';
 import MemberDetailPage from './pages/members/MemberDetailPage';
 
-// Assembly Pages (placeholders - will be implemented)
+// Assembly Pages
 import AssembliesListPage from './pages/assemblies/AssembliesListPage';
 import AssemblyFormPage from './pages/assemblies/AssemblyFormPage';
+import AssemblyDetailPage from './pages/assemblies/AssemblyDetailPage';
 
 // Attendance Pages (placeholders - will be implemented)
 import AttendanceScanPage from './pages/attendance/AttendanceScanPage';
@@ -114,6 +115,16 @@ function App() {
                             <ProtectedRoute requiredRole={USER_ROLES.ADMINISTRATOR}>
                                 <Layout>
                                     <AssembliesListPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/assemblies/:id"
+                        element={
+                            <ProtectedRoute requiredRole={USER_ROLES.ADMINISTRATOR}>
+                                <Layout>
+                                    <AssemblyDetailPage />
                                 </Layout>
                             </ProtectedRoute>
                         }
