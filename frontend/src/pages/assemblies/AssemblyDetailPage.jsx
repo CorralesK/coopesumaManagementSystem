@@ -291,7 +291,7 @@ const AssemblyDetailPage = () => {
                             {assembly.isActive && (
                                 <>
                                     <Button
-                                        onClick={() => navigate('/attendance')}
+                                        onClick={() => navigate('/attendance/scan')}
                                         variant="primary"
                                         fullWidth
                                     >
