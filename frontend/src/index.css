@@ -291,9 +291,9 @@ header div[class*="absolute"] button:hover {
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
 }
 
-/* Space between buttons in flex containers */
-.main-content .flex button:not(:last-child),
-.main-content .flex a:not(:last-child) {
+/* Space between buttons in flex containers without explicit gap */
+.main-content .flex:not([class*="gap-"]) button:not(:last-child),
+.main-content .flex:not([class*="gap-"]) a:not(:last-child) {
   margin-right: 1rem !important;
 }
 

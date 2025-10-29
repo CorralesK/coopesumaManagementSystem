@@ -118,17 +118,34 @@ const AssemblyDetailPage = () => {
         <div className="max-w-5xl mx-auto space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Detalle de la Asamblea</h1>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <Button onClick={() => navigate('/assemblies')} variant="outline" className="w-full sm:w-auto">
-                        Volver
-                    </Button>
-                    {!concluded && (
-                        <Button onClick={() => navigate(`/assemblies/${id}/edit`)} variant="primary" className="w-full sm:w-auto">
-                            Editar
-                        </Button>
-                    )}
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{assembly.title}</h1>
+                    <div className="mt-2 flex gap-2">
+                        {assembly.isActive && (
+                            <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 border border-green-200">
+                                <span className="w-2 h-2 rounded-full bg-green-600" style={{ marginRight: '0.5rem' }}></span>
+                                <span className="text-green-600">En Curso</span>
+                            </span>
+                        )}
+                        {concluded && (
+                            <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 border border-gray-200">
+                                <span className="w-2 h-2 rounded-full bg-gray-500" style={{ marginRight: '0.5rem' }}></span>
+                                <span className="text-gray-700">Concluida</span>
+                            </span>
+                        )}
+                        {!assembly.isActive && !concluded && (
+                            <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 border border-gray-200">
+                                <span className="w-2 h-2 rounded-full bg-gray-500" style={{ marginRight: '0.5rem' }}></span>
+                                <span className="text-gray-700">Pendiente</span>
+                            </span>
+                        )}
+                    </div>
                 </div>
+                {!concluded && (
+                    <Button onClick={() => navigate(`/assemblies/${id}/edit`)} variant="primary" className="w-full sm:w-auto">
+                        Editar
+                    </Button>
+                )}
             </div>
 
             {/* Alerts */}
@@ -141,31 +158,6 @@ const AssemblyDetailPage = () => {
                 <div className="lg:col-span-2 space-y-6">
                     <Card>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                            {/* Title and Status */}
-                            <div>
-                                <h2 className="text-3xl font-bold text-gray-900" style={{ marginBottom: '0.5rem' }}>
-                                    {assembly.title}
-                                </h2>
-                                {assembly.isActive && (
-                                    <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 border border-green-200">
-                                        <span className="w-2 h-2 rounded-full bg-green-600" style={{ marginRight: '0.5rem' }}></span>
-                                        <span className="text-green-600">En Curso</span>
-                                    </span>
-                                )}
-                                {concluded && (
-                                    <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 border border-gray-200">
-                                        <span className="w-2 h-2 rounded-full bg-gray-500" style={{ marginRight: '0.5rem' }}></span>
-                                        <span className="text-gray-700">Concluida</span>
-                                    </span>
-                                )}
-                                {!assembly.isActive && !concluded && (
-                                    <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 border border-gray-200">
-                                        <span className="w-2 h-2 rounded-full bg-gray-500" style={{ marginRight: '0.5rem' }}></span>
-                                        <span className="text-gray-700">Pendiente</span>
-                                    </span>
-                                )}
-                            </div>
-
                             {/* Info Grid */}
                             <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: '1.5rem' }}>
                                 <div className="pb-3 border-b border-gray-200">

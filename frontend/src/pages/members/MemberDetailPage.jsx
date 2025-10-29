@@ -84,10 +84,7 @@ const MemberDetailPage = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Detalle del Miembro</h1>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <Button onClick={() => navigate('/members')} variant="outline" className="w-full sm:w-auto">Volver</Button>
-                    <Button onClick={() => navigate(`/members/${id}/edit`)} variant="primary" className="w-full sm:w-auto">Editar</Button>
-                </div>
+                <Button onClick={() => navigate(`/members/${id}/edit`)} variant="primary" className="w-full sm:w-auto">Editar</Button>
             </div>
 
             {/* Alerts */}
