@@ -175,9 +175,23 @@ header > div {
   margin-bottom: 1.5rem !important;
 }
 
+/* Exception for table cards - more top margin */
+.main-content .bg-white:has(table) {
+  margin-top: 2rem !important;
+}
+
 /* Better spacing for cards content */
 .main-content .bg-white > div {
   padding: 1.25rem !important;
+}
+
+/* Exception for table containers */
+.main-content .bg-white > div.overflow-x-auto {
+  padding: 0 !important;
+}
+
+.main-content .bg-white > div:has(.overflow-x-auto) {
+  padding: 0 !important;
 }
 
 /* Ensure primary color classes work correctly */
@@ -202,6 +216,56 @@ header > div {
   min-height: 44px !important; /* Minimum touch target size */
   padding-left: 2rem !important;
   padding-right: 2rem !important;
+}
+
+/* Exception for buttons inside tables - let Tailwind classes control them */
+.main-content table button {
+  padding-left: inherit !important;
+  padding-right: inherit !important;
+  min-height: 36px !important;
+  align-self: center !important;
+}
+
+/* Ensure all flex containers in table cells are centered */
+.main-content table td > div {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Exception for table cells */
+.main-content table td {
+  padding: 1rem 1.5rem !important;
+  vertical-align: middle !important;
+}
+
+@media (max-width: 640px) {
+  .main-content table td {
+    padding: 1rem 0.75rem !important;
+  }
+}
+
+/* Table row borders */
+.main-content table tbody tr {
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* Table row hover and active states */
+.main-content table tbody tr {
+  transition: all 0.2s ease !important;
+}
+
+.main-content table tbody tr:hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  font-weight: 600 !important;
+}
+
+.main-content table tbody tr.bg-gray-100 {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  font-weight: 600 !important;
 }
 
 /* Exception for mobile menu toggle button */
