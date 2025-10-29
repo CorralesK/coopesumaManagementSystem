@@ -146,6 +146,7 @@ CREATE TABLE assemblies (
     start_time TIME,
     end_time TIME,
     is_active BOOLEAN DEFAULT false NOT NULL,
+    concluded_at TIMESTAMP,
     created_by INTEGER NOT NULL REFERENCES users(user_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -161,9 +162,10 @@ COMMENT ON COLUMN assemblies.cooperative_id IS 'ID de la cooperativa a la que pe
 COMMENT ON COLUMN assemblies.assembly_id IS 'ID único de la asamblea (clave primaria)';
 COMMENT ON COLUMN assemblies.title IS 'Título de la asamblea';
 COMMENT ON COLUMN assemblies.scheduled_date IS 'Fecha programada de la asamblea';
-COMMENT ON COLUMN assemblies.start_time IS 'Hora de inicio de la asamblea';
-COMMENT ON COLUMN assemblies.end_time IS 'Hora de finalización de la asamblea';
+COMMENT ON COLUMN assemblies.start_time IS 'Hora real en que se inició la asamblea (seteada al activar)';
+COMMENT ON COLUMN assemblies.end_time IS 'Hora real en que finalizó la asamblea (seteada al concluir)';
 COMMENT ON COLUMN assemblies.is_active IS 'Indica si es la asamblea activa actual (solo una permitida)';
+COMMENT ON COLUMN assemblies.concluded_at IS 'Fecha y hora en que la asamblea fue concluida (marcada como finalizada)';
 COMMENT ON COLUMN assemblies.created_by IS 'ID del usuario que creó la asamblea';
 COMMENT ON COLUMN assemblies.created_at IS 'Fecha y hora de creación del registro';
 COMMENT ON COLUMN assemblies.updated_at IS 'Fecha y hora de última actualización del registro';
