@@ -24,6 +24,7 @@ const findById = async (assemblyId) => {
                 start_time,
                 end_time,
                 is_active,
+                concluded_at,
                 created_by,
                 created_at,
                 updated_at
@@ -55,6 +56,7 @@ const findActive = async () => {
                 start_time,
                 end_time,
                 is_active,
+                concluded_at,
                 created_by,
                 created_at,
                 updated_at
@@ -87,6 +89,7 @@ const findAll = async (filters = {}) => {
                 a.start_time,
                 a.end_time,
                 a.is_active,
+                a.concluded_at,
                 a.created_by,
                 a.created_at,
                 a.updated_at,
@@ -123,7 +126,14 @@ const findAll = async (filters = {}) => {
             paramIndex++;
         }
 
-        query += ' GROUP BY a.assembly_id ORDER BY a.scheduled_date DESC, a.created_at DESC';
+        query += ` GROUP BY a.assembly_id
+                   ORDER BY
+                   CASE
+                       WHEN a.is_active = true THEN 1
+                       WHEN a.is_active = false AND a.concluded_at IS NULL THEN 2
+                       ELSE 3
+                   END,
+                   a.title ASC`;
 
         // Pagination
         if (filters.limit) {
@@ -252,7 +262,8 @@ const update = async (assemblyId, updates) => {
             'scheduled_date',
             'start_time',
             'end_time',
-            'is_active'
+            'is_active',
+            'concluded_at'
         ];
         const fields = Object.keys(updates).filter(key => allowedFields.includes(key));
 
@@ -274,6 +285,7 @@ const update = async (assemblyId, updates) => {
                 start_time,
                 end_time,
                 is_active,
+                concluded_at,
                 created_by,
                 updated_at
         `;
@@ -295,9 +307,12 @@ const update = async (assemblyId, updates) => {
 const activate = async (assemblyId) => {
     try {
         // The database trigger will automatically deactivate other assemblies
+        // Set start_time to current time when activating
         const query = `
             UPDATE assemblies
-            SET is_active = true, updated_at = CURRENT_TIMESTAMP
+            SET is_active = true,
+                start_time = CURRENT_TIME,
+                updated_at = CURRENT_TIMESTAMP
             WHERE assembly_id = $1
             RETURNING
                 assembly_id,
@@ -306,6 +321,7 @@ const activate = async (assemblyId) => {
                 start_time,
                 end_time,
                 is_active,
+                concluded_at,
                 created_by,
                 updated_at
         `;
@@ -325,7 +341,15 @@ const activate = async (assemblyId) => {
  * @returns {Promise<Object>} Deactivated assembly object
  */
 const deactivate = async (assemblyId) => {
-    return update(assemblyId, { is_active: false });
+    // Get current time for end_time (TIME type)
+    const now = new Date();
+    const endTime = now.toTimeString().substring(0, 8); // HH:MM:SS format
+
+    return update(assemblyId, {
+        is_active: false,
+        end_time: endTime,
+        concluded_at: now
+    });
 };
 
 /**
@@ -361,6 +385,7 @@ const findByIdWithStats = async (assemblyId) => {
                 a.start_time,
                 a.end_time,
                 a.is_active,
+                a.concluded_at,
                 a.created_by,
                 a.created_at,
                 a.updated_at,
@@ -394,6 +419,7 @@ const findActiveWithStats = async () => {
                 a.start_time,
                 a.end_time,
                 a.is_active,
+                a.concluded_at,
                 a.created_by,
                 a.created_at,
                 a.updated_at,
