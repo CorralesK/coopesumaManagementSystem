@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { USER_ROLES } from '../utils/constants';
 
 const AuthCallbackPage = () => {
     const [searchParams] = useSearchParams();
@@ -60,10 +61,14 @@ const AuthCallbackPage = () => {
 
                     login(token, userData);
 
-                    console.log('Login successful, navigating to dashboard');
+                    console.log('Login successful, navigating based on role');
 
-                    // Navigate to dashboard immediately (replace: true removes auth page from history)
-                    navigate('/dashboard', { replace: true });
+                    // Navigate based on user role
+                    if (userData.role === USER_ROLES.REGISTRAR) {
+                        navigate('/attendance/scan', { replace: true });
+                    } else {
+                        navigate('/dashboard', { replace: true });
+                    }
                 } catch (err) {
                     console.error('Error processing token:', err);
                     console.error('Error details:', err.message, err.stack);

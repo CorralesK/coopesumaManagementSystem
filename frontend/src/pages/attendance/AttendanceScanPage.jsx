@@ -10,6 +10,8 @@ import { useAttendanceRecording, useAssemblyAttendance } from '../../hooks/useAt
 import { useQrScanner } from '../../hooks/useQrScanner';
 import { verifyMemberByQR } from '../../services/memberService';
 import { printAttendanceList } from '../../utils/printUtils';
+import { useAuth } from '../../context/AuthContext';
+import { USER_ROLES } from '../../utils/constants';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
@@ -29,6 +31,8 @@ const AttendanceScanPage = () => {
     const [successMessage, setSuccessMessage] = useState('');
 
     // Use custom hooks
+    const { user } = useAuth();
+    const isRegistrar = user?.role === USER_ROLES.REGISTRAR;
     const { activeAssembly, loading: loadingAssembly } = useActiveAssembly();
     const { recordByQR, loading: recording, error: recordError, clearState } = useAttendanceRecording();
     const { attendance, stats, loading: loadingAttendance, refetch: refetchAttendance } = useAssemblyAttendance(activeAssembly?.assemblyId);
@@ -36,6 +40,12 @@ const AttendanceScanPage = () => {
     // Handle QR scan success - verify member first
     const handleScanSuccess = async (scannedData) => {
         if (verifying || recording) return;
+
+        // Prevent scanning if no active assembly
+        if (!activeAssembly) {
+            setVerifyError('No hay una asamblea activa. No se puede registrar asistencia.');
+            return;
+        }
 
         try {
             setVerifyError(null);
@@ -157,7 +167,11 @@ const AttendanceScanPage = () => {
                 <Alert
                     type="warning"
                     title="No hay asamblea activa"
-                    message="Debe activar una asamblea antes de poder registrar asistencia. Por favor, ve a Gestión de Asambleas y activa una asamblea."
+                    message={
+                        isRegistrar
+                            ? "No hay una asamblea activa en este momento. Por favor, comunícate con el administrador para activar una asamblea."
+                            : "Debe activar una asamblea antes de poder registrar asistencia. Por favor, ve a Gestión de Asambleas y activa una asamblea."
+                    }
                 />
             </div>
         );

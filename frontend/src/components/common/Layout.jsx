@@ -26,6 +26,9 @@ const Layout = ({ children }) => {
     const isAdministrator = user?.role === USER_ROLES.ADMINISTRATOR;
     const isRegistrar = user?.role === USER_ROLES.REGISTRAR;
 
+    // Registrars don't have sidebar access
+    const showSidebar = !isRegistrar;
+
     // Navigation menu items based on role
     const menuItems = [
         {
@@ -91,7 +94,8 @@ const Layout = ({ children }) => {
             {/* Top Header */}
             <header className="fixed top-0 left-0 right-0 w-full bg-white shadow-sm z-40">
                 <div className="flex items-center justify-between h-16 px-4 lg:px-6 max-w-full">
-                    {/* Mobile Menu Button */}
+                    {/* Mobile Menu Button - Hide for registrars */}
+                    {showSidebar && (
                     <button
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                         className="lg:hidden text-gray-600 hover:text-gray-900 p-3 transition-all duration-200"
@@ -106,9 +110,17 @@ const Layout = ({ children }) => {
                             </svg>
                         )}
                     </button>
+                    )}
+
+                    {/* Logo for registrar - Show when sidebar is hidden */}
+                    {!showSidebar && (
+                        <div className="flex items-center">
+                            <h1 className="text-lg sm:text-xl font-bold text-primary-600">COOPESUMA R.L.</h1>
+                        </div>
+                    )}
 
                     {/* Header Content */}
-                    <div className="flex items-center justify-end flex-1 ml-2 lg:ml-0">
+                    <div className="flex items-center justify-end flex-1">
                         {/* User Dropdown - Desktop Only */}
                         <div className="hidden lg:block">
                             <UserDropdown user={user} onLogout={handleLogout} />
@@ -117,7 +129,8 @@ const Layout = ({ children }) => {
                 </div>
             </header>
 
-            {/* Sidebar */}
+            {/* Sidebar - Hide for registrars */}
+            {showSidebar && (
             <aside className={`fixed top-16 bottom-0 left-0 z-30 w-64 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:shadow-lg`}>
                 <div className="flex flex-col h-full px-6 pb-8 pt-4">
                     {/* Navigation */}
@@ -184,17 +197,18 @@ const Layout = ({ children }) => {
                     </div>
                 </div>
             </aside>
+            )}
 
             {/* Main Content */}
-            <div className="main-content pt-16">
+            <div className={`${showSidebar ? 'main-content' : ''} pt-16`}>
                 {/* Page Content */}
                 <main className="p-6 sm:p-8 lg:p-10">
                     {children}
                 </main>
             </div>
 
-            {/* Overlay for mobile - Blurred backdrop */}
-            {isSidebarOpen && (
+            {/* Overlay for mobile - Blurred backdrop - Hide for registrars */}
+            {showSidebar && isSidebarOpen && (
                 <div
                     className="fixed top-16 bottom-0 left-0 right-0 z-20 bg-black/20 backdrop-blur-sm lg:hidden"
                     onClick={() => setIsSidebarOpen(false)}
