@@ -58,7 +58,7 @@ function App() {
                     <Route
                         path="/dashboard"
                         element={
-                            <ProtectedRoute>
+                            <ProtectedRoute requiredRole={USER_ROLES.ADMINISTRATOR}>
                                 <Layout>
                                     <DashboardPage />
                                 </Layout>
