@@ -164,48 +164,40 @@ const AttendanceScanPage = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6">
+        <div className="space-y-6">
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">Registro de Asistencia</h1>
-                <p className="text-gray-600 mt-1">Escanea el código QR de los miembros</p>
-            </div>
-
-            {/* Assembly Info Card - Full Width */}
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-primary-200">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-2">
-                    <div className="flex-1 w-full sm:w-auto">
-                        <div className="flex items-center space-x-4 sm:space-x-6">
-                            <div className="flex-shrink-0">
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-500 rounded-lg flex items-center justify-center">
-                                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 truncate">{activeAssembly.title}</h2>
-                                <p className="text-xs sm:text-sm text-gray-600">
-                                    <span className="font-medium">Fecha:</span> {new Date(activeAssembly.scheduledDate).toLocaleDateString('es-CR', {
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    })}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white border-2 border-primary-500 rounded-lg px-4 py-2 sm:px-6 sm:py-2 shadow-md w-full sm:w-auto">
-                        <div className="text-center">
-                            <p className="text-xs text-primary-600 font-medium">Total Asistentes</p>
-                            <p className="text-2xl sm:text-3xl font-bold text-primary-700">
-                                {loadingAttendance ? '...' : (attendance?.length || 0)}
-                            </p>
-                        </div>
-                    </div>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{activeAssembly.title}</h1>
+                    <p className="text-gray-600 mt-1">
+                        {new Date(activeAssembly.scheduledDate).toLocaleDateString('es-CR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })}
+                    </p>
                 </div>
-            </Card>
+                <div className="flex items-center gap-4">
+                    <div className="text-center">
+                        <p className="text-sm text-gray-600">Asistentes</p>
+                        <p className="text-2xl font-bold text-primary-600">
+                            {loadingAttendance ? '...' : (attendance?.length || 0)}
+                        </p>
+                    </div>
+                    {attendance && attendance.length > 0 && (
+                        <Button
+                            onClick={handlePrintAttendanceList}
+                            variant="outline"
+                            size="sm"
+                        >
+                            <svg className="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            <span className="hidden sm:inline">Imprimir</span>
+                        </Button>
+                    )}
+                </div>
+            </div>
 
             {/* Success Message */}
             {successMessage && (
@@ -224,108 +216,85 @@ const AttendanceScanPage = () => {
                 />
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* QR Scanner */}
-                <Card title="Escáner QR">
-                    <div className="space-y-4">
-                        {/* Scanner Container */}
-                        <div id="qr-reader" className="w-full rounded-lg overflow-hidden border-2 border-gray-300"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                {/* QR Scanner - 2 columns */}
+                <div className="lg:col-span-2">
+                    <Card>
+                        <div>
+                            {/* Scanner Container */}
+                            <div id="qr-reader" className="w-full rounded-lg overflow-hidden" style={{ marginBottom: '2rem' }}></div>
 
-                        {/* Scanner Controls */}
-                        <div className="flex justify-center space-x-3">
-                            {!isScanning ? (
-                                <Button onClick={startScanning} variant="primary">
-                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Iniciar Escaneo
-                                </Button>
-                            ) : (
-                                <Button onClick={stopScanning} variant="danger">
-                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-                                    </svg>
-                                    Detener Escaneo
-                                </Button>
+                            {/* Scanner Controls */}
+                            <div className="flex justify-center gap-3">
+                                {!isScanning ? (
+                                    <Button onClick={startScanning} variant="primary" fullWidth>
+                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Iniciar Escaneo
+                                    </Button>
+                                ) : (
+                                    <Button onClick={stopScanning} variant="secondary" fullWidth>
+                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                                        </svg>
+                                        Detener Escaneo
+                                    </Button>
+                                )}
+                            </div>
+
+                            {/* Status */}
+                            {(verifying || recording) && (
+                                <div className="text-center py-4">
+                                    <Loading message={verifying ? "Verificando..." : "Registrando..."} />
+                                </div>
                             )}
                         </div>
+                    </Card>
+                </div>
 
-                        {/* Instructions */}
-                        <div className="bg-primary-50 border-l-4 border-primary-500 p-4">
-                            <h4 className="font-medium text-primary-900 mb-2">Instrucciones:</h4>
-                            <ul className="text-sm text-primary-800 space-y-1">
-                                <li>• Coloca el código QR frente a la cámara</li>
-                                <li>• Mantén el código dentro del marco de escaneo</li>
-                                <li>• Verifica la información del miembro</li>
-                                <li>• Confirma o rechaza el registro</li>
-                            </ul>
-                        </div>
-
-                        {/* Status */}
-                        {(verifying || recording) && (
-                            <div className="text-center py-4">
-                                <Loading message={verifying ? "Verificando código QR..." : "Registrando asistencia..."} />
-                            </div>
-                        )}
-                    </div>
-                </Card>
-
-                {/* Attendance List */}
-                <Card
-                    title="Lista de Asistentes"
-                    className="lg:col-span-1"
-                    headerAction={
-                        attendance && attendance.length > 0 && (
-                            <Button
-                                onClick={handlePrintAttendanceList}
-                                variant="outline"
-                                size="sm"
-                                className="flex items-center space-x-2"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                </svg>
-                                <span>Imprimir</span>
-                            </Button>
-                        )
-                    }
-                >
-                    <div className="space-y-4">
+                {/* Attendance List - 3 columns */}
+                <div className="lg:col-span-3">
+                    <Card padding="none">
                         {loadingAttendance ? (
                             <div className="text-center py-8">
                                 <Loading message="Cargando asistentes..." />
                             </div>
                         ) : attendance && attendance.length > 0 ? (
                             <div className="max-h-[600px] overflow-y-auto">
-                                <div className="space-y-2">
-                                    {attendance.map((record, index) => (
-                                        <div
-                                            key={record.attendanceId || index}
-                                            className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                                        >
-                                            <div className="flex-shrink-0 w-10 h-10 bg-primary-500 text-white rounded-full flex items-center justify-center font-semibold">
-                                                {index + 1}
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-gray-900">{record.fullName || 'N/A'}</p>
-                                                <p className="text-sm text-gray-500">{record.identification}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                <table className="min-w-full">
+                                    <tbody className="bg-white">
+                                        {attendance.map((record, index) => (
+                                            <tr
+                                                key={record.attendanceId || index}
+                                                className="transition-all duration-200 border-b border-gray-200 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md hover:font-semibold"
+                                            >
+                                                <td className="px-3 sm:px-6 py-4 text-sm align-middle text-center w-16">
+                                                    <div className="flex-shrink-0 w-10 h-10 bg-primary-600 text-white rounded-full flex items-center justify-center font-semibold mx-auto">
+                                                        {index + 1}
+                                                    </div>
+                                                </td>
+                                                <td className="px-3 sm:px-6 py-4 text-sm align-middle">
+                                                    <p className="font-medium text-gray-900">{record.fullName || 'N/A'}</p>
+                                                    <p className="text-xs text-gray-500">{record.identification}</p>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         ) : (
-                            <div className="text-center py-12 text-gray-500">
-                                <svg className="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+                                <svg className="h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
-                                <p>No hay asistentes registrados aún</p>
+                                <p className="text-base">No hay asistentes registrados</p>
                             </div>
                         )}
-                    </div>
-                </Card>
+                    </Card>
+                </div>
             </div>
 
             {/* Confirmation Modal */}
