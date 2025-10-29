@@ -28,15 +28,15 @@ const Table = ({
 
     return (
         <div className={`overflow-x-auto ${className}`}>
-            <table className="min-w-full divide-y divide-gray-200 table-fixed">
-                <tbody className="bg-white divide-y divide-gray-200">
+            <table className="min-w-full">
+                <tbody className="bg-white">
                     {data.map((row, rowIndex) => {
                         const isActive = isRowActive(row);
                         return (
                             <tr
                                 key={rowIndex}
                                 onClick={() => onRowClick && onRowClick(row)}
-                                className={`transition-all duration-200 ${
+                                className={`transition-all duration-200 border-b border-gray-200 ${
                                     isActive
                                         ? 'bg-gray-100 text-gray-900 shadow-md font-semibold'
                                         : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md hover:font-semibold'
@@ -45,15 +45,9 @@ const Table = ({
                                 {columns.map((column) => (
                                     <td
                                         key={column.key}
-                                        className={`px-6 py-6 text-sm align-middle ${column.key === 'actions' ? 'text-center' : 'text-left'}`}
+                                        className={`px-3 sm:px-6 py-4 text-sm align-middle ${column.key === 'actions' ? 'text-center' : 'text-left'}`}
                                     >
-                                        {column.key === 'actions' ? (
-                                            <div className="flex items-center justify-center h-full">
-                                                {column.render ? column.render(row) : row[column.key]}
-                                            </div>
-                                        ) : (
-                                            column.render ? column.render(row) : row[column.key]
-                                        )}
+                                        {column.render ? column.render(row) : row[column.key]}
                                     </td>
                                 ))}
                             </tr>

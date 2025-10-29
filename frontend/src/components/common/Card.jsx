@@ -15,7 +15,7 @@ const Card = ({
     padding = 'normal'
 }) => {
     const paddingClasses = {
-        none: '',
+        none: 'py-4',
         sm: 'p-4',
         normal: 'p-5',
         lg: 'p-8 sm:p-9 lg:p-10'
