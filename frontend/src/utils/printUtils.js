@@ -30,6 +30,15 @@ export const printAttendanceList = ({ attendees = [], assembly = {}, title = 'Li
         });
     };
 
+    // Get current date and time for print timestamp
+    const printDate = new Date().toLocaleString('es-CR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
     // Generate HTML content for printing
     const htmlContent = `
         <!DOCTYPE html>
@@ -42,12 +51,32 @@ export const printAttendanceList = ({ attendees = [], assembly = {}, title = 'Li
                 @media print {
                     @page {
                         size: letter;
-                        margin: 1.5cm;
+                        margin: 1.5cm 2cm;
+                    }
+
+                    /* Remove default headers and footers from browser print */
+                    @page :first {
+                        margin-top: 1.5cm;
+                    }
+
+                    @page :left {
+                        margin-left: 2cm;
+                        margin-right: 2cm;
+                    }
+
+                    @page :right {
+                        margin-left: 2cm;
+                        margin-right: 2cm;
                     }
 
                     body {
                         -webkit-print-color-adjust: exact;
                         print-color-adjust: exact;
+                    }
+
+                    /* Hide default browser print headers/footers */
+                    html {
+                        margin: 0;
                     }
                 }
 
@@ -58,171 +87,149 @@ export const printAttendanceList = ({ attendees = [], assembly = {}, title = 'Li
                 }
 
                 body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    font-family: 'Times New Roman', Times, serif;
                     padding: 20px;
                     background: white;
-                    color: #333;
+                    color: #000;
+                    line-height: 1.6;
                 }
 
-                .header {
+                .document-header {
                     text-align: center;
-                    margin-bottom: 30px;
-                    padding-bottom: 20px;
-                    border-bottom: 3px solid #2563eb;
+                    margin-bottom: 40px;
+                    padding-bottom: 15px;
+                    border-bottom: 2px solid #000;
                 }
 
-                .header h1 {
-                    color: #1e40af;
-                    font-size: 28px;
-                    margin-bottom: 10px;
+                .document-header h1 {
+                    font-size: 18px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    margin-bottom: 8px;
+                }
+
+                .document-header .subtitle {
+                    font-size: 14px;
+                    font-weight: normal;
                     text-transform: uppercase;
                     letter-spacing: 1px;
                 }
 
-                .header .subtitle {
-                    color: #64748b;
-                    font-size: 16px;
-                    margin-top: 5px;
-                }
-
                 .assembly-info {
-                    background: #f1f5f9;
-                    border-left: 4px solid #2563eb;
-                    padding: 15px 20px;
-                    margin-bottom: 25px;
-                    border-radius: 4px;
+                    margin-bottom: 30px;
+                    padding: 15px 0;
                 }
 
                 .assembly-info h2 {
-                    color: #1e40af;
-                    font-size: 18px;
-                    margin-bottom: 10px;
-                }
-
-                .assembly-info p {
-                    color: #475569;
                     font-size: 14px;
-                    margin: 5px 0;
-                }
-
-                .assembly-info strong {
-                    color: #334155;
-                }
-
-                .stats {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 25px;
-                    gap: 15px;
-                }
-
-                .stat-card {
-                    flex: 1;
-                    background: #eff6ff;
-                    border: 2px solid #2563eb;
-                    border-radius: 8px;
-                    padding: 15px;
-                    text-align: center;
-                }
-
-                .stat-card .label {
-                    color: #1e40af;
-                    font-size: 12px;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                    margin-bottom: 5px;
-                }
-
-                .stat-card .value {
-                    color: #1e3a8a;
-                    font-size: 32px;
                     font-weight: bold;
+                    margin-bottom: 12px;
+                    text-transform: uppercase;
+                }
+
+                .info-row {
+                    display: flex;
+                    margin-bottom: 8px;
+                    font-size: 12px;
+                }
+
+                .info-row .label {
+                    font-weight: bold;
+                    width: 150px;
+                    flex-shrink: 0;
+                }
+
+                .info-row .value {
+                    flex: 1;
+                }
+
+                .attendees-section {
+                    margin-top: 30px;
+                }
+
+                .attendees-section h3 {
+                    font-size: 13px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    margin-bottom: 15px;
+                    text-align: center;
                 }
 
                 .attendees-table {
                     width: 100%;
                     border-collapse: collapse;
-                    margin-bottom: 30px;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                    margin-bottom: 40px;
+                    border: 2px solid #000;
                 }
 
                 .attendees-table thead {
-                    background: #1e40af;
-                    color: white;
+                    background: #fff;
+                    color: #000;
                 }
 
                 .attendees-table th {
-                    padding: 12px 15px;
+                    padding: 10px 8px;
                     text-align: left;
-                    font-size: 13px;
-                    font-weight: 600;
+                    font-size: 11px;
+                    font-weight: bold;
                     text-transform: uppercase;
-                    letter-spacing: 0.5px;
+                    border: 1px solid #000;
+                    border-bottom: 2px solid #000;
                 }
 
                 .attendees-table th:first-child {
-                    width: 60px;
+                    width: 50px;
+                    text-align: center;
+                }
+
+                .attendees-table th:nth-child(3) {
+                    width: 120px;
+                }
+
+                .attendees-table th:last-child {
+                    width: 150px;
                     text-align: center;
                 }
 
                 .attendees-table tbody tr {
-                    border-bottom: 1px solid #e2e8f0;
-                    transition: background-color 0.2s;
-                }
-
-                .attendees-table tbody tr:nth-child(even) {
-                    background-color: #f8fafc;
-                }
-
-                .attendees-table tbody tr:hover {
-                    background-color: #eff6ff;
+                    border-bottom: 1px solid #000;
                 }
 
                 .attendees-table td {
-                    padding: 12px 15px;
-                    font-size: 14px;
-                    color: #334155;
+                    padding: 10px 8px;
+                    font-size: 11px;
+                    border: 1px solid #000;
+                    min-height: 40px;
                 }
 
                 .attendees-table td:first-child {
                     text-align: center;
                     font-weight: bold;
-                    color: #1e40af;
+                }
+
+                .attendees-table td:last-child {
+                    text-align: center;
+                    background: #fff;
+                }
+
+                .footer {
+                    position: fixed;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    padding: 15px 0;
+                    border-top: 1px solid #000;
+                    font-size: 9px;
+                    text-align: center;
+                    background: white;
                 }
 
                 .no-data {
                     text-align: center;
                     padding: 40px;
-                    color: #94a3b8;
                     font-style: italic;
-                }
-
-                .footer {
-                    margin-top: 40px;
-                    padding-top: 20px;
-                    border-top: 2px solid #e2e8f0;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    color: #64748b;
                     font-size: 12px;
-                }
-
-                .footer .print-date {
-                    font-weight: 600;
-                }
-
-                .footer .signature-section {
-                    margin-top: 60px;
-                    text-align: center;
-                }
-
-                .footer .signature-line {
-                    border-top: 2px solid #334155;
-                    width: 300px;
-                    margin: 0 auto 10px auto;
-                    padding-top: 10px;
                 }
 
                 @media print {
@@ -233,46 +240,77 @@ export const printAttendanceList = ({ attendees = [], assembly = {}, title = 'Li
                     body {
                         padding: 0;
                     }
+
+                    .attendees-table thead {
+                        background: #fff !important;
+                        color: #000 !important;
+                    }
                 }
             </style>
         </head>
         <body>
-            <div class="header">
-                <h1>${title}</h1>
+            <div class="document-header">
+                <h1>COOPESUMA R.L.</h1>
+                <div class="subtitle">${title}</div>
             </div>
 
             <div class="assembly-info">
-                <h2>${assembly.title || 'Asamblea'}</h2>
-                <p><strong>Fecha:</strong> ${assembly.scheduledDate ? formatDate(assembly.scheduledDate) : 'N/A'}</p>
-                ${assembly.description ? `<p><strong>Descripción:</strong> ${assembly.description}</p>` : ''}
+                <h2>Información de la Asamblea</h2>
+                <div class="info-row">
+                    <span class="label">Nombre de la Asamblea:</span>
+                    <span class="value">${assembly.title || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Fecha Programada:</span>
+                    <span class="value">${assembly.scheduledDate ? formatDate(assembly.scheduledDate) : 'N/A'}</span>
+                </div>
+                ${assembly.startTime ? `
+                <div class="info-row">
+                    <span class="label">Hora de Inicio:</span>
+                    <span class="value">${assembly.startTime.substring(0, 5)}</span>
+                </div>
+                ` : ''}
+                ${assembly.endTime ? `
+                <div class="info-row">
+                    <span class="label">Hora de Finalización:</span>
+                    <span class="value">${assembly.endTime.substring(0, 5)}</span>
+                </div>
+                ` : ''}
             </div>
 
             ${attendees.length > 0 ? `
-                <table class="attendees-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Nombre Completo</th>
-                            <th>Identificación</th>
-                            <th>Firma</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${attendees.map((attendee, index) => `
+                <div class="attendees-section">
+                    <h3>Registro de Asistencia</h3>
+                    <table class="attendees-table">
+                        <thead>
                             <tr>
-                                <td>${index + 1}</td>
-                                <td>${attendee.fullName || 'N/A'}</td>
-                                <td>${attendee.identification || 'N/A'}</td>
-                                <td></td>
+                                <th>N°</th>
+                                <th>Nombre Completo</th>
+                                <th>Cédula</th>
+                                <th>Firma</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${attendees.map((attendee, index) => `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${attendee.fullName || 'N/A'}</td>
+                                    <td>${attendee.identification || 'N/A'}</td>
+                                    <td>&nbsp;</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             ` : `
                 <div class="no-data">
                     No hay asistentes registrados para esta asamblea.
                 </div>
             `}
+
+            <div class="footer">
+                Documento generado el ${printDate} - COOPESUMA R.L.
+            </div>
 
             <script>
                 // Auto-print when the page loads
