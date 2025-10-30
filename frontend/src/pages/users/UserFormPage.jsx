@@ -135,13 +135,13 @@ const UserFormPage = () => {
     }
 
     return (
-        <div className="max-w-3xl mx-auto space-y-6">
+        <div className="space-y-6">
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+            <div className="pb-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                     {isEditMode ? 'Editar Usuario' : 'Nuevo Usuario'}
                 </h1>
-                <p className="text-gray-600 mt-1">
+                <p className="text-gray-600 mt-1 text-sm sm:text-base">
                     {isEditMode ? 'Actualiza la información del usuario' : 'Completa el formulario para crear un nuevo usuario'}
                 </p>
             </div>
@@ -157,8 +157,9 @@ const UserFormPage = () => {
             )}
 
             {/* Form */}
-            <Card>
-                <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="max-w-3xl">
+                <Card>
+                    <form onSubmit={handleSubmit} className="space-y-6">
                     <Input
                         label="Nombre Completo"
                         name="fullName"
@@ -229,16 +230,28 @@ const UserFormPage = () => {
                     )}
 
                     {/* Action Buttons */}
-                    <div className="flex justify-end space-x-3 pt-4 border-t">
-                        <Button type="button" onClick={() => navigate('/users')} variant="outline" disabled={submitting}>
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
+                        <Button
+                            type="button"
+                            onClick={() => navigate('/users')}
+                            variant="outline"
+                            disabled={submitting}
+                            className="w-full sm:w-auto"
+                        >
                             Cancelar
                         </Button>
-                        <Button type="submit" variant="primary" disabled={submitting}>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            disabled={submitting}
+                            className="w-full sm:w-auto"
+                        >
                             {submitting ? (isEditMode ? 'Guardando...' : 'Creando...') : (isEditMode ? 'Guardar Cambios' : 'Crear Usuario')}
                         </Button>
                     </div>
                 </form>
             </Card>
+            </div>
         </div>
     );
 };
