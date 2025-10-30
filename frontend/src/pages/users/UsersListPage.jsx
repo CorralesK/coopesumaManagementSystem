@@ -71,16 +71,19 @@ const UsersListPage = () => {
     const tableColumns = [
         {
             key: 'fullName',
-            label: 'Nombre',
+            label: 'Usuario',
             render: (user) => (
-                <p className="font-medium text-gray-900">{user.fullName}</p>
-            )
-        },
-        {
-            key: 'email',
-            label: 'Correo',
-            render: (user) => (
-                <p className="text-sm text-gray-700">{user.email}</p>
+                <div className="text-left">
+                    <div className="flex flex-col">
+                        <button
+                            onClick={() => navigate(`/users/${user.userId}`)}
+                            className="font-semibold text-sm sm:text-base text-primary-600 hover:text-primary-700 text-left break-words cursor-pointer"
+                        >
+                            {user.fullName}
+                        </button>
+                        <span className="text-xs text-gray-500">{user.email}</span>
+                    </div>
+                </div>
             )
         },
         {
@@ -96,9 +99,11 @@ const UsersListPage = () => {
                 const config = roleConfig[user.role] || { class: 'bg-gray-100 text-gray-800' };
 
                 return (
-                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${config.class}`}>
-                        {getRoleLabel(user.role)}
-                    </span>
+                    <div className="text-center">
+                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${config.class}`}>
+                            {getRoleLabel(user.role)}
+                        </span>
+                    </div>
                 );
             }
         },
@@ -106,33 +111,32 @@ const UsersListPage = () => {
             key: 'status',
             label: 'Estado',
             render: (user) => (
-                <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                    user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                    {user.isActive ? 'Activo' : 'Inactivo'}
-                </span>
+                <div className="flex items-center justify-center">
+                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+                        user.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                        {user.isActive ? 'Activo' : 'Inactivo'}
+                    </span>
+                </div>
             )
         },
         {
             key: 'actions',
             label: 'Acciones',
             render: (user) => (
-                <div className="inline-flex items-center justify-center gap-2 my-2">
-                    <Button
-                        onClick={() => navigate(`/users/${user.userId}/edit`)}
-                        variant="outline"
-                        size="sm"
-                    >
-                        Editar
-                    </Button>
+                <div className="flex items-center justify-center gap-2">
                     {user.isActive ? (
                         <Button
                             onClick={() => handleDeactivate(user.userId)}
-                            variant="danger"
+                            variant="secondary"
                             size="sm"
                             disabled={operating}
+                            className="!px-3 sm:!px-4"
                         >
-                            Desactivar
+                            <svg className="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span className="hidden sm:inline">Desactivar</span>
                         </Button>
                     ) : (
                         <Button
@@ -140,8 +144,12 @@ const UsersListPage = () => {
                             variant="success"
                             size="sm"
                             disabled={operating}
+                            className="!px-3 sm:!px-4"
                         >
-                            Activar
+                            <svg className="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="hidden sm:inline">Activar</span>
                         </Button>
                     )}
                 </div>
@@ -156,13 +164,13 @@ const UsersListPage = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Usuarios</h1>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Usuarios del Sistema</h1>
                 <Button onClick={() => navigate('/users/new')} variant="primary" className="whitespace-nowrap w-full sm:w-auto">
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                     </svg>
-                    Nuevo Usuario
+                    Agregar Usuario
                 </Button>
             </div>
 
@@ -171,22 +179,26 @@ const UsersListPage = () => {
             {successMessage && <Alert type="success" message={successMessage} onClose={() => setSuccessMessage('')} />}
 
             {/* Users Table */}
-            <Card>
+            <Card padding="none">
                 {loading ? (
-                    <Loading message="Cargando..." />
+                    <div className="py-8">
+                        <Loading message="Cargando usuarios..." />
+                    </div>
                 ) : (
                     <>
                         <Table
                             columns={tableColumns}
                             data={users}
-                            emptyMessage="No se encontraron usuarios"
+                            emptyMessage="No se encontraron usuarios en el sistema"
                         />
                         {pagination.totalPages > 1 && (
-                            <Pagination
-                                currentPage={pagination.currentPage}
-                                totalPages={pagination.totalPages}
-                                onPageChange={setPage}
-                            />
+                            <div className="px-6 py-4">
+                                <Pagination
+                                    currentPage={pagination.currentPage}
+                                    totalPages={pagination.totalPages}
+                                    onPageChange={setPage}
+                                />
+                            </div>
                         )}
                     </>
                 )}

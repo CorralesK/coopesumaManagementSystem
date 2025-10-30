@@ -135,15 +135,17 @@ const UserFormPage = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
             {/* Header */}
-            <div className="pb-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                    {isEditMode ? 'Editar Usuario' : 'Nuevo Usuario'}
-                </h1>
-                <p className="text-gray-600 mt-1 text-sm sm:text-base">
-                    {isEditMode ? 'Actualiza la información del usuario' : 'Completa el formulario para crear un nuevo usuario'}
-                </p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                        {isEditMode ? 'Editar Usuario' : 'Agregar Usuario'}
+                    </h1>
+                    <p className="text-gray-600 mt-1 text-sm sm:text-base">
+                        {isEditMode ? 'Actualiza la información del usuario' : 'Completa el formulario para crear un nuevo usuario'}
+                    </p>
+                </div>
             </div>
 
             {/* Success Alert */}
@@ -157,101 +159,120 @@ const UserFormPage = () => {
             )}
 
             {/* Form */}
-            <div className="max-w-3xl">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Main Card */}
                 <Card>
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                    <Input
-                        label="Nombre Completo"
-                        name="fullName"
-                        value={formData.fullName}
-                        onChange={handleInputChange}
-                        error={errors.fullName}
-                        required
-                        placeholder="Ej: Juan Pérez García"
-                        maxLength={100}
-                        minLength={3}
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        {/* Información del Usuario */}
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Información del Usuario</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <Input
+                                    label="Nombre Completo"
+                                    name="fullName"
+                                    value={formData.fullName}
+                                    onChange={handleInputChange}
+                                    error={errors.fullName}
+                                    required
+                                    placeholder="Ej: Juan Pérez García"
+                                    maxLength={100}
+                                    minLength={3}
+                                />
 
-                    <Input
-                        label="Correo Electrónico"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        error={errors.email}
-                        required
-                        placeholder="Ej: juan.perez@example.com"
-                        maxLength={255}
-                    />
-
-                    <Select
-                        label="Rol"
-                        name="role"
-                        value={formData.role}
-                        onChange={handleInputChange}
-                        options={roleOptions}
-                        error={errors.role}
-                        required
-                    />
-
-                    {/* Role Descriptions */}
-                    <div className="bg-primary-50 border-l-4 border-primary-500 p-4">
-                        <div className="flex">
-                            <svg className="w-5 h-5 text-primary-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                            </svg>
-                            <div className="text-sm text-primary-700">
-                                <p className="font-semibold mb-2">Descripción de Roles:</p>
-                                <ul className="space-y-1 list-disc list-inside">
-                                    <li><strong>Administrador:</strong> Acceso completo al sistema</li>
-                                    <li><strong>Registrador:</strong> Puede registrar asistencia a asambleas</li>
-                                    <li><strong>Tesorero:</strong> Acceso a reportes y estadísticas</li>
-                                    <li><strong>Estudiante:</strong> Acceso limitado a su propia información</li>
-                                </ul>
+                                <Input
+                                    label="Correo Electrónico"
+                                    name="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    error={errors.email}
+                                    required
+                                    placeholder="Ej: juan.perez@example.com"
+                                    maxLength={255}
+                                />
                             </div>
                         </div>
-                    </div>
 
-                    {/* Info Box for New Users */}
-                    {!isEditMode && (
-                        <div className="bg-green-50 border-l-4 border-green-500 p-4">
+                        {/* Separador */}
+                        <div className="border-t border-gray-200"></div>
+
+                        {/* Rol y Permisos */}
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Rol y Permisos</h2>
+                            <div className="grid grid-cols-1 gap-6">
+                                <Select
+                                    label="Rol del Usuario"
+                                    name="role"
+                                    value={formData.role}
+                                    onChange={handleInputChange}
+                                    options={roleOptions}
+                                    error={errors.role}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        {/* Separador */}
+                        <div className="border-t border-gray-200"></div>
+
+                        {/* Role Descriptions */}
+                        <div className="bg-primary-50 border-l-4 border-primary-500 p-4">
                             <div className="flex">
-                                <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <svg className="w-5 h-5 text-primary-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                 </svg>
-                                <div className="text-sm text-green-700">
-                                    <p>
-                                        El usuario será creado con estado activo. La autenticación se realiza mediante Microsoft OAuth,
-                                        por lo que el usuario debe iniciar sesión con su cuenta de Microsoft asociada al correo proporcionado.
-                                    </p>
+                                <div className="text-sm text-primary-700">
+                                    <p className="font-semibold mb-2">Descripción de Roles:</p>
+                                    <ul className="space-y-1 list-disc list-inside">
+                                        <li><strong>Administrador:</strong> Acceso completo al sistema</li>
+                                        <li><strong>Registrador:</strong> Puede registrar asistencia a asambleas</li>
+                                        <li><strong>Tesorero:</strong> Acceso a reportes y estadísticas</li>
+                                        <li><strong>Estudiante:</strong> Acceso limitado a su propia información</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
-                    )}
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
-                        <Button
-                            type="button"
-                            onClick={() => navigate('/users')}
-                            variant="outline"
-                            disabled={submitting}
-                            className="w-full sm:w-auto"
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            disabled={submitting}
-                            className="w-full sm:w-auto"
-                        >
-                            {submitting ? (isEditMode ? 'Guardando...' : 'Creando...') : (isEditMode ? 'Guardar Cambios' : 'Crear Usuario')}
-                        </Button>
+                        {/* Info Box for New Users */}
+                        {!isEditMode && (
+                            <div className="bg-green-50 border-l-4 border-green-500 p-4">
+                                <div className="flex">
+                                    <svg className="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                    </svg>
+                                    <div className="text-sm text-green-700">
+                                        <p>
+                                            El usuario será creado con estado activo. La autenticación se realiza mediante Microsoft OAuth,
+                                            por lo que el usuario debe iniciar sesión con su cuenta de Microsoft asociada al correo proporcionado.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                </form>
-            </Card>
-            </div>
+                </Card>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
+                    <Button
+                        type="button"
+                        onClick={() => navigate('/users')}
+                        variant="outline"
+                        disabled={submitting}
+                        className="w-full sm:w-auto"
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={submitting}
+                        className="w-full sm:w-auto"
+                    >
+                        {submitting ? (isEditMode ? 'Guardando...' : 'Creando...') : (isEditMode ? 'Guardar Cambios' : 'Crear Usuario')}
+                    </Button>
+                </div>
+            </form>
         </div>
     );
 };

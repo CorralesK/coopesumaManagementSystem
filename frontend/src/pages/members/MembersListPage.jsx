@@ -163,55 +163,57 @@ const MembersListPage = () => {
             {error && <Alert type="error" message={error} onClose={() => {}} />}
             {successMessage && <Alert type="success" message={successMessage} onClose={() => setSuccessMessage('')} />}
 
-            {/* Filters */}
-            <Card title="Filtros de Búsqueda">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Input
-                        label="Buscar"
-                        name="search"
-                        type="text"
-                        value={filters.search}
-                        onChange={(e) => handleFilterChange('search', e.target.value)}
-                        placeholder="Nombre o identificación..."
-                    />
-                    <Select
-                        label="Grado"
-                        name="grade"
-                        value={filters.grade}
-                        onChange={(e) => handleFilterChange('grade', e.target.value)}
-                        options={gradeOptions}
-                        placeholder="Todos los grados"
-                    />
-                    <Select
-                        label="Estado"
-                        name="isActive"
-                        value={filters.isActive}
-                        onChange={(e) => handleFilterChange('isActive', e.target.value)}
-                        options={statusOptions}
-                        placeholder=""
-                    />
-                </div>
-                <div className="mt-6 flex flex-wrap gap-3">
-                    <Button onClick={() => resetFilters()} variant="outline" size="md" className="whitespace-nowrap">
-                        Limpiar Filtros
-                    </Button>
-                    <Button
-                        onClick={() => setShowBatchQrModal(true)}
-                        variant="secondary"
-                        size="md"
-                        className="whitespace-nowrap"
-                        disabled={members.length === 0}
-                    >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                        </svg>
-                        Imprimir QR en Lote
-                    </Button>
-                </div>
-            </Card>
+            {/* Filters and Table Container */}
+            <div className="space-y-0">
+                {/* Filters */}
+                <Card title="Filtros de Búsqueda">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Input
+                            label="Buscar"
+                            name="search"
+                            type="text"
+                            value={filters.search}
+                            onChange={(e) => handleFilterChange('search', e.target.value)}
+                            placeholder="Nombre o identificación..."
+                        />
+                        <Select
+                            label="Grado"
+                            name="grade"
+                            value={filters.grade}
+                            onChange={(e) => handleFilterChange('grade', e.target.value)}
+                            options={gradeOptions}
+                            placeholder="Todos los grados"
+                        />
+                        <Select
+                            label="Estado"
+                            name="isActive"
+                            value={filters.isActive}
+                            onChange={(e) => handleFilterChange('isActive', e.target.value)}
+                            options={statusOptions}
+                            placeholder=""
+                        />
+                    </div>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                        <Button onClick={() => resetFilters()} variant="outline" size="md" className="whitespace-nowrap">
+                            Limpiar Filtros
+                        </Button>
+                        <Button
+                            onClick={() => setShowBatchQrModal(true)}
+                            variant="secondary"
+                            size="md"
+                            className="whitespace-nowrap"
+                            disabled={members.length === 0}
+                        >
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                            </svg>
+                            Imprimir QR en Lote
+                        </Button>
+                    </div>
+                </Card>
 
-            {/* Members Table */}
-            <Card padding="none">
+                {/* Members Table */}
+                <Card padding="none">
                 {loading ? (
                     <div className="py-8">
                         <Loading message="Cargando..." />
@@ -229,6 +231,7 @@ const MembersListPage = () => {
                     </>
                 )}
             </Card>
+            </div>
 
             {/* Batch QR Print Modal */}
             <BatchQrPrintModal

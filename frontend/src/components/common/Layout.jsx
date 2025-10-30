@@ -9,6 +9,7 @@ import PropTypes from 'prop-types';
 import { useAuth } from '../../context/AuthContext';
 import { USER_ROLES } from '../../utils/constants';
 import UserDropdown from './UserDropdown';
+import CoopesumaLogo from '../../assets/logos/CoopesumaLogo.png';
 
 const Layout = ({ children }) => {
     const { user, logout } = useAuth();
@@ -112,12 +113,15 @@ const Layout = ({ children }) => {
                     </button>
                     )}
 
-                    {/* Logo for registrar - Show when sidebar is hidden */}
-                    {!showSidebar && (
-                        <div className="flex items-center">
-                            <h1 className="text-lg sm:text-xl font-bold text-primary-600">COOPESUMA R.L.</h1>
-                        </div>
-                    )}
+                    {/* Brand: Logo + Name (always left aligned) */}
+                    <div className="flex items-center gap-2">
+                        <img
+                            src={CoopesumaLogo}
+                            alt="COOPESUMA"
+                            className="h-10 w-auto sm:h-10 md:h-12"
+                        />
+                        <span className="text-lg sm:text-xl font-bold text-primary-600">COOPESUMA</span>
+                    </div>
 
                     {/* Header Content */}
                     <div className="flex items-center justify-end flex-1">

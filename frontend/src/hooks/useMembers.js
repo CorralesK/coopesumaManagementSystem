@@ -55,7 +55,24 @@ export const useMembers = (initialFilters = {}) => {
 
             const response = await getAllMembers(params);
 
-            setMembers(response.data || []);
+            // Sort members: active first, then by name, then by grade
+            const sortedMembers = (response.data || []).sort((a, b) => {
+                // First: Sort by status (active first)
+                if (a.isActive !== b.isActive) {
+                    return b.isActive - a.isActive; // true (1) comes before false (0)
+                }
+
+                // Second: Sort by name alphabetically
+                const nameComparison = a.fullName.localeCompare(b.fullName, 'es');
+                if (nameComparison !== 0) {
+                    return nameComparison;
+                }
+
+                // Third: Sort by grade
+                return a.grade - b.grade;
+            });
+
+            setMembers(sortedMembers);
             setPagination({
                 currentPage: response.pagination?.page || 1,
                 totalPages: response.pagination?.totalPages || 1,
