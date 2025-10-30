@@ -98,11 +98,11 @@ const AssemblyFormPage = () => {
 
             if (isEditMode) {
                 await update(id, payload);
+                navigate(`/assemblies/${id}`);
             } else {
                 await create(payload);
+                navigate('/assemblies');
             }
-
-            navigate('/assemblies');
         } catch (err) {
             setFormError(err.message || `Error al ${isEditMode ? 'actualizar' : 'crear'} la asamblea`);
         }
@@ -113,15 +113,17 @@ const AssemblyFormPage = () => {
     }
 
     return (
-        <div className="max-w-3xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                    {isEditMode ? 'Editar Asamblea' : 'Nueva Asamblea'}
-                </h1>
-                <p className="text-gray-600 mt-1">
-                    {isEditMode ? 'Actualiza la información de la asamblea' : 'Completa el formulario para crear una nueva asamblea'}
-                </p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                        {isEditMode ? 'Editar Asamblea' : 'Agregar Asamblea'}
+                    </h1>
+                    <p className="text-gray-600 mt-1 text-sm sm:text-base">
+                        {isEditMode ? 'Actualiza la información de la asamblea' : 'Completa el formulario para crear una nueva asamblea'}
+                    </p>
+                </div>
             </div>
 
             {/* Error Alert */}
@@ -130,55 +132,78 @@ const AssemblyFormPage = () => {
             )}
 
             {/* Form */}
-            <Card>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <Input
-                        label="Título"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleInputChange}
-                        error={errors.title}
-                        required
-                        placeholder="Ej: Asamblea Mensual - Enero 2025"
-                    />
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Main Card */}
+                <Card>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        {/* Información de la Asamblea */}
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Información de la Asamblea</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <Input
+                                    label="Título"
+                                    name="title"
+                                    value={formData.title}
+                                    onChange={handleInputChange}
+                                    error={errors.title}
+                                    required
+                                    placeholder="Ej: Asamblea Mensual - Enero 2025"
+                                />
 
-                    <Input
-                        label="Fecha Programada"
-                        name="scheduledDate"
-                        type="date"
-                        value={formData.scheduledDate}
-                        onChange={handleInputChange}
-                        error={errors.scheduledDate}
-                        required
-                    />
+                                <Input
+                                    label="Fecha Programada"
+                                    name="scheduledDate"
+                                    type="date"
+                                    value={formData.scheduledDate}
+                                    onChange={handleInputChange}
+                                    error={errors.scheduledDate}
+                                    required
+                                />
+                            </div>
+                        </div>
 
-                    {/* Info Box */}
-                    <div className="bg-primary-50 border-l-4 border-primary-500 p-4">
-                        <div className="flex">
-                            <svg className="w-5 h-5 text-primary-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                            </svg>
-                            <div>
-                                <p className="text-sm text-primary-700">
-                                    {isEditMode
-                                        ? 'Los cambios se aplicarán inmediatamente. Si la asamblea está activa, permanecerá activa después de la edición.'
-                                        : 'La asamblea será creada con estado "Programada". Deberás activarla manualmente cuando estés listo para el registro de asistencia.'}
-                                </p>
+                        {/* Separador */}
+                        <div className="border-t border-gray-200"></div>
+
+                        {/* Info Box */}
+                        <div className="bg-primary-50 border-l-4 border-primary-500 p-4">
+                            <div className="flex">
+                                <svg className="w-5 h-5 text-primary-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                                <div>
+                                    <p className="text-sm text-primary-700">
+                                        {isEditMode
+                                            ? 'Los cambios se aplicarán inmediatamente. Si la asamblea está activa, permanecerá activa después de la edición.'
+                                            : 'La asamblea será creada con estado "Programada". Deberás activarla manualmente cuando estés listo para el registro de asistencia.'}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </Card>
 
-                    {/* Action Buttons */}
-                    <div className="flex justify-end space-x-3 pt-4 border-t">
-                        <Button type="button" onClick={() => navigate('/assemblies')} variant="outline" disabled={submitting}>
-                            Cancelar
-                        </Button>
-                        <Button type="submit" variant="primary" disabled={submitting}>
-                            {submitting ? (isEditMode ? 'Guardando...' : 'Creando...') : (isEditMode ? 'Guardar Cambios' : 'Crear Asamblea')}
-                        </Button>
-                    </div>
-                </form>
-            </Card>
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row justify-end gap-3">
+                    <Button
+                        type="button"
+                        onClick={() => navigate(isEditMode ? `/assemblies/${id}` : '/assemblies')}
+                        variant="outline"
+                        disabled={submitting}
+                        className="w-full sm:w-auto"
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={submitting}
+                        className="w-full sm:w-auto"
+                    >
+                        {submitting ? (isEditMode ? 'Guardando...' : 'Creando...') : (isEditMode ? 'Guardar Cambios' : 'Crear Asamblea')}
+                    </Button>
+                </div>
+            </form>
         </div>
     );
 };
