@@ -124,11 +124,11 @@ const MemberFormPage = () => {
 
             if (isEditMode) {
                 await update(id, payload);
+                navigate(`/members/${id}`);
             } else {
                 await create(payload);
+                navigate('/members');
             }
-
-            navigate('/members');
         } catch (err) {
             setFormError(err.message || `Error al ${isEditMode ? 'actualizar' : 'crear'} el miembro`);
         }
@@ -141,15 +141,17 @@ const MemberFormPage = () => {
     const gradeOptions = GRADES.map(grade => ({ value: grade, label: `${grade}° grado` }));
 
     return (
-        <div className="max-w-3xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                    {isEditMode ? 'Editar Miembro' : 'Nuevo Miembro'}
-                </h1>
-                <p className="text-gray-600 mt-1">
-                    {isEditMode ? 'Actualiza la información del miembro' : 'Completa el formulario para agregar un nuevo miembro'}
-                </p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                        {isEditMode ? 'Editar Miembro' : 'Agregar Miembro'}
+                    </h1>
+                    <p className="text-gray-600 mt-1 text-sm sm:text-base">
+                        {isEditMode ? 'Actualiza la información del miembro' : 'Completa el formulario para agregar un nuevo miembro'}
+                    </p>
+                </div>
             </div>
 
             {/* Error Alert */}
@@ -158,86 +160,113 @@ const MemberFormPage = () => {
             )}
 
             {/* Form */}
-            <Card>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <Input
-                        label="Nombre Completo"
-                        name="fullName"
-                        value={formData.fullName}
-                        onChange={handleInputChange}
-                        error={errors.fullName}
-                        required
-                        placeholder="Ej: Juan Pérez Rodríguez"
-                    />
-
-                    <Input
-                        label="Identificación"
-                        name="identification"
-                        value={formData.identification}
-                        onChange={handleInputChange}
-                        error={errors.identification}
-                        required
-                        placeholder="Ej: 1-2345-6789"
-                        disabled={isEditMode}
-                    />
-
-                    {!isEditMode && (
-                        <Input
-                            label="Correo Institucional"
-                            name="institutionalEmail"
-                            type="email"
-                            value={formData.institutionalEmail}
-                            onChange={handleInputChange}
-                            error={errors.institutionalEmail}
-                            required
-                            placeholder="Ej: estudiante@educacion.mep.go.cr"
-                        />
-                    )}
-
-                    <Select
-                        label="Grado"
-                        name="grade"
-                        value={formData.grade}
-                        onChange={handleInputChange}
-                        options={gradeOptions}
-                        error={errors.grade}
-                        required
-                        placeholder="Seleccione el grado"
-                    />
-
-                    <Input
-                        label="URL de Foto"
-                        name="photoUrl"
-                        type="url"
-                        value={formData.photoUrl}
-                        onChange={handleInputChange}
-                        error={errors.photoUrl}
-                        placeholder="https://ejemplo.com/foto.jpg (opcional)"
-                    />
-
-                    {formData.photoUrl && (
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Main Card */}
+                <Card>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        {/* Información Personal */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Vista Previa</label>
-                            <img
-                                src={formData.photoUrl}
-                                alt="Vista previa"
-                                className="w-32 h-32 object-cover rounded-lg border-2 border-gray-300"
-                                onError={(e) => { e.target.style.display = 'none'; }}
-                            />
-                        </div>
-                    )}
+                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Información Personal</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <Input
+                                    label="Nombre Completo"
+                                    name="fullName"
+                                    value={formData.fullName}
+                                    onChange={handleInputChange}
+                                    error={errors.fullName}
+                                    required
+                                    placeholder="Ej: Juan Pérez Rodríguez"
+                                />
 
-                    {/* Action Buttons */}
-                    <div className="flex justify-end space-x-3 pt-4 border-t">
-                        <Button type="button" onClick={() => navigate('/members')} variant="outline" disabled={submitting}>
-                            Cancelar
-                        </Button>
-                        <Button type="submit" variant="primary" disabled={submitting}>
-                            {submitting ? (isEditMode ? 'Guardando...' : 'Creando...') : (isEditMode ? 'Guardar Cambios' : 'Crear Miembro')}
-                        </Button>
+                                <Input
+                                    label="Identificación"
+                                    name="identification"
+                                    value={formData.identification}
+                                    onChange={handleInputChange}
+                                    error={errors.identification}
+                                    required
+                                    placeholder="Ej: 1-2345-6789"
+                                    disabled={isEditMode}
+                                />
+
+                                {!isEditMode && (
+                                    <Input
+                                        label="Correo Institucional"
+                                        name="institutionalEmail"
+                                        type="email"
+                                        value={formData.institutionalEmail}
+                                        onChange={handleInputChange}
+                                        error={errors.institutionalEmail}
+                                        required
+                                        placeholder="Ej: estudiante@educacion.mep.go.cr"
+                                    />
+                                )}
+
+                                <Select
+                                    label="Grado"
+                                    name="grade"
+                                    value={formData.grade}
+                                    onChange={handleInputChange}
+                                    options={gradeOptions}
+                                    error={errors.grade}
+                                    required
+                                    placeholder="Seleccione el grado"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Separador */}
+                        <div className="border-t border-gray-200"></div>
+
+                        {/* Fotografía */}
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Fotografía</h2>
+                            <Input
+                                label="URL de Foto"
+                                name="photoUrl"
+                                type="url"
+                                value={formData.photoUrl}
+                                onChange={handleInputChange}
+                                error={errors.photoUrl}
+                                placeholder="https://ejemplo.com/foto.jpg (opcional)"
+                            />
+
+                            {formData.photoUrl && (
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Vista Previa</label>
+                                    <img
+                                        src={formData.photoUrl}
+                                        alt="Vista previa"
+                                        className="w-32 h-32 object-cover rounded-lg border-2 border-gray-300"
+                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </form>
-            </Card>
+                </Card>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row justify-end gap-3">
+                    <Button
+                        type="button"
+                        onClick={() => navigate(isEditMode ? `/members/${id}` : '/members')}
+                        variant="outline"
+                        disabled={submitting}
+                        className="w-full sm:w-auto"
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={submitting}
+                        className="w-full sm:w-auto"
+                    >
+                        {submitting ? (isEditMode ? 'Guardando...' : 'Creando...') : (isEditMode ? 'Guardar Cambios' : 'Crear Miembro')}
+                    </Button>
+                </div>
+            </form>
         </div>
     );
 };
