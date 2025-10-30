@@ -65,41 +65,46 @@ const MembersListPage = () => {
     const tableColumns = [
         {
             key: 'fullName',
-            label: 'Nombre Completo',
+            label: 'Miembro',
             render: (member) => (
-                <div className="flex items-center">
-                    {member.photoUrl && (
-                        <img
-                            src={member.photoUrl}
-                            alt={member.fullName}
-                            className="w-10 h-10 rounded-full mr-3 object-cover"
-                        />
-                    )}
-                    <button
-                        onClick={() => navigate(`/members/${member.memberId}`)}
-                        className="font-medium text-primary-600 hover:text-primary-800 hover:underline text-left"
-                    >
-                        {member.fullName}
-                    </button>
+                <div className="text-left">
+                    <div className="flex items-center gap-3">
+                        {member.photoUrl && (
+                            <img
+                                src={member.photoUrl}
+                                alt={member.fullName}
+                                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                            />
+                        )}
+                        <div className="flex flex-col">
+                            <button
+                                onClick={() => navigate(`/members/${member.memberId}`)}
+                                className="font-semibold text-sm sm:text-base text-primary-600 hover:text-primary-700 text-left break-words cursor-pointer"
+                            >
+                                {member.fullName}
+                            </button>
+                            <span className="text-xs text-gray-500">{member.identification}</span>
+                        </div>
+                    </div>
                 </div>
             )
         },
         {
-            key: 'identification',
-            label: 'Identificación'
-        },
-        {
             key: 'grade',
             label: 'Grado',
-            render: (member) => `${member.grade}° grado`
+            render: (member) => (
+                <div className="text-gray-600 font-medium text-sm">
+                    {member.grade}°
+                </div>
+            )
         },
         {
             key: 'isActive',
             label: 'Estado',
             render: (member) => (
                 <div className="flex items-center justify-center">
-                    <span className={`inline-flex items-center justify-center px-4 py-1.5 text-xs font-semibold rounded-full whitespace-nowrap ${
-                        member.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+                        member.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'
                     }`}>
                         {member.isActive ? 'Activo' : 'Inactivo'}
                     </span>
@@ -110,13 +115,19 @@ const MembersListPage = () => {
             key: 'actions',
             label: 'Acciones',
             render: (member) => (
-                <div className="inline-flex items-center justify-center gap-2 my-2">
-                    <Button onClick={() => navigate(`/members/${member.memberId}/edit`)} variant="outline" size="sm">
-                        Editar
-                    </Button>
+                <div className="flex items-center justify-center">
                     {member.isActive && (
-                        <Button onClick={() => handleDeactivateMember(member.memberId)} variant="danger" size="sm" disabled={deactivating}>
-                            Desactivar
+                        <Button
+                            onClick={() => handleDeactivateMember(member.memberId)}
+                            variant="secondary"
+                            size="sm"
+                            disabled={deactivating}
+                            className="!px-3 sm:!px-4"
+                        >
+                            <svg className="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span className="hidden sm:inline">Desactivar</span>
                         </Button>
                     )}
                 </div>
@@ -138,7 +149,7 @@ const MembersListPage = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Miembros</h1>
                 <Button onClick={() => navigate('/members/new')} variant="primary" className="whitespace-nowrap w-full sm:w-auto">
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,17 +211,21 @@ const MembersListPage = () => {
             </Card>
 
             {/* Members Table */}
-            <Card>
+            <Card padding="none">
                 {loading ? (
-                    <Loading message="Cargando..." />
+                    <div className="py-8">
+                        <Loading message="Cargando..." />
+                    </div>
                 ) : (
                     <>
                         <Table columns={tableColumns} data={members} emptyMessage="No se encontraron miembros" />
-                        <Pagination
-                            currentPage={pagination.currentPage}
-                            totalPages={pagination.totalPages}
-                            onPageChange={setPage}
-                        />
+                        <div className="px-6 py-4">
+                            <Pagination
+                                currentPage={pagination.currentPage}
+                                totalPages={pagination.totalPages}
+                                onPageChange={setPage}
+                            />
+                        </div>
                     </>
                 )}
             </Card>
