@@ -99,7 +99,7 @@ const Layout = ({ children }) => {
                     {showSidebar && (
                     <button
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="lg:hidden text-gray-600 hover:text-gray-900 p-3 transition-all duration-200"
+                        className="lg:hidden text-gray-600 hover:text-gray-900 p-3 mr-3 transition-all duration-200"
                     >
                         {isSidebarOpen ? (
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,8 +125,8 @@ const Layout = ({ children }) => {
 
                     {/* Header Content */}
                     <div className="flex items-center justify-end flex-1">
-                        {/* User Dropdown - Desktop Only */}
-                        <div className="hidden lg:block">
+                        {/* User Dropdown - Desktop Only for admins, Always visible for registrars */}
+                        <div className={showSidebar ? "hidden lg:block" : "block"}>
                             <UserDropdown user={user} onLogout={handleLogout} />
                         </div>
                     </div>

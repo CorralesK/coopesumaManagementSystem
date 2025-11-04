@@ -137,6 +137,11 @@ header > div {
   }
 }
 
+/* Padding-top for pages without sidebar (registrars) */
+div.pt-16:not(.main-content) {
+  padding-top: 4rem !important; /* pt-16 - header height */
+}
+
 /* Enhanced padding for better spacing */
 .main-content main {
   padding: 2rem !important;
@@ -154,6 +159,54 @@ header > div {
   }
 }
 
+/* Padding for pages without sidebar (registrars) */
+div:not(.main-content) > main {
+  padding: 2rem !important;
+}
+
+@media (min-width: 640px) {
+  div:not(.main-content) > main {
+    padding: 2.5rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  div:not(.main-content) > main {
+    padding: 3rem !important;
+  }
+}
+
+/* Better spacing for pages without sidebar (registrars) */
+div:not(.main-content) main h1,
+div:not(.main-content) main h2,
+div:not(.main-content) main h3 {
+  margin-bottom: 1.25rem !important;
+}
+
+div:not(.main-content) main p {
+  margin-bottom: 1rem !important;
+}
+
+/* Better spacing for space-y classes for registrars */
+div:not(.main-content) main [class*="space-y-6"] > * + * {
+  margin-top: 1.5rem !important;
+}
+
+/* Better button spacing for registrars */
+div:not(.main-content) main button {
+  min-height: 44px !important; /* Minimum touch target size */
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+}
+
+/* Exception for buttons inside tables */
+div:not(.main-content) main table button {
+  padding-left: inherit !important;
+  padding-right: inherit !important;
+  min-height: 36px !important;
+  align-self: center !important;
+}
+
 /* Better spacing for all elements */
 .main-content h1,
 .main-content h2,
@@ -163,11 +216,6 @@ header > div {
 
 .main-content p {
   margin-bottom: 1rem !important;
-}
-
-/* Better spacing in grids */
-.main-content [class*="grid"] {
-  gap: 2rem !important;
 }
 
 /* Better card spacing */
@@ -186,12 +234,24 @@ header > div {
 }
 
 /* Exception for table containers */
-.main-content .bg-white > div.overflow-x-auto {
+.main-content .bg-white > div.overflow-x-auto,
+.main-content .bg-white > div.overflow-y-auto {
   padding: 0 !important;
 }
 
 .main-content .bg-white > div:has(.overflow-x-auto) {
   padding: 0 !important;
+}
+
+.main-content .bg-white > div:has(table) {
+  padding: 0 !important;
+}
+
+/* Remove vertical padding from attendance list card for admin only */
+.main-content .bg-white > div.py-4:has(table),
+.main-content .bg-white > div.py-4:has(.overflow-y-auto) {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 /* Ensure primary color classes work correctly */
@@ -272,6 +332,12 @@ header > div {
 .main-content header button.lg\:hidden {
   min-height: auto !important;
   padding: 0.75rem !important;
+  margin-right: 0.75rem !important;
+}
+
+/* Mobile menu button spacing (for all layouts) */
+header button.lg\:hidden {
+  margin-right: 0.75rem !important;
 }
 
 /* Exception for dropdown button inside header */
