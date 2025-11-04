@@ -6,6 +6,7 @@
  */
 
 import axios from 'axios';
+import { sanitizeErrorMessage } from '../utils/errorSanitizer';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -57,6 +58,12 @@ api.interceptors.response.use(
             // Server responded with error status
             const { status, data } = error.response;
 
+            // Get the original message from backend
+            const originalMessage = data.message || 'Error en la solicitud';
+
+            // Sanitize the error message to prevent exposing technical details
+            const sanitizedMessage = sanitizeErrorMessage(originalMessage, status);
+
             // Handle specific HTTP status codes
             switch (status) {
                 case 401:
@@ -68,26 +75,26 @@ api.interceptors.response.use(
 
                 case 403:
                     // Forbidden - insufficient permissions
-                    console.error('Access forbidden:', data.message);
+                    console.error('Access forbidden:', sanitizedMessage);
                     break;
 
                 case 404:
                     // Not found
-                    console.error('Resource not found:', data.message);
+                    console.error('Resource not found:', sanitizedMessage);
                     break;
 
                 case 500:
                     // Server error
-                    console.error('Server error:', data.message);
+                    console.error('Server error:', sanitizedMessage);
                     break;
 
                 default:
-                    console.error('API error:', data.message);
+                    console.error('API error:', sanitizedMessage);
             }
 
-            // Return error in consistent format
+            // Return error in consistent format with sanitized message
             return Promise.reject({
-                message: data.message || 'Error en la solicitud',
+                message: sanitizedMessage,
                 error: data.error || 'UNKNOWN_ERROR',
                 statusCode: status,
             });

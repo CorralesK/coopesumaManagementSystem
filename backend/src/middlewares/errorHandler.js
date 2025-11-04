@@ -26,22 +26,68 @@ const errorHandler = (err, req, res, next) => {
         );
     }
 
-    // Database errors
-    if (err.code && err.code.startsWith('23')) { // PostgreSQL constraint violations
-        if (err.code === '23505') { // Unique violation
-            return errorResponse(
-                res,
-                'Ya existe un registro con estos datos',
-                ERROR_CODES.VALIDATION_ERROR,
-                409
-            );
+    // Database errors (PostgreSQL)
+    if (err.code) {
+        // Constraint violations (23xxx codes)
+        if (err.code.startsWith('23')) {
+            switch (err.code) {
+                case '23505': // Unique violation
+                    return errorResponse(
+                        res,
+                        'Ya existe un registro con estos datos',
+                        ERROR_CODES.VALIDATION_ERROR,
+                        409
+                    );
+                case '23503': // Foreign key violation
+                    return errorResponse(
+                        res,
+                        'El registro referenciado no existe',
+                        ERROR_CODES.VALIDATION_ERROR,
+                        400
+                    );
+                case '23502': // NOT NULL constraint violation
+                    return errorResponse(
+                        res,
+                        'Faltan datos requeridos para completar la operación',
+                        ERROR_CODES.VALIDATION_ERROR,
+                        400
+                    );
+                case '23514': // CHECK constraint violation
+                    return errorResponse(
+                        res,
+                        'Los datos no cumplen con las restricciones requeridas',
+                        ERROR_CODES.VALIDATION_ERROR,
+                        400
+                    );
+                default:
+                    // Other constraint violations
+                    return errorResponse(
+                        res,
+                        'Error de validación en los datos',
+                        ERROR_CODES.VALIDATION_ERROR,
+                        400
+                    );
+            }
         }
-        if (err.code === '23503') { // Foreign key violation
+
+        // Data type errors (22xxx codes)
+        if (err.code.startsWith('22')) {
             return errorResponse(
                 res,
-                'El registro referenciado no existe',
+                'Los datos proporcionados tienen un formato inválido',
                 ERROR_CODES.VALIDATION_ERROR,
                 400
+            );
+        }
+
+        // Syntax errors and access rule violations (42xxx codes)
+        if (err.code.startsWith('42')) {
+            // These are programming errors, don't expose details
+            return errorResponse(
+                res,
+                MESSAGES.INTERNAL_ERROR,
+                ERROR_CODES.DATABASE_ERROR,
+                500
             );
         }
     }
