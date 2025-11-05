@@ -1,23 +1,29 @@
 {
   "name": "CoopeSuma Management System",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-18-bullseye",
 
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "18"
+      "version": "18",
+      "nodeGypDependencies": true
     },
-    "ghcr.io/devcontainers-contrib/features/postgres-homebrew:1": {}
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true
+    }
   },
 
   "forwardPorts": [5000, 5173, 5432],
   "portsAttributes": {
     "5000": {
       "label": "Backend API",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify",
+      "visibility": "public"
     },
     "5173": {
       "label": "Frontend",
-      "onAutoForward": "openBrowser"
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
     },
     "5432": {
       "label": "PostgreSQL",
@@ -26,6 +32,7 @@
   },
 
   "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/configure-urls.sh",
 
   "customizations": {
     "vscode": {
@@ -33,7 +40,14 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "ms-vscode.vscode-node-azure-pack"
-      ]
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
     }
+  },
+
+  "remoteEnv": {
+    "CODESPACE_NAME": "${localEnv:CODESPACE_NAME}"
   }
 }
