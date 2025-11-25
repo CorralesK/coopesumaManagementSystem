@@ -80,6 +80,9 @@ COMMENT ON INDEX idx_members_level_id IS 'Optimiza filtrado por nivel educativo'
 CREATE INDEX idx_members_gender ON members(gender);
 COMMENT ON INDEX idx_members_gender IS 'Optimiza filtrado por género';
 
+CREATE INDEX idx_members_user_id ON members(user_id);
+COMMENT ON INDEX idx_members_user_id IS 'Optimiza búsquedas de miembros por usuario asociado';
+
 -- ============================================================================
 -- ÍNDICES PARA TABLAS DE CATÁLOGO
 -- ============================================================================

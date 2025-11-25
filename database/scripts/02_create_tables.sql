@@ -40,28 +40,33 @@ CREATE TABLE cooperatives (
 COMMENT ON TABLE cooperatives IS 'Cooperativas estudiantiles del sistema';
 
 -- ============================================================================
--- TABLA 3: users
+-- TABLE 3: users
+-- Description: System users authenticated via Microsoft OAuth
 -- ============================================================================
 
 CREATE TABLE users (
     cooperative_id INTEGER NOT NULL REFERENCES cooperatives(cooperative_id) ON DELETE RESTRICT,
     user_id SERIAL PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE,
     microsoft_id VARCHAR(255) UNIQUE,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('administrator', 'registrar', 'treasurer', 'student')),
+    role VARCHAR(20) NOT NULL CHECK (role IN ('administrator', 'registrar', 'manager', 'member')),
     is_active BOOLEAN DEFAULT true NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     CONSTRAINT chk_full_name_not_empty CHECK (TRIM(full_name) != ''),
-    CONSTRAINT chk_email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
+    CONSTRAINT chk_email_format CHECK (
+        email IS NULL OR
+        email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+    )
 );
 
-COMMENT ON TABLE users IS 'Usuarios del sistema autenticados con Microsoft OAuth';
-COMMENT ON COLUMN users.cooperative_id IS 'Cooperativa a la que pertenece el usuario';
-COMMENT ON COLUMN users.role IS 'Rol del usuario: administrator, registrar, treasurer, student';
-COMMENT ON COLUMN users.microsoft_id IS 'ID de Microsoft para autenticación OAuth';
+COMMENT ON TABLE users IS 'System users authenticated via Microsoft OAuth';
+COMMENT ON COLUMN users.cooperative_id IS 'Cooperative to which the user belongs';
+COMMENT ON COLUMN users.email IS 'User email (NULL if institutional email not yet assigned)';
+COMMENT ON COLUMN users.role IS 'User role: administrator, registrar, manager (financial), member (cooperative member)';
+COMMENT ON COLUMN users.microsoft_id IS 'Microsoft ID for OAuth authentication';
 
 -- ============================================================================
 -- TABLA 4: member_qualities
@@ -130,6 +135,7 @@ INSERT INTO member_levels (level_id, level_code, level_name, applies_to_quality_
 CREATE TABLE members (
     cooperative_id INTEGER NOT NULL REFERENCES cooperatives(cooperative_id) ON DELETE RESTRICT,
     member_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
     full_name VARCHAR(100) NOT NULL,
     identification VARCHAR(20) UNIQUE NOT NULL,
     gender CHAR(1) CHECK (gender IN ('M', 'F', 'O')),
@@ -155,6 +161,7 @@ CREATE TABLE members (
 );
 
 COMMENT ON TABLE members IS 'Miembros de la cooperativa (estudiantes y funcionarios)';
+COMMENT ON COLUMN members.user_id IS 'Usuario asociado al miembro para acceso al sistema (NULL si aún no tiene correo institucional)';
 COMMENT ON COLUMN members.gender IS 'Género: M=Masculino, F=Femenino, O=Otro';
 COMMENT ON COLUMN members.member_code IS 'Código único de miembro (formato: NNN-YYYY, ej: 001-2025)';
 COMMENT ON COLUMN members.quality_id IS 'Calidad del miembro (estudiante o funcionario)';

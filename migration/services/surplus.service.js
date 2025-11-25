@@ -183,6 +183,11 @@ async function insertContributionWithdrawals(client, withdrawals, identification
                 continue;
             }
 
+            // Log first few transactions for debugging
+            if (i < 3) {
+                logger.info(`DEBUG: Insertando retiro ${i + 1}: Miembro ID ${memberId}, Código ${transaction.memberCode}, Monto ${transaction.amount}, Tipo: ${transaction.transactionType}`);
+            }
+
             await insertTransaction(client, transaction, memberId, createdBy);
             inserted++;
 
@@ -201,15 +206,23 @@ async function insertContributionWithdrawals(client, withdrawals, identification
                     fiscalYear: transaction.fiscalYear,
                     reason: 'Saldo insuficiente (posible liquidación anterior sin registro)'
                 });
+            } else if (error.message.includes('transacción abortada')) {
+                // Transaction is already aborted, log accumulated errors and throw
+                logger.error(`❌ Transacción abortada debido a errores anteriores`);
+                logger.error(`Total de errores encontrados: ${errors.length}`);
+                throw new Error('Transacción abortada - revisa los errores anteriores');
             } else {
+                // This is a new error that might abort the transaction
                 errors.push({
                     identification: transaction.identification || transaction.memberCode,
                     error: error.message
                 });
 
-                if (errors.length <= 5) {
-                    logger.error(`Error insertando retiro de aportación: ${error.message}`);
-                }
+                logger.error(`❌ Error crítico insertando retiro de aportación (${transaction.memberCode}): ${error.message}`);
+                logger.error(`Stack trace: ${error.stack}`);
+
+                // Throw immediately to prevent transaction abort
+                throw error;
             }
         }
     }

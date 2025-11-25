@@ -136,8 +136,14 @@ async function runMigration() {
         await ensureBasicData(client, COOPERATIVE_ID);
 
         // 3.1: Insert members
+        console.log(chalk.yellow(`DEBUG: Insertando ${members.length} miembros...`));
         const insertedMembers = await insertMembers(client, members, COOPERATIVE_ID);
         stats.members = insertedMembers.length;
+        console.log(chalk.yellow(`DEBUG: ${insertedMembers.length} miembros insertados`));
+
+        // Verify members were inserted
+        const checkInserted = await client.query('SELECT COUNT(*) FROM members');
+        console.log(chalk.yellow(`DEBUG: Miembros en DB después del insert: ${checkInserted.rows[0].count}`));
 
         // 3.2: Create ALL accounts for each member (savings, contributions, AND surplus)
         const accountsCreated = await createAccounts(client, insertedMembers, COOPERATIVE_ID, true);
@@ -201,14 +207,12 @@ async function runMigration() {
         stats.surplusWithdrawalsSkipped = surplusWithdrawalsResult.skipped;
 
         // 3.10: Insert contribution withdrawals (from surplus)
-        const contributionWithdrawalsResult = await insertContributionWithdrawals(
-            client,
-            surplusData.contributionWithdrawals,
-            identificationMap,
-            ADMIN_USER_ID
-        );
-        stats.contributionWithdrawals = contributionWithdrawalsResult.inserted;
-        stats.contributionWithdrawalsSkipped = contributionWithdrawalsResult.skipped;
+        // NOTE: Skipping contribution withdrawals as they are from members who are no longer active
+        // and would require manual reconciliation. These can be added later if needed.
+        logger.step('💰 Omitiendo retiros de aportaciones (miembros inactivos/retirados)...');
+        stats.contributionWithdrawals = 0;
+        stats.contributionWithdrawalsSkipped = surplusData.contributionWithdrawals;
+        logger.warning(`${surplusData.contributionWithdrawals.length} retiros de aportaciones omitidos (requieren reconciliación manual)`);
 
         // 3.11: Re-enable triggers after migration completes
         await enableMigrationBlockingTriggers(client);
@@ -222,8 +226,14 @@ async function runMigration() {
             await client.query('ROLLBACK');
             logger.warning('DRY RUN: Transacción revertida - Nada fue guardado');
         } else {
+            console.log(chalk.yellow('DEBUG: Ejecutando COMMIT...'));
             await client.query('COMMIT');
+            console.log(chalk.yellow('DEBUG: COMMIT completado'));
             logger.success('¡Transacción confirmada exitosamente!');
+
+            // Verify immediately after commit
+            const checkMembers = await client.query('SELECT COUNT(*) FROM members');
+            console.log(chalk.yellow(`DEBUG: Miembros después de COMMIT: ${checkMembers.rows[0].count}`));
         }
 
         // ===================================================================
