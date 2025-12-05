@@ -27,12 +27,18 @@ const findById = async (attendanceId) => {
                 ar.notes,
                 m.full_name as member_name,
                 m.identification as member_identification,
-                m.grade as member_grade,
-                m.section as member_section,
+                m.quality_id,
+                m.level_id,
+                mq.quality_code,
+                mq.quality_name,
+                ml.level_code,
+                ml.level_name,
                 a.title as assembly_title,
                 u.full_name as registered_by_name
             FROM attendance_records ar
             INNER JOIN members m ON ar.member_id = m.member_id
+            INNER JOIN member_qualities mq ON m.quality_id = mq.quality_id
+            LEFT JOIN member_levels ml ON m.level_id = ml.level_id
             INNER JOIN assemblies a ON ar.assembly_id = a.assembly_id
             INNER JOIN users u ON ar.registered_by = u.user_id
             WHERE ar.attendance_id = $1
@@ -95,9 +101,16 @@ const findByAssembly = async (assemblyId) => {
                 ar.notes,
                 m.full_name,
                 m.identification,
-                m.grade
+                m.quality_id,
+                m.level_id,
+                mq.quality_code,
+                mq.quality_name,
+                ml.level_code,
+                ml.level_name
             FROM attendance_records ar
             JOIN members m ON ar.member_id = m.member_id
+            JOIN member_qualities mq ON m.quality_id = mq.quality_id
+            LEFT JOIN member_levels ml ON m.level_id = ml.level_id
             WHERE ar.assembly_id = $1
             ORDER BY ar.registered_at DESC
         `;
@@ -129,13 +142,19 @@ const findAll = async (filters = {}) => {
                 ar.notes,
                 m.full_name as member_name,
                 m.identification as member_identification,
-                m.grade as member_grade,
-                m.section as member_section,
+                m.quality_id,
+                m.level_id,
+                mq.quality_code,
+                mq.quality_name,
+                ml.level_code,
+                ml.level_name,
                 a.title as assembly_title,
                 a.scheduled_date as assembly_date,
                 u.full_name as registered_by_name
             FROM attendance_records ar
             INNER JOIN members m ON ar.member_id = m.member_id
+            INNER JOIN member_qualities mq ON m.quality_id = mq.quality_id
+            LEFT JOIN member_levels ml ON m.level_id = ml.level_id
             INNER JOIN assemblies a ON ar.assembly_id = a.assembly_id
             INNER JOIN users u ON ar.registered_by = u.user_id
             WHERE 1=1
@@ -180,15 +199,15 @@ const findAll = async (filters = {}) => {
             paramIndex++;
         }
 
-        if (filters.grade) {
-            query += ` AND m.grade = $${paramIndex}`;
-            params.push(filters.grade);
+        if (filters.qualityId) {
+            query += ` AND m.quality_id = $${paramIndex}`;
+            params.push(filters.qualityId);
             paramIndex++;
         }
 
-        if (filters.section) {
-            query += ` AND m.section = $${paramIndex}`;
-            params.push(filters.section);
+        if (filters.levelId) {
+            query += ` AND m.level_id = $${paramIndex}`;
+            params.push(filters.levelId);
             paramIndex++;
         }
 
@@ -268,15 +287,16 @@ const count = async (filters = {}) => {
             paramIndex++;
         }
 
-        if (filters.grade) {
-            query += ` AND m.grade = $${paramIndex}`;
-            params.push(filters.grade);
+        if (filters.qualityId) {
+            query += ` AND m.quality_id = $${paramIndex}`;
+            params.push(filters.qualityId);
             paramIndex++;
         }
 
-        if (filters.section) {
-            query += ` AND m.section = $${paramIndex}`;
-            params.push(filters.section);
+        if (filters.levelId) {
+            query += ` AND m.level_id = $${paramIndex}`;
+            params.push(filters.levelId);
+            paramIndex++;
         }
 
         const result = await db.query(query, params);
@@ -360,7 +380,8 @@ const getAssemblyStats = async (assemblyId) => {
                 COUNT(*) as total_attendance,
                 COUNT(CASE WHEN registration_method = 'qr_scan' THEN 1 END) as qr_scans,
                 COUNT(CASE WHEN registration_method = 'manual' THEN 1 END) as manual_registrations,
-                COUNT(DISTINCT m.grade) as grades_represented,
+                COUNT(DISTINCT m.quality_id) as qualities_represented,
+                COUNT(DISTINCT m.level_id) as levels_represented,
                 MIN(ar.registered_at) as first_registration,
                 MAX(ar.registered_at) as last_registration
             FROM attendance_records ar
@@ -377,30 +398,49 @@ const getAssemblyStats = async (assemblyId) => {
 };
 
 /**
- * Get attendance by grade for an assembly
+ * Get attendance by quality and level for an assembly
  *
  * @param {number} assemblyId - Assembly ID
- * @returns {Promise<Array>} Attendance by grade
+ * @returns {Promise<Array>} Attendance grouped by quality and level
  */
-const getAttendanceByGrade = async (assemblyId) => {
+const getAttendanceByQualityLevel = async (assemblyId) => {
     try {
         const query = `
             SELECT
-                m.grade,
+                m.quality_id,
+                mq.quality_code,
+                mq.quality_name,
+                m.level_id,
+                ml.level_code,
+                ml.level_name,
                 COUNT(*) as attendance_count
             FROM attendance_records ar
             INNER JOIN members m ON ar.member_id = m.member_id
+            INNER JOIN member_qualities mq ON m.quality_id = mq.quality_id
+            LEFT JOIN member_levels ml ON m.level_id = ml.level_id
             WHERE ar.assembly_id = $1
-            GROUP BY m.grade
-            ORDER BY m.grade
+            GROUP BY m.quality_id, mq.quality_code, mq.quality_name, m.level_id, ml.level_code, ml.level_name
+            ORDER BY m.quality_id, m.level_id
         `;
 
         const result = await db.query(query, [assemblyId]);
         return result.rows;
     } catch (error) {
-        logger.error('Error getting attendance by grade:', error);
+        logger.error('Error getting attendance by quality/level:', error);
         throw error;
     }
+};
+
+/**
+ * Get attendance by grade for an assembly
+ * @deprecated Use getAttendanceByQualityLevel() instead
+ *
+ * @param {number} assemblyId - Assembly ID
+ * @returns {Promise<Array>} Attendance by grade (mapped from level)
+ */
+const getAttendanceByGrade = async (assemblyId) => {
+    logger.warn('getAttendanceByGrade is deprecated. Use getAttendanceByQualityLevel instead.');
+    return getAttendanceByQualityLevel(assemblyId);
 };
 
 /**
@@ -444,6 +484,7 @@ module.exports = {
     create,
     deleteAttendance,
     getAssemblyStats,
-    getAttendanceByGrade,
+    getAttendanceByQualityLevel,
+    getAttendanceByGrade, // deprecated
     getMemberAttendanceHistory
 };

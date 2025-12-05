@@ -103,7 +103,10 @@ const registerAttendanceByQr = async (qrHash, userId) => {
                 memberId: member.memberId,
                 fullName: member.fullName,
                 identification: member.identification,
-                grade: member.grade,
+                qualityId: member.qualityId,
+                qualityName: member.qualityName,
+                levelId: member.levelId,
+                levelName: member.levelName,
                 photoUrl: member.photoUrl
             },
             assembly: {
@@ -205,7 +208,10 @@ const registerAttendanceManually = async (memberId, userId, notes = null) => {
                 memberId: member.memberId,
                 fullName: member.fullName,
                 identification: member.identification,
-                grade: member.grade,
+                qualityId: member.qualityId,
+                qualityName: member.qualityName,
+                levelId: member.levelId,
+                levelName: member.levelName,
                 photoUrl: member.photoUrl
             },
             assembly: {
@@ -281,8 +287,8 @@ const getAllAttendance = async (filters = {}) => {
             registeredBy: filters.registeredBy,
             fromDate: filters.fromDate,
             toDate: filters.toDate,
-            grade: filters.grade,
-            section: filters.section,
+            qualityId: filters.qualityId,
+            levelId: filters.levelId,
             limit,
             offset
         };
@@ -410,9 +416,9 @@ const getAssemblyAttendanceStats = async (assemblyId) => {
             );
         }
 
-        const [stats, byGrade] = await Promise.all([
+        const [stats, byQualityLevel] = await Promise.all([
             attendanceRepository.getAssemblyStats(assemblyId),
-            attendanceRepository.getAttendanceByGrade(assemblyId)
+            attendanceRepository.getAttendanceByQualityLevel(assemblyId)
         ]);
 
         return {
@@ -422,7 +428,7 @@ const getAssemblyAttendanceStats = async (assemblyId) => {
                 scheduledDate: assembly.scheduled_date
             },
             stats,
-            byGrade
+            byQualityLevel
         };
     } catch (error) {
         if (error.isOperational) {
