@@ -68,15 +68,21 @@ const getAttendeeList = async (assemblyId) => {
                 m.member_id,
                 m.full_name,
                 m.identification,
-                m.grade,
-                m.section,
+                m.quality_id,
+                m.level_id,
+                mq.quality_code,
+                mq.quality_name,
+                ml.level_code,
+                ml.level_name,
                 m.photo_url,
                 u.full_name as registered_by_name
             FROM attendance_records ar
             INNER JOIN members m ON ar.member_id = m.member_id
+            INNER JOIN member_qualities mq ON m.quality_id = mq.quality_id
+            LEFT JOIN member_levels ml ON m.level_id = ml.level_id
             INNER JOIN users u ON ar.registered_by = u.user_id
             WHERE ar.assembly_id = $1
-            ORDER BY m.grade, m.section, m.full_name
+            ORDER BY mq.quality_code, ml.level_code, m.full_name
         `;
 
         const result = await db.query(query, [assemblyId]);
@@ -88,16 +94,21 @@ const getAttendeeList = async (assemblyId) => {
 };
 
 /**
- * Get attendance statistics by grade for assembly
+ * Get attendance statistics by quality and level for assembly
  *
  * @param {number} assemblyId - Assembly ID
- * @returns {Promise<Array>} Attendance statistics by grade
+ * @returns {Promise<Array>} Attendance statistics by quality and level
  */
-const getAttendanceStatsByGrade = async (assemblyId) => {
+const getAttendanceStatsByQualityLevel = async (assemblyId) => {
     try {
         const query = `
             SELECT
-                m.grade,
+                m.quality_id,
+                mq.quality_code,
+                mq.quality_name,
+                m.level_id,
+                ml.level_code,
+                ml.level_name,
                 COUNT(DISTINCT m.member_id) as total_members,
                 COUNT(ar.attendance_id) as attended,
                 ROUND(
@@ -105,18 +116,32 @@ const getAttendanceStatsByGrade = async (assemblyId) => {
                     2
                 ) as attendance_rate
             FROM members m
+            INNER JOIN member_qualities mq ON m.quality_id = mq.quality_id
+            LEFT JOIN member_levels ml ON m.level_id = ml.level_id
             LEFT JOIN attendance_records ar ON m.member_id = ar.member_id AND ar.assembly_id = $1
             WHERE m.is_active = true
-            GROUP BY m.grade
-            ORDER BY m.grade
+            GROUP BY m.quality_id, mq.quality_code, mq.quality_name, m.level_id, ml.level_code, ml.level_name
+            ORDER BY m.quality_id, m.level_id
         `;
 
         const result = await db.query(query, [assemblyId]);
         return result.rows;
     } catch (error) {
-        logger.error('Error getting attendance stats by grade:', error);
+        logger.error('Error getting attendance stats by quality/level:', error);
         throw error;
     }
+};
+
+/**
+ * Get attendance statistics by grade for assembly
+ * @deprecated Use getAttendanceStatsByQualityLevel() instead
+ *
+ * @param {number} assemblyId - Assembly ID
+ * @returns {Promise<Array>} Attendance statistics by grade (mapped from quality/level)
+ */
+const getAttendanceStatsByGrade = async (assemblyId) => {
+    logger.warn('getAttendanceStatsByGrade is deprecated. Use getAttendanceStatsByQualityLevel instead.');
+    return getAttendanceStatsByQualityLevel(assemblyId);
 };
 
 /**
@@ -138,6 +163,7 @@ const getTotalActiveMembers = async () => {
 module.exports = {
     getAttendanceReportData,
     getAttendeeList,
-    getAttendanceStatsByGrade,
+    getAttendanceStatsByQualityLevel,
+    getAttendanceStatsByGrade, // deprecated
     getTotalActiveMembers
 };

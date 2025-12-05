@@ -111,9 +111,9 @@ const generateAttendanceStatsReport = async (assemblyId) => {
         }
 
         // Get report data
-        const [assemblyData, statsByGrade, totalMembers] = await Promise.all([
+        const [assemblyData, statsByQualityLevel, totalMembers] = await Promise.all([
             reportRepository.getAttendanceReportData(assemblyId),
-            reportRepository.getAttendanceStatsByGrade(assemblyId),
+            reportRepository.getAttendanceStatsByQualityLevel(assemblyId),
             reportRepository.getTotalActiveMembers()
         ]);
 
@@ -134,7 +134,7 @@ const generateAttendanceStatsReport = async (assemblyId) => {
         };
 
         // Generate PDF
-        const pdfDoc = createAttendanceStatsReport(assemblyData, stats, statsByGrade);
+        const pdfDoc = createAttendanceStatsReport(assemblyData, stats, statsByQualityLevel);
 
         logger.info('Attendance stats report generated', {
             assemblyId
@@ -175,9 +175,9 @@ const getAttendanceStats = async (assemblyId) => {
         }
 
         // Get statistics
-        const [assemblyData, statsByGrade, totalMembers] = await Promise.all([
+        const [assemblyData, statsByQualityLevel, totalMembers] = await Promise.all([
             reportRepository.getAttendanceReportData(assemblyId),
-            reportRepository.getAttendanceStatsByGrade(assemblyId),
+            reportRepository.getAttendanceStatsByQualityLevel(assemblyId),
             reportRepository.getTotalActiveMembers()
         ]);
 
@@ -194,14 +194,20 @@ const getAttendanceStats = async (assemblyId) => {
             ? ((totalAttendees / totalMembers) * 100).toFixed(2)
             : 0;
 
-        // Format statistics by grade
-        const byGrade = {};
-        statsByGrade.forEach(gradeStats => {
-            byGrade[gradeStats.grade] = {
-                total: parseInt(gradeStats.total_members, 10),
-                attended: parseInt(gradeStats.attended, 10),
-                rate: parseFloat(gradeStats.attendance_rate)
-            };
+        // Format statistics by quality and level
+        const byQualityLevel = [];
+        statsByQualityLevel.forEach(stats => {
+            byQualityLevel.push({
+                qualityId: stats.quality_id,
+                qualityCode: stats.quality_code,
+                qualityName: stats.quality_name,
+                levelId: stats.level_id,
+                levelCode: stats.level_code,
+                levelName: stats.level_name,
+                total: parseInt(stats.total_members, 10),
+                attended: parseInt(stats.attended, 10),
+                rate: parseFloat(stats.attendance_rate)
+            });
         });
 
         return {
@@ -214,7 +220,7 @@ const getAttendanceStats = async (assemblyId) => {
                 totalMembers,
                 totalAttendees,
                 attendanceRate: parseFloat(attendanceRate),
-                byGrade,
+                byQualityLevel,
                 byRegistrationMethod: {
                     qr_scan: parseInt(assemblyData.qr_registrations, 10),
                     manual: parseInt(assemblyData.manual_registrations, 10)
