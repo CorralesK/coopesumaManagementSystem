@@ -23,12 +23,13 @@ const startServer = async () => {
         // Test database
         await testDatabaseConnection();
 
-        // Start listening
-        app.listen(config.port, () => {
+        // Start listening on all network interfaces
+        app.listen(config.port, '0.0.0.0', () => {
             console.log('🚀 Server started successfully');
             console.log(`📡 Environment: ${config.nodeEnv}`);
             console.log(`🌐 Server running on port ${config.port}`);
             console.log(`🔗 API available at http://localhost:${config.port}`);
+            console.log(`🌍 Network: Server accessible from local network`);
             console.log(`💾 Database: ${config.database.name}`);
         });
     } catch (error) {

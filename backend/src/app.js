@@ -53,6 +53,14 @@ const attendanceRoutes = require('./modules/attendance/attendanceRoutes');
 const userRoutes = require('./modules/users/userRoutes');
 const reportRoutes = require('./modules/reports/reportRoutes');
 const cooperativeRoutes = require('./modules/cooperatives/cooperativeRoutes');
+const catalogRoutes = require('./modules/catalogs/catalogRoutes');
+const savingsRoutes = require('./modules/savings/savingsRoutes');
+const contributionsRoutes = require('./modules/contributions/contributionsRoutes');
+const withdrawalRequestRoutes = require('./modules/withdrawalRequests/withdrawalRequestRoutes');
+const notificationRoutes = require('./modules/notifications/notificationRoutes');
+const receiptRoutes = require('./modules/receipts/receiptRoutes');
+const liquidationRoutes = require('./modules/liquidations/liquidationRoutes');
+const surplusRoutes = require('./modules/surplus/surplusRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/members', memberRoutes);
@@ -61,6 +69,14 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/cooperatives', cooperativeRoutes);
+app.use('/api/catalogs', catalogRoutes);
+app.use('/api/savings', savingsRoutes);
+app.use('/api/contributions', contributionsRoutes);
+app.use('/api/withdrawal-requests', withdrawalRequestRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/receipts', receiptRoutes);
+app.use('/api/liquidations', liquidationRoutes);
+app.use('/api/surplus', surplusRoutes);
 
 // 404 handler
 app.use((req, res) => {
