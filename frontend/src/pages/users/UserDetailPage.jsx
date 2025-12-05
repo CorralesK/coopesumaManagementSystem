@@ -11,6 +11,7 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import ConfirmDeleteUserModal from '../../components/users/ConfirmDeleteUserModal';
 import { USER_ROLES } from '../../utils/constants';
 
 /**
@@ -21,18 +22,19 @@ const UserDetailPage = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const [successMessage, setSuccessMessage] = useState('');
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     // Use custom hooks
     const { user, loading, error, refetch } = useUser(id);
-    const { activate, deactivate, loading: operating } = useUserOperations();
+    const { deactivate, loading: operating } = useUserOperations();
 
     // Get role label
     const getRoleLabel = (role) => {
         const roleLabels = {
             [USER_ROLES.ADMINISTRATOR]: 'Administrador',
             [USER_ROLES.REGISTRAR]: 'Registrador',
-            [USER_ROLES.TREASURER]: 'Tesorero',
-            [USER_ROLES.STUDENT]: 'Estudiante'
+            [USER_ROLES.MANAGER]: 'Tesorero',
+            [USER_ROLES.MEMBER]: 'Miembro'
         };
         return roleLabels[role] || role;
     };
@@ -42,39 +44,31 @@ const UserDetailPage = () => {
         const roleConfig = {
             [USER_ROLES.ADMINISTRATOR]: { class: 'bg-purple-100 text-purple-800 border-purple-200' },
             [USER_ROLES.REGISTRAR]: { class: 'bg-primary-100 text-primary-800 border-primary-200' },
-            [USER_ROLES.TREASURER]: { class: 'bg-green-100 text-green-800 border-green-200' },
-            [USER_ROLES.STUDENT]: { class: 'bg-gray-100 text-gray-800 border-gray-200' }
+            [USER_ROLES.MANAGER]: { class: 'bg-green-100 text-green-800 border-green-200' },
+            [USER_ROLES.MEMBER]: { class: 'bg-gray-100 text-gray-800 border-gray-200' }
         };
         return roleConfig[role] || { class: 'bg-gray-100 text-gray-800 border-gray-200' };
     };
 
     // Event handlers
-    const handleActivate = async () => {
-        if (!window.confirm('¿Activar este usuario? Podrá acceder al sistema.')) {
-            return;
-        }
+    const handleDeleteClick = () => {
+        setShowDeleteModal(true);
+    };
 
+    const handleDeleteConfirm = async () => {
         try {
-            await activate(id);
-            setSuccessMessage('Usuario activado exitosamente');
+            await deactivate(id);
+            setSuccessMessage('Usuario eliminado exitosamente');
+            setShowDeleteModal(false);
             refetch();
         } catch (err) {
             // Error handled by hook
+            setShowDeleteModal(false);
         }
     };
 
-    const handleDeactivate = async () => {
-        if (!window.confirm('¿Desactivar este usuario? No podrá acceder al sistema.')) {
-            return;
-        }
-
-        try {
-            await deactivate(id);
-            setSuccessMessage('Usuario desactivado exitosamente');
-            refetch();
-        } catch (err) {
-            // Error handled by hook
-        }
+    const handleDeleteCancel = () => {
+        setShowDeleteModal(false);
     };
 
     const formatDate = (dateString) => {
@@ -187,11 +181,11 @@ const UserDetailPage = () => {
                                     {user.role === USER_ROLES.REGISTRAR && (
                                         <p>Puede registrar asistencia mediante escaneo de códigos QR durante asambleas.</p>
                                     )}
-                                    {user.role === USER_ROLES.TREASURER && (
-                                        <p>Acceso a reportes financieros y estadísticas de asistencia.</p>
+                                    {user.role === USER_ROLES.MANAGER && (
+                                        <p>Acceso a toda la gestión financiera.</p>
                                     )}
-                                    {user.role === USER_ROLES.STUDENT && (
-                                        <p>Acceso limitado para consultar su propia información de asistencia.</p>
+                                    {user.role === USER_ROLES.MEMBER && (
+                                        <p>Acceso limitado para consultar su propia información.</p>
                                     )}
                                 </div>
                             </div>
@@ -202,35 +196,39 @@ const UserDetailPage = () => {
                         <div className="space-y-3">
                             {user.isActive ? (
                                 <Button
-                                    onClick={handleDeactivate}
-                                    variant="secondary"
-                                    fullWidth
-                                    disabled={operating}
-                                    className="group hover:bg-gray-700 transition-all"
-                                >
-                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                    {operating ? 'Desactivando...' : 'Desactivar Usuario'}
-                                </Button>
-                            ) : (
-                                <Button
-                                    onClick={handleActivate}
-                                    variant="success"
+                                    onClick={handleDeleteClick}
+                                    variant="danger"
                                     fullWidth
                                     disabled={operating}
                                     className="group transition-all"
                                 >
                                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
-                                    {operating ? 'Activando...' : 'Activar Usuario'}
+                                    Eliminar Usuario
                                 </Button>
+                            ) : (
+                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                                    <svg className="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                    <p className="text-sm text-gray-600 font-medium">Usuario Eliminado</p>
+                                    <p className="text-xs text-gray-500 mt-1">Este usuario ha sido eliminado y no puede ser reactivado</p>
+                                </div>
                             )}
                         </div>
                     </Card>
                 </div>
             </div>
+
+            {/* Modal de confirmación de eliminación */}
+            <ConfirmDeleteUserModal
+                isOpen={showDeleteModal}
+                onClose={handleDeleteCancel}
+                onConfirm={handleDeleteConfirm}
+                userName={user?.fullName || ''}
+                isLoading={operating}
+            />
         </div>
     );
 };

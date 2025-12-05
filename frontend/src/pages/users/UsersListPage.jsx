@@ -9,106 +9,120 @@ import { useNavigate } from 'react-router-dom';
 import { useUsers, useUserOperations } from '../../hooks/useUsers';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import Input from '../../components/common/Input';
+import Select from '../../components/common/Select';
 import Table from '../../components/common/Table';
 import Pagination from '../../components/common/Pagination';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
-import { USER_ROLES } from '../../utils/constants';
 
 /**
  * UsersListPage Component
- * Displays paginated list of users with management actions
+ * Displays a paginated list of users with filtering capabilities
  */
 const UsersListPage = () => {
     const navigate = useNavigate();
     const [successMessage, setSuccessMessage] = useState('');
+    const [filters, setFilters] = useState({
+        search: '',
+        role: '',
+        isActive: '',
+    });
 
-    // Use custom hooks
-    const { users, loading, error, pagination, setPage, refetch } = useUsers({ limit: 20 });
-    const { activate, deactivate, loading: operating } = useUserOperations();
+    // Use custom hooks for user management
+    const {
+        users,
+        loading,
+        error,
+        pagination,
+        setPage,
+        refetch
+    } = useUsers({ ...filters, limit: 20 });
+
+    const { deactivate, loading: operationLoading } = useUserOperations();
 
     // Event handlers
-    const handleActivate = async (userId) => {
-        if (!window.confirm('¿Activar este usuario?')) {
-            return;
-        }
-
-        try {
-            await activate(userId);
-            setSuccessMessage('Usuario activado exitosamente');
-            refetch();
-        } catch (err) {
-            // Error handled by hook
-        }
+    const handleFilterChange = (field, value) => {
+        setFilters(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleDeactivate = async (userId) => {
-        if (!window.confirm('¿Desactivar este usuario? No podrá acceder al sistema.')) {
+    const handleResetFilters = () => {
+        setFilters({
+            search: '',
+            role: '',
+            isActive: '',
+        });
+    };
+
+    const handleToggleUserStatus = async (userId, isActive, userName) => {
+        // Solo permitir desactivar (eliminar), no reactivar
+        if (!isActive) {
+            return; // Los usuarios inactivos no se pueden reactivar
+        }
+
+        const confirmed = window.confirm(
+            `⚠️ ADVERTENCIA: ¿Está seguro que desea ELIMINAR al usuario ${userName}?\n\nEsta acción no se puede deshacer. El usuario será desactivado permanentemente y no podrá acceder al sistema.`
+        );
+
+        if (!confirmed) {
             return;
         }
 
         try {
             await deactivate(userId);
-            setSuccessMessage('Usuario desactivado exitosamente');
+            setSuccessMessage('Usuario eliminado exitosamente');
             refetch();
         } catch (err) {
-            // Error handled by hook
+            // Error already handled by hook
         }
-    };
-
-    // Get role label
-    const getRoleLabel = (role) => {
-        const roleLabels = {
-            [USER_ROLES.ADMINISTRATOR]: 'Administrador',
-            [USER_ROLES.REGISTRAR]: 'Registrador',
-            [USER_ROLES.TREASURER]: 'Tesorero',
-            [USER_ROLES.STUDENT]: 'Estudiante'
-        };
-        return roleLabels[role] || role;
     };
 
     // Table columns configuration
     const tableColumns = [
         {
             key: 'fullName',
-            label: 'Usuario',
+            label: 'Nombre',
             render: (user) => (
                 <div className="text-left">
-                    <div className="flex flex-col">
-                        <button
-                            onClick={() => navigate(`/users/${user.userId}`)}
-                            className="font-semibold text-sm sm:text-base text-primary-600 hover:text-primary-700 text-left break-words cursor-pointer"
-                        >
-                            {user.fullName}
-                        </button>
-                        <span className="text-xs text-gray-500">{user.email}</span>
-                    </div>
+                    <button
+                        onClick={() => navigate(`/users/${user.userId}`)}
+                        className="font-semibold text-sm sm:text-base text-primary-600 hover:text-primary-700 text-left break-words cursor-pointer"
+                    >
+                        {user.fullName}
+                    </button>
                 </div>
-            )
+            ),
+        },
+        {
+            key: 'email',
+            label: 'Correo Electrónico',
+            render: (user) => (
+                <div className="text-left text-sm text-gray-600">
+                    {user.email || '-'}
+                </div>
+            ),
         },
         {
             key: 'role',
             label: 'Rol',
             render: (user) => {
-                const roleConfig = {
-                    [USER_ROLES.ADMINISTRATOR]: { class: 'bg-purple-100 text-purple-800' },
-                    [USER_ROLES.REGISTRAR]: { class: 'bg-primary-100 text-primary-800' },
-                    [USER_ROLES.TREASURER]: { class: 'bg-green-100 text-green-800' },
-                    [USER_ROLES.STUDENT]: { class: 'bg-gray-100 text-gray-800' }
+                const roleLabels = {
+                    administrator: 'Administrador',
+                    registrar: 'Registrador',
+                    manager: 'Tesorero',
+                    member: 'Miembro'
                 };
-                const config = roleConfig[user.role] || { class: 'bg-gray-100 text-gray-800' };
-
                 return (
-                    <div className="text-center">
-                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${config.class}`}>
-                            {getRoleLabel(user.role)}
+                    <div className="text-left">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {roleLabels[user.role] || user.role}
                         </span>
                     </div>
                 );
-            }
+            },
         },
         {
-            key: 'status',
+            key: 'isActive',
             label: 'Estado',
             render: (user) => (
                 <div className="flex items-center justify-center">
@@ -125,36 +139,37 @@ const UsersListPage = () => {
             label: 'Acciones',
             render: (user) => (
                 <div className="flex items-center justify-center gap-2">
-                    {user.isActive ? (
+                    {user.isActive && (
                         <Button
-                            onClick={() => handleDeactivate(user.userId)}
-                            variant="secondary"
+                            onClick={() => handleToggleUserStatus(user.userId, user.isActive, user.fullName)}
+                            variant="danger"
                             size="sm"
-                            disabled={operating}
-                            className="!px-3 sm:!px-4"
+                            disabled={operationLoading}
+                            className="!px-2 sm:!px-3"
                         >
-                            <svg className="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            <span className="hidden sm:inline">Desactivar</span>
-                        </Button>
-                    ) : (
-                        <Button
-                            onClick={() => handleActivate(user.userId)}
-                            variant="success"
-                            size="sm"
-                            disabled={operating}
-                            className="!px-3 sm:!px-4"
-                        >
-                            <svg className="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span className="hidden sm:inline">Activar</span>
+                            <span className="hidden sm:inline">Eliminar</span>
                         </Button>
                     )}
                 </div>
-            )
-        }
+            ),
+        },
+    ];
+
+    const roleOptions = [
+        { value: '', label: 'Todos los roles' },
+        { value: 'administrator', label: 'Administrador' },
+        { value: 'registrar', label: 'Registrador' },
+        { value: 'manager', label: 'Tesorero' },
+        { value: 'member', label: 'Miembro' }
+    ];
+
+    const statusOptions = [
+        { value: '', label: 'Todos' },
+        { value: 'true', label: 'Activos' },
+        { value: 'false', label: 'Inactivos' }
     ];
 
     if (loading && users.length === 0) {
@@ -178,61 +193,69 @@ const UsersListPage = () => {
             {error && <Alert type="error" message={error} onClose={() => {}} />}
             {successMessage && <Alert type="success" message={successMessage} onClose={() => setSuccessMessage('')} />}
 
-            {/* Users Table */}
-            <Card padding="none">
-                {loading ? (
-                    <div className="py-8">
-                        <Loading message="Cargando usuarios..." />
-                    </div>
-                ) : (
-                    <>
-                        <Table
-                            columns={tableColumns}
-                            data={users}
-                            emptyMessage="No se encontraron usuarios en el sistema"
+            {/* Filters and Table Container */}
+            <div className="space-y-0">
+                {/* Filters */}
+                <Card title="Filtros de Búsqueda">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Input
+                            label="Buscar"
+                            name="search"
+                            type="text"
+                            value={filters.search}
+                            onChange={(e) => handleFilterChange('search', e.target.value)}
+                            placeholder="Nombre o correo..."
                         />
-                        {pagination.totalPages > 1 && (
-                            <div className="px-6 py-4">
+                        <Select
+                            label="Rol"
+                            name="role"
+                            value={filters.role}
+                            onChange={(e) => handleFilterChange('role', e.target.value)}
+                            options={roleOptions}
+                            placeholder=""
+                        />
+                        <Select
+                            label="Estado"
+                            name="isActive"
+                            value={filters.isActive}
+                            onChange={(e) => handleFilterChange('isActive', e.target.value)}
+                            options={statusOptions}
+                            placeholder=""
+                        />
+                    </div>
+                    <div className="mt-6">
+                        <Button onClick={handleResetFilters} variant="outline" size="md" className="whitespace-nowrap">
+                            Limpiar Filtros
+                        </Button>
+                    </div>
+                </Card>
+
+                {/* Users Table */}
+                <Card padding="none">
+                    {loading ? (
+                        <div className="py-8">
+                            <Loading message="Cargando..." />
+                        </div>
+                    ) : (
+                        <>
+                            <div className="overflow-x-auto">
+                                <Table
+                                    columns={tableColumns}
+                                    data={users}
+                                    emptyMessage="No se encontraron usuarios"
+                                />
+                            </div>
+                            <div className="px-4 py-3">
                                 <Pagination
                                     currentPage={pagination.currentPage}
                                     totalPages={pagination.totalPages}
                                     onPageChange={setPage}
                                 />
                             </div>
-                        )}
-                    </>
-                )}
-            </Card>
-
-            {/* Info Card */}
-            <Card title="Roles del Sistema">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-purple-50 border-l-4 border-purple-500 p-4">
-                        <h4 className="font-semibold text-purple-900">Administrador</h4>
-                        <p className="text-sm text-purple-700 mt-1">
-                            Acceso completo al sistema. Puede gestionar miembros, asambleas, usuarios y reportes.
-                        </p>
-                    </div>
-                    <div className="bg-primary-50 border-l-4 border-primary-500 p-4">
-                        <h4 className="font-semibold text-primary-900">Registrador</h4>
-                        <p className="text-sm text-primary-700 mt-1">
-                            Puede registrar asistencia mediante escaneo de códigos QR durante asambleas.
-                        </p>
-                    </div>
-                    <div className="bg-green-50 border-l-4 border-green-500 p-4">
-                        <h4 className="font-semibold text-green-900">Tesorero</h4>
-                        <p className="text-sm text-green-700 mt-1">
-                            Acceso a reportes financieros y estadísticas de asistencia.
-                        </p>
-                    </div>
-                    <div className="bg-gray-50 border-l-4 border-gray-500 p-4">
-                        <h4 className="font-semibold text-gray-900">Estudiante</h4>
-                        <p className="text-sm text-gray-700 mt-1">
-                            Acceso limitado para consultar su propia información de asistencia.
-                        </p>
-                    </div>
-                </div>
-            </Card>
+                        </>
+                    )}
+                </Card>
+            </div>
         </div>
     );
 };

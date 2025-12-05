@@ -32,7 +32,7 @@ const UserFormPage = () => {
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
-        role: USER_ROLES.STUDENT
+        role: USER_ROLES.MEMBER
     });
     const [errors, setErrors] = useState({});
     const [formError, setFormError] = useState('');
@@ -44,7 +44,7 @@ const UserFormPage = () => {
             setFormData({
                 fullName: user.fullName || '',
                 email: user.email || '',
-                role: user.role || USER_ROLES.STUDENT
+                role: user.role || USER_ROLES.MEMBER
             });
         }
     }, [user, isEditMode]);
@@ -126,8 +126,8 @@ const UserFormPage = () => {
     const roleOptions = [
         { value: USER_ROLES.ADMINISTRATOR, label: 'Administrador' },
         { value: USER_ROLES.REGISTRAR, label: 'Registrador' },
-        { value: USER_ROLES.TREASURER, label: 'Tesorero' },
-        { value: USER_ROLES.STUDENT, label: 'Estudiante' }
+        { value: USER_ROLES.MANAGER, label: 'Tesorero' },
+        { value: USER_ROLES.MEMBER, label: 'Miembro' }
     ];
 
     if (loadingUser) {
@@ -226,8 +226,8 @@ const UserFormPage = () => {
                                     <ul className="space-y-1 list-disc list-inside">
                                         <li><strong>Administrador:</strong> Acceso completo al sistema</li>
                                         <li><strong>Registrador:</strong> Puede registrar asistencia a asambleas</li>
-                                        <li><strong>Tesorero:</strong> Acceso a reportes y estadísticas</li>
-                                        <li><strong>Estudiante:</strong> Acceso limitado a su propia información</li>
+                                        <li><strong>Tesorero:</strong> Acceso a toda la gestión financiera</li>
+                                        <li><strong>Miembro:</strong> Acceso limitado a su propia información</li>
                                     </ul>
                                 </div>
                             </div>
@@ -242,8 +242,8 @@ const UserFormPage = () => {
                                     </svg>
                                     <div className="text-sm text-green-700">
                                         <p>
-                                            El usuario será creado con estado activo. La autenticación se realiza mediante Microsoft OAuth,
-                                            por lo que el usuario debe iniciar sesión con su cuenta de Microsoft asociada al correo proporcionado.
+                                            El usuario será creado con estado activo. La autenticación se realiza con Microsoft,
+                                            y la cuenta se vinculará automáticamente cuando el usuario inicie sesión por primera vez con el correo proporcionado.
                                         </p>
                                     </div>
                                 </div>
