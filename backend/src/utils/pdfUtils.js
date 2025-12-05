@@ -157,8 +157,8 @@ const createAttendanceReport = (assemblyData, attendeeRecords, stats) => {
                     .text('#', col1X, currentY)
                     .text('Nombre', col2X, currentY)
                     .text('Identificación', col3X, currentY)
-                    .text('Grado', col4X, currentY)
-                    .text('Sección', col5X, currentY)
+                    .text('Calidad', col4X, currentY)
+                    .text('Nivel', col5X, currentY)
                     .text('Firma', col6X, currentY);
 
                 doc
@@ -184,11 +184,13 @@ const createAttendanceReport = (assemblyData, attendeeRecords, stats) => {
             // Identification
             doc.text(attendee.identification, col3X, currentY);
 
-            // Grade
-            doc.text(attendee.grade, col4X, currentY, { width: 40, align: 'center' });
+            // Quality
+            const qualityText = attendee.quality_name || attendee.quality_code || '-';
+            doc.text(qualityText, col4X, currentY, { width: 60, align: 'center' });
 
-            // Section
-            doc.text(attendee.section, col5X, currentY, { width: 40, align: 'center' });
+            // Level
+            const levelText = attendee.level_name || attendee.level_code || '-';
+            doc.text(levelText, col5X, currentY, { width: 40, align: 'center' });
 
             // Signature space (empty box)
             doc
@@ -229,10 +231,10 @@ const createAttendanceReport = (assemblyData, attendeeRecords, stats) => {
  *
  * @param {Object} assemblyData - Assembly information
  * @param {Object} stats - Attendance statistics
- * @param {Array} statsByGrade - Statistics by grade
+ * @param {Array} statsByQualityLevel - Statistics by quality and level
  * @returns {PDFDocument} PDF document stream
  */
-const createAttendanceStatsReport = (assemblyData, stats, statsByGrade) => {
+const createAttendanceStatsReport = (assemblyData, stats, statsByQualityLevel) => {
     try {
         const doc = new PDFDocument({
             size: 'LETTER',
@@ -304,7 +306,7 @@ const createAttendanceStatsReport = (assemblyData, stats, statsByGrade) => {
         doc
             .fontSize(11)
             .font('Helvetica-Bold')
-            .text('Grado', col1X, tableTop)
+            .text('Calidad/Nivel', col1X, tableTop)
             .text('Total Miembros', col2X, tableTop)
             .text('Asistieron', col3X, tableTop)
             .text('Porcentaje', col4X, tableTop);
@@ -316,14 +318,19 @@ const createAttendanceStatsReport = (assemblyData, stats, statsByGrade) => {
 
         let currentY = tableTop + 30;
 
-        statsByGrade.forEach((gradeStats) => {
+        statsByQualityLevel.forEach((stats) => {
+            // Format the quality/level text
+            const qualityLevelText = stats.level_name
+                ? `${stats.quality_name} - ${stats.level_name}`
+                : stats.quality_name;
+
             doc
                 .fontSize(10)
                 .font('Helvetica')
-                .text(gradeStats.grade, col1X, currentY)
-                .text(gradeStats.total_members.toString(), col2X, currentY)
-                .text(gradeStats.attended.toString(), col3X, currentY)
-                .text(`${gradeStats.attendance_rate}%`, col4X, currentY);
+                .text(qualityLevelText, col1X, currentY)
+                .text(stats.total_members.toString(), col2X, currentY)
+                .text(stats.attended.toString(), col3X, currentY)
+                .text(`${stats.attendance_rate}%`, col4X, currentY);
 
             currentY += 25;
         });
