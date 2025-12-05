@@ -12,18 +12,40 @@ import Alert from '../common/Alert';
 import Select from '../common/Select';
 import { batchGenerateQRCodes } from '../../services/memberService';
 import { printMemberCards } from '../../utils/printUtils';
-import { GRADES } from '../../utils/constants';
+import { getAllQualities, getAllLevels } from '../../services/catalogService';
 
 /**
  * BatchQrPrintModal Component
  * Allows batch printing of QR codes for multiple members
  */
-const BatchQrPrintModal = ({ isOpen, onClose, members, filterGrade }) => {
+const BatchQrPrintModal = ({ isOpen, onClose, members, filterQualityId, filterLevelId }) => {
     const [selectedMembers, setSelectedMembers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [statusFilter, setStatusFilter] = useState('true'); // active by default
-    const [gradeFilter, setGradeFilter] = useState(filterGrade || '');
+    const [qualityFilter, setQualityFilter] = useState(filterQualityId || '');
+    const [levelFilter, setLevelFilter] = useState(filterLevelId || '');
+
+    // Catalogs
+    const [qualities, setQualities] = useState([]);
+    const [levels, setLevels] = useState([]);
+
+    // Load catalogs
+    useEffect(() => {
+        const loadCatalogs = async () => {
+            try {
+                const [qualitiesData, levelsData] = await Promise.all([
+                    getAllQualities(),
+                    getAllLevels()
+                ]);
+                setQualities(qualitiesData);
+                setLevels(levelsData);
+            } catch (err) {
+                console.error('Error loading catalogs:', err);
+            }
+        };
+        loadCatalogs();
+    }, []);
 
     // Reset state when modal closes
     useEffect(() => {
@@ -31,22 +53,30 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterGrade }) => {
             setSelectedMembers([]);
             setError(null);
             setStatusFilter('true');
-            setGradeFilter(filterGrade || '');
+            setQualityFilter(filterQualityId || '');
+            setLevelFilter(filterLevelId || '');
         }
-    }, [isOpen, filterGrade]);
+    }, [isOpen, filterQualityId, filterLevelId]);
 
-    // Filter members based on status and grade
+    // Filter members based on status, quality and level
     const filteredMembers = members.filter(member => {
         const statusMatch = statusFilter === '' || member.isActive === (statusFilter === 'true');
-        const gradeMatch = gradeFilter === '' || member.grade === parseInt(gradeFilter);
-        return statusMatch && gradeMatch;
+        const qualityMatch = qualityFilter === '' || member.qualityId === parseInt(qualityFilter);
+        const levelMatch = levelFilter === '' || member.levelId === parseInt(levelFilter);
+        return statusMatch && qualityMatch && levelMatch;
     });
 
-    // Sort members by grade (ascending) and name (alphabetical)
+    // Sort members by quality, level and name
     const sortedMembers = [...filteredMembers].sort((a, b) => {
-        if (a.grade !== b.grade) {
-            return a.grade - b.grade;
+        // First by quality
+        if (a.qualityId !== b.qualityId) {
+            return (a.qualityId || 0) - (b.qualityId || 0);
         }
+        // Then by level
+        if (a.levelId !== b.levelId) {
+            return (a.levelId || 0) - (b.levelId || 0);
+        }
+        // Finally by name
         return a.fullName.localeCompare(b.fullName, 'es');
     });
 
@@ -95,10 +125,13 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterGrade }) => {
                 return;
             }
 
-            // Sort QR codes by grade and name
+            // Sort QR codes by quality, level and name
             const sortedQRs = successfulQRs.sort((a, b) => {
-                if (a.grade !== b.grade) {
-                    return a.grade - b.grade;
+                if (a.qualityId !== b.qualityId) {
+                    return (a.qualityId || 0) - (b.qualityId || 0);
+                }
+                if (a.levelId !== b.levelId) {
+                    return (a.levelId || 0) - (b.levelId || 0);
                 }
                 return a.fullName.localeCompare(b.fullName, 'es');
             });
@@ -120,8 +153,18 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterGrade }) => {
 
     if (!isOpen) return null;
 
+    const qualityOptions = qualities.map(q => ({
+        value: q.qualityId.toString(),
+        label: q.qualityName
+    }));
+
+    const levelOptions = levels.map(l => ({
+        value: l.levelId.toString(),
+        label: l.levelName
+    }));
+
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Impresión de Carnets Estudiantiles" size="lg">
+        <Modal isOpen={isOpen} onClose={onClose} title="Impresión de Carnets" size="lg">
             <div className="space-y-6">
                 {/* Error Alert */}
                 {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
@@ -140,8 +183,8 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterGrade }) => {
                                 </svg>
                                 <div className="flex-1">
                                     <p className="text-sm text-primary-700 leading-relaxed">
-                                        Selecciona los miembros para generar sus carnets estudiantiles. Los carnets se imprimirán
-                                        en formato de 4 por hoja (2x2) y se ordenarán por grado y nombre alfabéticamente.
+                                        Selecciona los miembros para generar sus carnets. Los carnets se imprimirán
+                                        en formato de 4 por hoja (2x2) y se ordenarán por calidad, nivel y nombre alfabéticamente.
                                     </p>
                                     <p className="text-sm text-primary-700 mt-2 font-medium">
                                         Límite máximo: 100 carnets por lote
@@ -153,7 +196,7 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterGrade }) => {
                         {/* Filters Section */}
                         <div>
                             <h3 className="text-sm font-semibold text-gray-900 mb-3">Filtros de Búsqueda</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <Select
                                     label="Estado del Miembro"
                                     value={statusFilter}
@@ -165,12 +208,21 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterGrade }) => {
                                     ]}
                                 />
                                 <Select
-                                    label="Grado"
-                                    value={gradeFilter}
-                                    onChange={(e) => setGradeFilter(e.target.value)}
+                                    label="Calidad"
+                                    value={qualityFilter}
+                                    onChange={(e) => setQualityFilter(e.target.value)}
                                     options={[
-                                        { value: '', label: 'Todos los grados' },
-                                        ...GRADES.map(g => ({ value: g.toString(), label: `${g}° grado` }))
+                                        { value: '', label: 'Todas las calidades' },
+                                        ...qualityOptions
+                                    ]}
+                                />
+                                <Select
+                                    label="Nivel"
+                                    value={levelFilter}
+                                    onChange={(e) => setLevelFilter(e.target.value)}
+                                    options={[
+                                        { value: '', label: 'Todos los niveles' },
+                                        ...levelOptions
                                     ]}
                                 />
                             </div>
@@ -245,9 +297,14 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterGrade }) => {
                                                 </div>
 
                                                 <div className="pr-2">
-                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800 whitespace-nowrap">
-                                                        {member.grade}° Grado
-                                                    </span>
+                                                    <div className="text-right">
+                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800 whitespace-nowrap">
+                                                            {member.qualityName}
+                                                        </span>
+                                                        {member.levelName && (
+                                                            <div className="text-xs text-gray-500 mt-1">{member.levelName}</div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </label>
                                         ))

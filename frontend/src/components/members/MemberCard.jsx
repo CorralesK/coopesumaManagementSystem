@@ -15,7 +15,8 @@ import PropTypes from 'prop-types';
  * @param {Object} props.member - Member data
  * @param {string} props.member.fullName - Member's full name
  * @param {string} props.member.identification - Member's ID number
- * @param {number} props.member.grade - Member's grade
+ * @param {string} props.member.qualityName - Member's quality (Estudiante/Funcionario)
+ * @param {string} props.member.levelName - Member's level (optional)
  * @param {string} props.member.photoUrl - Member's photo URL
  * @param {string} props.member.qrCodeDataUrl - QR code data URL
  * @param {string} props.cooperativeName - Cooperative trade name (optional, defaults to 'Coopesuma')
@@ -278,7 +279,8 @@ MemberCard.propTypes = {
     member: PropTypes.shape({
         fullName: PropTypes.string.isRequired,
         identification: PropTypes.string.isRequired,
-        grade: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        qualityName: PropTypes.string,
+        levelName: PropTypes.string,
         photoUrl: PropTypes.string,
         qrCodeDataUrl: PropTypes.string
     }).isRequired,
