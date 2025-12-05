@@ -1,12 +1,17 @@
 /**
  * User Roles Constants
+ * Updated to match database schema (member, manager instead of student, treasurer)
  */
 
 const USER_ROLES = {
     ADMINISTRATOR: 'administrator',
     REGISTRAR: 'registrar',
-    TREASURER: 'treasurer',
-    STUDENT: 'student'
+    MANAGER: 'manager',        // Changed from TREASURER
+    MEMBER: 'member',          // Changed from STUDENT
+
+    // Deprecated aliases for backwards compatibility
+    TREASURER: 'manager',      // Alias for MANAGER
+    STUDENT: 'member'          // Alias for MEMBER
 };
 
 const ROLE_PERMISSIONS = {
@@ -17,22 +22,34 @@ const ROLE_PERMISSIONS = {
         'scan_attendance',
         'generate_reports',
         'manage_savings',
+        'manage_contributions',
+        'approve_withdrawals',
         'view_all_data',
         'view_qr_codes',
-        'generate_qr_codes'
+        'generate_qr_codes',
+        'manage_surplus',
+        'execute_liquidations',
+        'broadcast_notifications',
+        'generate_receipts'
     ],
     [USER_ROLES.REGISTRAR]: [
         'scan_attendance',
         'view_active_assembly'
     ],
-    [USER_ROLES.TREASURER]: [
+    [USER_ROLES.MANAGER]: [  // Changed from TREASURER
         'manage_savings',
+        'manage_contributions',
+        'approve_withdrawals',
         'view_savings_reports',
-        'view_member_balances'
+        'view_member_balances',
+        'generate_receipts',
+        'manage_surplus'
     ],
-    [USER_ROLES.STUDENT]: [
-        // Estudiantes no tienen permisos por ahora
-        // Estos permisos se agregarán cuando se implemente el módulo correspondiente
+    [USER_ROLES.MEMBER]: [  // Changed from STUDENT
+        'view_own_dashboard',
+        'view_own_accounts',
+        'view_own_transactions',
+        'request_withdrawal'
     ]
 };
 
