@@ -26,6 +26,7 @@ const AttendanceScanPage = () => {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [pendingMember, setPendingMember] = useState(null);
     const [pendingQrHash, setPendingQrHash] = useState(null);
+    const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
     const [verifying, setVerifying] = useState(false);
     const [verifyError, setVerifyError] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
@@ -63,10 +64,18 @@ const AttendanceScanPage = () => {
 
             // Verify member without registering attendance
             const response = await verifyMemberByQR(qrHash);
+            const memberData = response.data;
+
+            // Check if member is already registered in this assembly
+            const alreadyRegistered = attendance?.some(
+                record => record.identification === memberData.identification ||
+                          record.memberId === memberData.memberId
+            ) || false;
 
             // Show confirmation modal with member info
-            setPendingMember(response.data);
+            setPendingMember(memberData);
             setPendingQrHash(qrHash);
+            setIsAlreadyRegistered(alreadyRegistered);
             setShowConfirmModal(true);
         } catch (err) {
             setVerifyError(err.message || 'Error al verificar el código QR');
@@ -131,8 +140,8 @@ const AttendanceScanPage = () => {
         clearScannedData
     } = useQrScanner({
         elementId: 'qr-reader',
-        fps: 10,
-        qrbox: 250,
+        fps: 30, // Faster scanning
+        qrbox: 300, // Larger detection area
         onScanSuccess: (decodedText) => {
             handleScanSuccess(decodedText);
             clearScannedData();
@@ -314,7 +323,7 @@ const AttendanceScanPage = () => {
             <Modal
                 isOpen={showConfirmModal}
                 onClose={handleRejectAttendance}
-                title="Confirmar Registro de Asistencia"
+                title={isAlreadyRegistered ? "Miembro Ya Registrado" : "Confirmar Registro de Asistencia"}
                 size="md"
             >
                 {pendingMember && (
@@ -342,33 +351,60 @@ const AttendanceScanPage = () => {
                             <p className="text-gray-600">
                                 <strong>Identificación:</strong> {pendingMember.identification}
                             </p>
-                            <p className="text-gray-600">
-                                <strong>Grado:</strong> {pendingMember.grade}°
-                            </p>
+                            {pendingMember.qualityName && (
+                                <p className="text-gray-600">
+                                    <strong>Calidad:</strong> {pendingMember.qualityName}
+                                    {pendingMember.levelName && ` - ${pendingMember.levelName}`}
+                                </p>
+                            )}
                         </div>
 
-                        <div className="bg-primary-50 border-l-4 border-primary-500 p-4">
-                            <p className="text-sm text-primary-800 text-center">
-                                ¿Deseas registrar la asistencia de este miembro a la asamblea "{activeAssembly.title}"?
-                            </p>
-                        </div>
+                        {isAlreadyRegistered ? (
+                            <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                                <div className="flex items-center">
+                                    <svg className="w-6 h-6 text-yellow-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    <p className="text-sm text-yellow-800">
+                                        Este miembro ya tiene su asistencia registrada en la asamblea "{activeAssembly.title}"
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-primary-50 border-l-4 border-primary-500 p-4">
+                                <p className="text-sm text-primary-800 text-center">
+                                    ¿Deseas registrar la asistencia de este miembro a la asamblea "{activeAssembly.title}"?
+                                </p>
+                            </div>
+                        )}
 
                         {/* Action Buttons */}
                         <div className="flex justify-center space-x-3">
-                            <Button
-                                onClick={handleRejectAttendance}
-                                variant="outline"
-                                disabled={recording}
-                            >
-                                Rechazar
-                            </Button>
-                            <Button
-                                onClick={handleConfirmAttendance}
-                                variant="primary"
-                                disabled={recording}
-                            >
-                                {recording ? 'Registrando...' : 'Aceptar'}
-                            </Button>
+                            {isAlreadyRegistered ? (
+                                <Button
+                                    onClick={handleRejectAttendance}
+                                    variant="primary"
+                                >
+                                    Cerrar
+                                </Button>
+                            ) : (
+                                <>
+                                    <Button
+                                        onClick={handleRejectAttendance}
+                                        variant="outline"
+                                        disabled={recording}
+                                    >
+                                        Rechazar
+                                    </Button>
+                                    <Button
+                                        onClick={handleConfirmAttendance}
+                                        variant="primary"
+                                        disabled={recording}
+                                    >
+                                        {recording ? 'Registrando...' : 'Aceptar'}
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

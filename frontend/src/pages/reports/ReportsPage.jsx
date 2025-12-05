@@ -194,13 +194,13 @@ const ReportsPage = () => {
                                     <p className="text-3xl font-bold text-green-900">{memberStats.activeMembers || 0}</p>
                                 </div>
                             </div>
-                            {memberStats.byGrade && Object.keys(memberStats.byGrade).length > 0 && (
+                            {memberStats.byQuality && Object.keys(memberStats.byQuality).length > 0 && (
                                 <div className="pt-2 border-t border-gray-200">
-                                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Distribución por Grado</h4>
+                                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Distribución por Calidad</h4>
                                     <div className="space-y-2">
-                                        {Object.entries(memberStats.byGrade).map(([grade, count]) => (
-                                            <div key={grade} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md">
-                                                <span className="text-sm font-medium text-gray-700">Grado {grade}°</span>
+                                        {Object.entries(memberStats.byQuality).map(([quality, count]) => (
+                                            <div key={quality} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md">
+                                                <span className="text-sm font-medium text-gray-700">{quality}</span>
                                                 <span className="text-sm font-bold text-gray-900">{count}</span>
                                             </div>
                                         ))}
@@ -218,18 +218,21 @@ const ReportsPage = () => {
                     )}
                 </Card>
 
-                {/* Attendance by Grade */}
-                <Card title="Asistencia por Grado">
+                {/* Attendance by Quality/Level */}
+                <Card title="Asistencia por Calidad / Nivel">
                     {loadingStats ? (
                         <div className="py-8">
                             <Loading message="Cargando estadísticas..." />
                         </div>
                     ) : gradeStats && gradeStats.length > 0 ? (
                         <div className="space-y-4">
-                            {gradeStats.map((stat) => (
-                                <div key={stat.grade} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            {gradeStats.map((stat, index) => (
+                                <div key={stat.qualityName ? `${stat.qualityName}-${stat.levelName || 'all'}` : index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                                     <div className="flex items-center justify-between mb-2">
-                                        <span className="font-semibold text-gray-900">Grado {stat.grade}°</span>
+                                        <span className="font-semibold text-gray-900">
+                                            {stat.qualityName || stat.grade || 'Sin clasificar'}
+                                            {stat.levelName && ` - ${stat.levelName}`}
+                                        </span>
                                         <span className="text-sm font-bold text-primary-600">{stat.attendanceRate || 0}%</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">

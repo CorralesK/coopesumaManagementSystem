@@ -185,9 +185,12 @@ const MemberVerifyPage = () => {
                                 <p>
                                     <span className="font-medium text-gray-700">Cédula:</span> {member.identification}
                                 </p>
-                                <p>
-                                    <span className="font-medium text-gray-700">Grado:</span> {member.grade}°
-                                </p>
+                                {member.qualityName && (
+                                    <p>
+                                        <span className="font-medium text-gray-700">Calidad:</span> {member.qualityName}
+                                        {member.levelName && ` - ${member.levelName}`}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
