@@ -20,6 +20,19 @@ const { USER_ROLES } = require('../../constants/roles');
 // ============================================================================
 
 /**
+ * GET /api/members/me/dashboard
+ * Get dashboard data for the logged-in member
+ * Protected: Requires authentication
+ * Accessible by: Member role only
+ */
+router.get(
+    '/me/dashboard',
+    authMiddleware,
+    requireRole([USER_ROLES.MEMBER]),  // Members with member role
+    memberController.getMemberDashboard
+);
+
+/**
  * GET /api/members
  * Get all members with optional filtering and pagination
  * Protected: Requires authentication
@@ -41,6 +54,21 @@ router.get(
     '/:id',
     authMiddleware,
     memberController.getMemberById
+);
+
+/**
+ * POST /api/members/affiliate
+ * Affiliate a new member (includes ₡500 affiliation fee + receipt)
+ * This is the recommended way to create new members
+ * Protected: Requires authentication
+ * Accessible by: Administrator only
+ */
+router.post(
+    '/affiliate',
+    authMiddleware,
+    requireRole([USER_ROLES.ADMINISTRATOR]),
+    validate(createMemberSchema),
+    memberController.affiliateMember
 );
 
 /**

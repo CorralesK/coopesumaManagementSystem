@@ -8,6 +8,7 @@
 // Updated to fix QR code generation
 const memberRepository = require('./memberRepository');
 const userRepository = require('../users/userRepository');
+const receiptService = require('../receipts/receiptService');
 const { generateQrHash, generateQrCodeDataUrl, generateVerificationUrl } = require('../../utils/qrUtils');
 const { verifyInstitutionalEmail } = require('../../utils/emailVerification');
 const { USER_ROLES } = require('../../constants/roles');
@@ -102,7 +103,7 @@ const getMemberById = async (memberId) => {
 };
 
 /**
- * Get all members with optional filters and pagination
+ * Get all members with optional filters and pagination (adapted to new structure)
  *
  * @param {Object} filters - Filter criteria
  * @returns {Promise<Object>} Members and pagination info
@@ -114,7 +115,8 @@ const getAllMembers = async (filters = {}) => {
         const offset = (page - 1) * limit;
 
         const queryFilters = {
-            grade: filters.grade,
+            qualityId: filters.qualityId,  // Replaces grade
+            levelId: filters.levelId,      // New filter
             isActive: filters.isActive,
             search: filters.search,
             limit,
@@ -202,41 +204,41 @@ const createMember = async (memberData) => {
         // Generate QR hash for the member
         const qrHash = generateQrHash(memberData.identification);
 
-        // Create member with QR hash (using transaction client)
+        // Create member with QR hash (using transaction client - adapted to new structure)
         const insertMemberQuery = `
             INSERT INTO members (
-                full_name,
-                identification,
-                grade,
-                institutional_email,
-                photo_url,
-                qr_hash,
-                is_active,
-                cooperative_id
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            RETURNING
-                member_id,
-                full_name,
-                identification,
-                grade,
-                institutional_email,
-                photo_url,
-                qr_hash,
-                is_active,
                 cooperative_id,
-                created_at
+                full_name,
+                identification,
+                quality_id,
+                level_id,
+                gender,
+                member_code,
+                user_id,
+                institutional_email,
+                photo_url,
+                qr_hash,
+                affiliation_date,
+                is_active
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            RETURNING *
         `;
 
         const memberValues = [
+            memberData.cooperativeId || 1, // Default to cooperative 1
             memberData.fullName,
             memberData.identification,
-            memberData.grade,
+            memberData.qualityId || 1,  // Default: Estudiante
+            memberData.levelId || null, // Can be NULL
+            memberData.gender || null,  // M/F or NULL
+            memberData.memberCode || null,  // Código único
+            null,  // user_id - will be linked later if needed
             memberData.institutionalEmail || null,
             memberData.photoUrl || null,
             qrHash,
-            true,
-            memberData.cooperativeId || 1 // Default to cooperative 1
+            memberData.affiliationDate || new Date(),
+            true
         ];
 
         const memberResult = await client.query(insertMemberQuery, memberValues);
@@ -269,8 +271,8 @@ const createMember = async (memberData) => {
             const userValues = [
                 memberData.fullName,
                 memberData.institutionalEmail,
-                null,  // microsoft_id will be set when student logs in
-                USER_ROLES.STUDENT,
+                null,  // microsoft_id will be set when member logs in
+                USER_ROLES.MEMBER,  // Updated from STUDENT to MEMBER
                 true,
                 memberData.cooperativeId || 1 // Default to cooperative 1
             ];
@@ -476,7 +478,14 @@ const generateMemberQr = async (memberId) => {
             memberId: member.memberId,
             fullName: member.fullName,
             identification: member.identification,
-            grade: member.grade,
+            qualityId: member.qualityId,
+            qualityCode: member.qualityCode,
+            qualityName: member.qualityName,
+            levelId: member.levelId,
+            levelCode: member.levelCode,
+            levelName: member.levelName,
+            gender: member.gender,
+            memberCode: member.memberCode,
             photoUrl: member.photoUrl,
             qrHash: member.qrHash,
             verificationUrl,
@@ -672,11 +681,12 @@ const publicVerifyMember = async (qrHash) => {
             isActive: member.is_active
         });
 
-        // Return only public information
+        // Return only public information (adapted to new structure)
         return {
             fullName: member.full_name,
             identification: member.identification,
-            grade: member.grade,
+            qualityName: member.quality_name,
+            levelName: member.level_name,
             photoUrl: member.photo_url,
             isActive: member.is_active
         };
@@ -694,6 +704,570 @@ const publicVerifyMember = async (qrHash) => {
     }
 };
 
+/**
+ * Get member dashboard data
+ * Returns comprehensive dashboard data for logged-in member
+ *
+ * @param {number} userId - User ID from authentication
+ * @returns {Promise<Object>} Dashboard data with member, accounts, transactions, and contribution status
+ * @throws {MemberError} If member not found or not linked to user
+ */
+const getMemberDashboard = async (userId) => {
+    try {
+        // 1. Get member linked to this user
+        const member = await memberRepository.findByUserId(userId);
+
+        if (!member) {
+            throw new MemberError(
+                'No se encontró un miembro vinculado a este usuario',
+                ERROR_CODES.MEMBER_NOT_FOUND,
+                404
+            );
+        }
+
+        // 2. Get all accounts with balances
+        const accountsQuery = `
+            SELECT
+                a.account_id,
+                a.account_type,
+                a.current_balance,
+                a.last_fiscal_year_balance,
+                a.created_at,
+                a.updated_at
+            FROM accounts a
+            WHERE a.member_id = $1
+            ORDER BY
+                CASE a.account_type
+                    WHEN 'savings' THEN 1
+                    WHEN 'contributions' THEN 2
+                    WHEN 'surplus' THEN 3
+                    WHEN 'affiliation' THEN 4
+                    ELSE 5
+                END
+        `;
+
+        const accountsResult = await db.query(accountsQuery, [member.member_id]);
+        const accounts = accountsResult.rows.map(acc => ({
+            accountId: acc.account_id,
+            accountType: acc.account_type,
+            currentBalance: parseFloat(acc.current_balance),
+            lastFiscalYearBalance: parseFloat(acc.last_fiscal_year_balance),
+            displayName: getAccountDisplayName(acc.account_type),
+            available: acc.account_type !== 'affiliation' // Affiliation account not visible to members
+        }));
+
+        // 3. Get recent transactions (last 10 across all accounts)
+        const transactionsQuery = `
+            SELECT
+                t.transaction_id,
+                t.account_id,
+                a.account_type,
+                t.transaction_type,
+                t.amount,
+                t.transaction_date,
+                t.fiscal_year,
+                t.description,
+                t.status,
+                t.created_at
+            FROM transactions t
+            JOIN accounts a ON t.account_id = a.account_id
+            WHERE a.member_id = $1
+                AND t.status = 'completed'
+            ORDER BY t.transaction_date DESC, t.created_at DESC
+            LIMIT 10
+        `;
+
+        const transactionsResult = await db.query(transactionsQuery, [member.member_id]);
+        const recentTransactions = transactionsResult.rows.map(tx => ({
+            transactionId: tx.transaction_id,
+            accountType: tx.account_type,
+            accountDisplayName: getAccountDisplayName(tx.account_type),
+            transactionType: tx.transaction_type,
+            amount: parseFloat(tx.amount),
+            transactionDate: tx.transaction_date,
+            fiscalYear: tx.fiscal_year,
+            description: tx.description,
+            status: tx.status
+        }));
+
+        // 4. Get contribution status for current fiscal year using contributions_detail
+        const currentFiscalYear = await getCurrentFiscalYear();
+
+        const contributionStatusQuery = `
+            SELECT
+                cd.fiscal_year,
+                COUNT(DISTINCT cd.tract_id) AS tracts_paid,
+                SUM(cd.amount) AS total_contributed,
+                ARRAY_AGG(cp.tract_name ORDER BY cp.start_date) AS paid_tracts
+            FROM accounts a
+            LEFT JOIN contributions_detail cd ON a.account_id = cd.account_id
+            LEFT JOIN contribution_periods cp ON cd.tract_id = cp.period_id
+            WHERE a.member_id = $1
+                AND a.account_type = 'contributions'
+                AND cd.fiscal_year = $2
+            GROUP BY cd.fiscal_year
+        `;
+
+        const contributionResult = await db.query(contributionStatusQuery, [
+            member.member_id,
+            currentFiscalYear
+        ]);
+
+        // Get all tracts for the current fiscal year
+        const tractsQuery = `
+            SELECT period_id, tract_name, required_amount, start_date, end_date
+            FROM contribution_periods
+            WHERE fiscal_year = $1
+            ORDER BY start_date
+        `;
+        const tractsResult = await db.query(tractsQuery, [currentFiscalYear]);
+        const allTracts = tractsResult.rows;
+
+        let contributionStatus = {
+            fiscalYear: currentFiscalYear,
+            tractsPaid: 0,
+            tractsRequired: allTracts.length,
+            totalContributed: 0.00,
+            paidTracts: [],
+            pendingTracts: allTracts.map(t => t.tract_name),
+            isComplete: false
+        };
+
+        if (contributionResult.rows.length > 0) {
+            const contribData = contributionResult.rows[0];
+            const paidTracts = contribData.paid_tracts || [];
+
+            contributionStatus = {
+                fiscalYear: currentFiscalYear,
+                tractsPaid: parseInt(contribData.tracts_paid) || 0,
+                tractsRequired: allTracts.length,
+                totalContributed: parseFloat(contribData.total_contributed) || 0.00,
+                paidTracts: paidTracts,
+                pendingTracts: allTracts
+                    .filter(t => !paidTracts.includes(t.tract_name))
+                    .map(t => t.tract_name),
+                isComplete: (parseInt(contribData.tracts_paid) || 0) >= allTracts.length
+            };
+        }
+
+        // 5. Get pending withdrawal requests (if any)
+        const pendingRequestsQuery = `
+            SELECT
+                wr.request_id,
+                wr.account_id,
+                a.account_type,
+                wr.amount,
+                wr.reason,
+                wr.status,
+                wr.requested_at,
+                wr.transfer_to_account_type
+            FROM withdrawal_requests wr
+            JOIN accounts a ON wr.account_id = a.account_id
+            WHERE a.member_id = $1
+                AND wr.status = 'pending'
+            ORDER BY wr.requested_at DESC
+        `;
+
+        const pendingRequestsResult = await db.query(pendingRequestsQuery, [member.member_id]);
+        const pendingRequests = pendingRequestsResult.rows.map(req => ({
+            requestId: req.request_id,
+            accountType: req.account_type,
+            accountDisplayName: getAccountDisplayName(req.account_type),
+            amount: parseFloat(req.amount),
+            reason: req.reason,
+            status: req.status,
+            requestedAt: req.requested_at,
+            transferTo: req.transfer_to_account_type ? getAccountDisplayName(req.transfer_to_account_type) : null
+        }));
+
+        // 6. Return dashboard data
+        return {
+            member: {
+                memberId: member.member_id,
+                fullName: member.full_name,
+                memberCode: member.member_code,
+                identification: member.identification,
+                gender: member.gender,
+                qualityId: member.quality_id,
+                qualityCode: member.quality_code,
+                qualityName: member.quality_name,
+                levelId: member.level_id,
+                levelCode: member.level_code,
+                levelName: member.level_name,
+                institutionalEmail: member.institutional_email,
+                affiliationDate: member.affiliation_date,
+                lastLiquidationDate: member.last_liquidation_date,
+                isActive: member.is_active,
+                photoUrl: member.photo_url
+            },
+            accounts: accounts.filter(acc => acc.available), // Hide affiliation account
+            recentTransactions,
+            contributionStatus,
+            pendingRequests
+        };
+
+    } catch (error) {
+        if (error.isOperational) {
+            throw error;
+        }
+
+        logger.error('Error getting member dashboard:', error);
+        throw new MemberError(
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    }
+};
+
+/**
+ * Helper function to get display name for account types
+ */
+const getAccountDisplayName = (accountType) => {
+    const displayNames = {
+        'savings': 'Ahorros',
+        'contributions': 'Aportaciones',
+        'surplus': 'Excedentes',
+        'affiliation': 'Afiliación'
+    };
+    return displayNames[accountType] || accountType;
+};
+
+/**
+ * Helper function to get current fiscal year
+ */
+const getCurrentFiscalYear = async () => {
+    const result = await db.query('SELECT get_fiscal_year(CURRENT_DATE) AS fiscal_year');
+    return result.rows[0].fiscal_year;
+};
+
+/**
+ * Affiliate a new member with receipt generation
+ * Creates member, user account, 4 financial accounts, and processes affiliation fee
+ *
+ * @param {Object} memberData - Member affiliation data
+ * @returns {Promise<Object>} Affiliation result with receipt data
+ * @throws {MemberError} If validation fails or database error occurs
+ */
+const affiliateMember = async (memberData) => {
+    const client = await db.pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        if (!memberData.fullName || !memberData.identification) {
+            throw new MemberError(
+                MESSAGES.REQUIRED_FIELD,
+                ERROR_CODES.VALIDATION_ERROR,
+                400
+            );
+        }
+
+        if (memberData.qualityId === 1 && !memberData.levelId) {
+            throw new MemberError(
+                MESSAGES.STUDENT_REQUIRES_LEVEL,
+                ERROR_CODES.VALIDATION_ERROR,
+                400
+            );
+        }
+
+        if (memberData.qualityId === 2) {
+            memberData.levelId = 7;
+        }
+
+        const checkMemberQuery = 'SELECT member_id FROM members WHERE identification = $1';
+        const existingMemberResult = await client.query(checkMemberQuery, [memberData.identification]);
+
+        if (existingMemberResult.rows.length > 0) {
+            throw new MemberError(
+                MESSAGES.MEMBER_ALREADY_EXISTS,
+                ERROR_CODES.MEMBER_ALREADY_EXISTS,
+                409
+            );
+        }
+
+        if (memberData.institutionalEmail) {
+            const emailVerification = await verifyInstitutionalEmail(memberData.institutionalEmail);
+
+            if (!emailVerification.isValid) {
+                throw new MemberError(
+                    emailVerification.error || MESSAGES.INVALID_EMAIL,
+                    ERROR_CODES.VALIDATION_ERROR,
+                    400
+                );
+            }
+
+            const checkEmailQuery = 'SELECT user_id FROM users WHERE email = $1';
+            const existingUserResult = await client.query(checkEmailQuery, [emailVerification.email]);
+
+            if (existingUserResult.rows.length > 0) {
+                throw new MemberError(
+                    MESSAGES.EMAIL_ALREADY_EXISTS,
+                    ERROR_CODES.USER_ALREADY_EXISTS,
+                    409
+                );
+            }
+
+            memberData.institutionalEmail = emailVerification.email;
+        }
+
+        const qrHash = generateQrHash(memberData.identification);
+
+        // Get next consecutive within the transaction to prevent race conditions
+        const nextConsecutive = await memberRepository.getNextMemberCodeConsecutive(client);
+        const currentYear = new Date().getFullYear();
+        const memberCode = `${nextConsecutive}-${currentYear}`;
+
+        logger.info('Generated member code', {
+            consecutive: nextConsecutive,
+            year: currentYear,
+            memberCode
+        });
+
+        const fiscalYearResult = await client.query('SELECT get_fiscal_year(CURRENT_DATE) AS fiscal_year');
+        const currentFiscalYear = fiscalYearResult.rows[0].fiscal_year;
+        const insertMemberQuery = `
+            INSERT INTO members (
+                cooperative_id,
+                full_name,
+                identification,
+                quality_id,
+                level_id,
+                gender,
+                member_code,
+                user_id,
+                institutional_email,
+                photo_url,
+                qr_hash,
+                affiliation_date,
+                is_active
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            RETURNING *
+        `;
+
+        const memberValues = [
+            memberData.cooperativeId || 1,
+            memberData.fullName,
+            memberData.identification,
+            memberData.qualityId,
+            memberData.levelId,
+            memberData.gender || null,
+            memberCode,
+            null,  // user_id - will be linked if email provided
+            memberData.institutionalEmail || null,
+            memberData.photoUrl || null,
+            qrHash,
+            memberData.affiliationDate || new Date(),
+            true
+        ];
+
+        const memberResult = await client.query(insertMemberQuery, memberValues);
+        const newMember = memberResult.rows[0];
+
+        logger.info('Member created', { memberId: newMember.member_id, memberCode });
+
+        const accountTypes = ['savings', 'contributions', 'surplus', 'affiliation'];
+        const createdAccounts = {};
+
+        for (const accountType of accountTypes) {
+            const insertAccountQuery = `
+                INSERT INTO accounts (member_id, cooperative_id, account_type, current_balance)
+                VALUES ($1, $2, $3, 0.00)
+                RETURNING account_id, account_type
+            `;
+
+            const accountResult = await client.query(insertAccountQuery, [
+                newMember.member_id,
+                memberData.cooperativeId || 1,
+                accountType
+            ]);
+
+            createdAccounts[accountType] = accountResult.rows[0];
+            logger.info(`Account created: ${accountType}`, { accountId: accountResult.rows[0].account_id });
+        }
+
+        let affiliationTransaction = null;
+        const affiliationFee = memberData.affiliationFee || 500.00;
+
+        if (affiliationFee > 0) {
+            const insertTransactionQuery = `
+                INSERT INTO transactions (
+                    account_id,
+                    transaction_type,
+                    amount,
+                    transaction_date,
+                    fiscal_year,
+                    description,
+                    status,
+                    created_by
+                )
+                VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, 'completed', $6)
+                RETURNING *
+            `;
+
+            const transactionResult = await client.query(insertTransactionQuery, [
+                createdAccounts.affiliation.account_id,
+                'deposit',
+                affiliationFee,
+                currentFiscalYear,
+                `Cuota de afiliación - ${memberData.fullName}`,
+                memberData.createdBy || 1  // Use provided createdBy or default to system user (1)
+            ]);
+
+            affiliationTransaction = transactionResult.rows[0];
+
+            const updateBalanceQuery = `
+                UPDATE accounts
+                SET current_balance = current_balance + $1,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE account_id = $2
+            `;
+
+            await client.query(updateBalanceQuery, [
+                affiliationFee,
+                createdAccounts.affiliation.account_id
+            ]);
+
+            logger.info('Affiliation fee processed', {
+                transactionId: affiliationTransaction.transaction_id,
+                amount: affiliationFee
+            });
+
+            // Generate receipt for affiliation transaction
+            try {
+                const receipt = await receiptService.generateReceiptForTransaction({
+                    transactionId: affiliationTransaction.transaction_id,
+                    previousBalance: 0,
+                    client
+                });
+
+                logger.info('Affiliation receipt generated', {
+                    receiptId: receipt.receipt_id,
+                    receiptNumber: receipt.receipt_number
+                });
+
+                // Store receipt info to return
+                affiliationTransaction.receipt = receipt;
+            } catch (receiptError) {
+                logger.error('Error generating affiliation receipt', {
+                    error: receiptError.message,
+                    transactionId: affiliationTransaction.transaction_id
+                });
+                // Don't fail the entire affiliation if receipt generation fails
+                // The receipt can be regenerated later if needed
+            }
+        }
+
+        let newUser = null;
+
+        if (memberData.institutionalEmail) {
+            const insertUserQuery = `
+                INSERT INTO users (
+                    full_name,
+                    email,
+                    microsoft_id,
+                    role,
+                    is_active,
+                    cooperative_id,
+                    created_at
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+                RETURNING *
+            `;
+
+            const userValues = [
+                memberData.fullName,
+                memberData.institutionalEmail,
+                null,
+                USER_ROLES.MEMBER,
+                true,
+                memberData.cooperativeId || 1
+            ];
+
+            const userResult = await client.query(insertUserQuery, userValues);
+            newUser = userResult.rows[0];
+
+            await client.query(
+                'UPDATE members SET user_id = $1 WHERE member_id = $2',
+                [newUser.user_id, newMember.member_id]
+            );
+
+            logger.info('User created and linked to member', {
+                userId: newUser.user_id,
+                memberId: newMember.member_id
+            });
+        }
+
+        await client.query('COMMIT');
+
+        logger.info('Member affiliation completed successfully', {
+            memberId: newMember.member_id,
+            identification: newMember.identification,
+            hasUser: !!newUser
+        });
+        return {
+            member: newMember,
+            user: newUser,
+            accounts: createdAccounts,
+            affiliationTransaction,
+            receipt: {
+                receiptNumber: `AF-${newMember.member_id}-${currentFiscalYear}`,
+                date: new Date(),
+                memberName: newMember.full_name,
+                memberCode: newMember.member_code,
+                identification: newMember.identification,
+                amount: affiliationFee,
+                fiscalYear: currentFiscalYear,
+                description: 'Cuota de Afiliación'
+            }
+        };
+
+    } catch (error) {
+        // Rollback transaction on error
+        await client.query('ROLLBACK');
+
+        logger.error('Transaction rolled back due to error', {
+            error: error.message,
+            stack: error.stack,
+            code: error.code
+        });
+
+        // If it's already an operational error, just throw it
+        if (error.isOperational) {
+            throw error;
+        }
+
+        // Handle PostgreSQL unique constraint violations
+        if (error.code === '23505') {
+            if (error.constraint === 'members_member_code_key') {
+                throw new MemberError(
+                    MESSAGES.MEMBER_CODE_DUPLICATE,
+                    ERROR_CODES.MEMBER_ALREADY_EXISTS,
+                    409
+                );
+            }
+            if (error.constraint === 'members_identification_key') {
+                throw new MemberError(
+                    MESSAGES.MEMBER_ALREADY_EXISTS,
+                    ERROR_CODES.MEMBER_ALREADY_EXISTS,
+                    409
+                );
+            }
+        }
+
+        // Handle other database errors
+        logger.error('Unexpected error affiliating member:', error);
+        throw new MemberError(
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    } finally {
+        client.release();
+    }
+};
+
 module.exports = {
     getMemberById,
     getAllMembers,
@@ -705,5 +1279,7 @@ module.exports = {
     generateBatchQrCodes,
     verifyMemberByQr,
     publicVerifyMember,
+    getMemberDashboard,
+    affiliateMember,
     MemberError
 };
