@@ -286,6 +286,77 @@ div:not(.main-content) main table button {
   align-self: center !important;
 }
 
+/* Exception for pagination buttons - no padding override */
+.main-content nav[aria-label="Pagination"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.125rem !important; /* Small gap between buttons */
+  flex-wrap: wrap !important; /* Allow wrapping on small screens */
+  width: 100% !important; /* Full width */
+}
+
+.main-content nav[aria-label="Pagination"] button {
+  padding: 0.5rem 0.75rem !important; /* Minimum internal padding */
+  min-height: 2.25rem !important; /* Same height for all buttons */
+  height: 2.25rem !important;
+  min-width: 2.25rem !important; /* Minimum width for consistency */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  margin-bottom: 0 !important; /* Remove bottom margin */
+  border: none !important; /* Remove border */
+  flex-shrink: 0 !important; /* Prevent buttons from shrinking */
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 640px) {
+  .main-content nav[aria-label="Pagination"] button {
+    padding: 0.375rem 0.5rem !important; /* Smaller padding on mobile */
+    font-size: 0.75rem !important; /* Smaller text on mobile */
+  }
+
+  .main-content nav[aria-label="Pagination"] button svg {
+    width: 0.875rem !important; /* Smaller icons on mobile */
+    height: 0.875rem !important;
+  }
+}
+
+/* Hover state for pagination buttons - same as sidebar nav links */
+.main-content nav[aria-label="Pagination"] button:not(:disabled):hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+
+/* Active/selected page button - blue background */
+.main-content nav[aria-label="Pagination"] button.bg-primary-600 {
+  background-color: #0a3166 !important; /* Primary blue */
+  color: white !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  font-weight: 600 !important;
+}
+
+.main-content nav[aria-label="Pagination"] button.bg-primary-600:hover {
+  background-color: #082852 !important; /* Darker blue on hover */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+
+/* Disabled pagination buttons */
+.main-content nav[aria-label="Pagination"] button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.4 !important;
+}
+
+/* Exception for mobile pagination buttons */
+.main-content button:has-text("Anterior"),
+.main-content button:has-text("Siguiente") {
+  padding: 0 !important;
+  min-height: auto !important;
+}
+
 /* Ensure all flex containers in table cells are centered */
 .main-content table td > div {
   display: flex !important;

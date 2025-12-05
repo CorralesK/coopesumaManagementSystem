@@ -4,7 +4,8 @@
  */
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Layout from './components/common/Layout';
@@ -18,6 +19,7 @@ import AuthCallbackPage from './pages/AuthCallbackPage';
 import MemberVerifyPage from './pages/public/MemberVerifyPage';
 
 // Main Pages
+import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -26,6 +28,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import MembersListPage from './pages/members/MembersListPage';
 import MemberFormPage from './pages/members/MemberFormPage';
 import MemberDetailPage from './pages/members/MemberDetailPage';
+import MemberDashboardPage from './pages/members/MemberDashboardPage';
 
 // Assembly Pages
 import AssembliesListPage from './pages/assemblies/AssembliesListPage';
@@ -43,10 +46,46 @@ import UserDetailPage from './pages/users/UserDetailPage';
 // Report Pages (placeholders - will be implemented)
 import ReportsPage from './pages/reports/ReportsPage';
 
+// Financial Pages
+import WithdrawalRequestPage from './pages/withdrawals/WithdrawalRequestPage';
+import WithdrawalRequestsManagementPage from './pages/withdrawals/WithdrawalRequestsManagementPage';
+import SurplusDistributionPage from './pages/surplus/SurplusDistributionPage';
+import LiquidationsManagementPage from './pages/liquidations/LiquidationsManagementPage';
+import SavingsManagementPage from './pages/savings/SavingsManagementPage';
+import SavingsInventoryPage from './pages/savings/SavingsInventoryPage';
+import SavingsMonthlyDetailPage from './pages/savings/SavingsMonthlyDetailPage';
+import MemberSavingsDashboardPage from './pages/savings/MemberSavingsDashboardPage';
+import ContributionsManagementPage from './pages/contributions/ContributionsManagementPage';
+import NotificationsPage from './pages/notifications/NotificationsPage';
+
 function App() {
     return (
         <Router>
             <AuthProvider>
+                <Toaster
+                    position="top-right"
+                    toastOptions={{
+                        duration: 4000,
+                        style: {
+                            background: '#363636',
+                            color: '#fff',
+                        },
+                        success: {
+                            duration: 3000,
+                            iconTheme: {
+                                primary: '#10b981',
+                                secondary: '#fff',
+                            },
+                        },
+                        error: {
+                            duration: 5000,
+                            iconTheme: {
+                                primary: '#ef4444',
+                                secondary: '#fff',
+                            },
+                        },
+                    }}
+                />
                 <Routes>
                     {/* Public Routes */}
                     <Route path="/login" element={<LoginPage />} />
@@ -56,6 +95,32 @@ function App() {
                     <Route path="/verify" element={<MemberVerifyPage />} />
 
                     {/* Protected Routes with Layout */}
+
+                    {/* Member Personal Dashboard (Member role only) */}
+                    <Route
+                        path="/my-dashboard"
+                        element={
+                            <ProtectedRoute requiredRole={USER_ROLES.MEMBER}>
+                                <Layout>
+                                    <MemberDashboardPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Member Withdrawal Requests (Member role only) */}
+                    <Route
+                        path="/my-withdrawals"
+                        element={
+                            <ProtectedRoute requiredRole={USER_ROLES.MEMBER}>
+                                <Layout>
+                                    <WithdrawalRequestPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Admin Dashboard (Administrator only) */}
                     <Route
                         path="/dashboard"
                         element={
@@ -217,8 +282,110 @@ function App() {
                         }
                     />
 
+                    {/* Withdrawal Requests Management (Administrator and Manager) */}
+                    <Route
+                        path="/withdrawals"
+                        element={
+                            <ProtectedRoute requiredRole={[USER_ROLES.ADMINISTRATOR, USER_ROLES.MANAGER]}>
+                                <Layout>
+                                    <WithdrawalRequestsManagementPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Surplus Distribution (Administrator and Manager) */}
+                    <Route
+                        path="/surplus"
+                        element={
+                            <ProtectedRoute requiredRole={[USER_ROLES.ADMINISTRATOR, USER_ROLES.MANAGER]}>
+                                <Layout>
+                                    <SurplusDistributionPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Liquidations Management (Administrator only) */}
+                    <Route
+                        path="/liquidations"
+                        element={
+                            <ProtectedRoute requiredRole={USER_ROLES.ADMINISTRATOR}>
+                                <Layout>
+                                    <LiquidationsManagementPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Savings Management (Administrator and Manager) */}
+                    <Route
+                        path="/savings"
+                        element={
+                            <ProtectedRoute requiredRole={[USER_ROLES.ADMINISTRATOR, USER_ROLES.MANAGER]}>
+                                <Layout>
+                                    <SavingsManagementPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/savings/inventory/:fiscalYear"
+                        element={
+                            <ProtectedRoute requiredRole={[USER_ROLES.ADMINISTRATOR, USER_ROLES.MANAGER]}>
+                                <Layout>
+                                    <SavingsInventoryPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/savings/inventory/:fiscalYear/:month"
+                        element={
+                            <ProtectedRoute requiredRole={[USER_ROLES.ADMINISTRATOR, USER_ROLES.MANAGER]}>
+                                <Layout>
+                                    <SavingsMonthlyDetailPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/members/:memberId/savings"
+                        element={
+                            <ProtectedRoute requiredRole={[USER_ROLES.ADMINISTRATOR, USER_ROLES.MANAGER]}>
+                                <Layout>
+                                    <MemberSavingsDashboardPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Contributions Management (Administrator and Manager) */}
+                    <Route
+                        path="/contributions"
+                        element={
+                            <ProtectedRoute requiredRole={[USER_ROLES.ADMINISTRATOR, USER_ROLES.MANAGER]}>
+                                <Layout>
+                                    <ContributionsManagementPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Notifications (Administrator only) */}
+                    <Route
+                        path="/notifications"
+                        element={
+                            <ProtectedRoute requiredRole={USER_ROLES.ADMINISTRATOR}>
+                                <Layout>
+                                    <NotificationsPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+
                     {/* Default Redirects */}
-                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route path="/" element={<HomePage />} />
                     <Route path="*" element={<NotFoundPage />} />
                 </Routes>
             </AuthProvider>
