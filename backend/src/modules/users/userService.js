@@ -1,7 +1,7 @@
 /**
  * User Service
- * Business logic for user management operations
- * Handles CRUD operations and user administration
+ * Business logic for user management operations.
+ * Handles CRUD operations, filtering, pagination and administrative rules.
  *
  * @module modules/users/userService
  */
@@ -12,7 +12,7 @@ const MESSAGES = require('../../constants/messages');
 const logger = require('../../utils/logger');
 
 /**
- * Custom error class for operational errors
+ * Custom Operational Error for User-related operations.
  */
 class UserError extends Error {
     constructor(message, errorCode, statusCode) {
@@ -24,23 +24,24 @@ class UserError extends Error {
 }
 
 /**
- * Get all users with optional filters and pagination
+ * Retrieve all users with optional filters and pagination.
+ * This version returns a response structure fully aligned with the Members endpoint,
+ * ensuring consistent pagination and list rendering across the frontend.
  *
- * @param {Object} filters - Filter criteria
- * @param {number} page - Page number (default: 1)
- * @param {number} limit - Items per page (default: 20)
- * @returns {Promise<Object>} Object with users array and pagination info
+ * @param {Object} filters - Filter criteria (search text, role, isActive)
+ * @param {number} page - Page number
+ * @param {number} limit - Items per page
+ * @returns {Promise<Object>} Paginated users list with metadata
  */
 const getAllUsers = async (filters = {}, page = 1, limit = 20) => {
     try {
         const offset = (page - 1) * limit;
+
         const result = await userRepository.findAll(filters, limit, offset);
 
-        // Remove sensitive information
         const users = result.users.map(user => ({
             userId: user.userId,
             fullName: user.fullName,
-            username: user.username,
             email: user.email,
             role: user.role,
             isActive: user.isActive,
@@ -50,15 +51,17 @@ const getAllUsers = async (filters = {}, page = 1, limit = 20) => {
             updatedAt: user.updatedAt
         }));
 
+        // ⬇️ IMPORTANT: Unified response format identical to the Members module
         return {
             users,
             pagination: {
-                currentPage: page,
-                totalPages: Math.ceil(result.total / limit),
-                totalItems: result.total,
-                limit
+                page,
+                limit,
+                total: result.total,
+                totalPages: Math.ceil(result.total / limit)
             }
         };
+
     } catch (error) {
         logger.error('Error getting all users:', error);
         throw new UserError(
@@ -70,11 +73,11 @@ const getAllUsers = async (filters = {}, page = 1, limit = 20) => {
 };
 
 /**
- * Get user by ID
+ * Retrieve a single user by ID.
  *
- * @param {number} userId - User ID
- * @returns {Promise<Object>} User object
- * @throws {UserError} If user not found
+ * @param {number} userId - Unique user identifier
+ * @returns {Promise<Object>} User details
+ * @throws {UserError} If user does not exist
  */
 const getUserById = async (userId) => {
     try {
@@ -91,7 +94,6 @@ const getUserById = async (userId) => {
         return {
             userId: user.userId,
             fullName: user.fullName,
-            username: user.username,
             email: user.email,
             role: user.role,
             isActive: user.isActive,
@@ -99,10 +101,9 @@ const getUserById = async (userId) => {
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         };
+
     } catch (error) {
-        if (error.isOperational) {
-            throw error;
-        }
+        if (error.isOperational) throw error;
 
         logger.error('Error getting user by ID:', error);
         throw new UserError(
@@ -114,27 +115,15 @@ const getUserById = async (userId) => {
 };
 
 /**
- * Create a new user
+ * Create a new user.
+ * Microsoft ID is required because authentication is handled via Microsoft OAuth.
  *
- * @param {Object} userData - User data
- * @returns {Promise<Object>} Created user object
- * @throws {UserError} If validation fails
+ * @param {Object} userData - Data for new user
+ * @returns {Promise<Object>} Newly created user
  */
 const createUser = async (userData) => {
     try {
-        // Check if username already exists
-        if (userData.username) {
-            const existingUsername = await userRepository.findByUsername(userData.username);
-            if (existingUsername) {
-                throw new UserError(
-                    MESSAGES.USERNAME_EXISTS,
-                    ERROR_CODES.USERNAME_EXISTS,
-                    409
-                );
-            }
-        }
-
-        // Check if email already exists
+        // Email uniqueness check
         if (userData.email) {
             const existingEmail = await userRepository.findByEmail(userData.email);
             if (existingEmail) {
@@ -146,45 +135,36 @@ const createUser = async (userData) => {
             }
         }
 
-        // Validate that Microsoft ID is provided (required for OAuth authentication)
-        if (!userData.microsoftId) {
-            throw new UserError(
-                'Se requiere Microsoft ID para la autenticación',
-                ERROR_CODES.VALIDATION_ERROR,
-                400
-            );
-        }
+        // Microsoft ID will be assigned automatically when the user logs in for the first time
+        // Users are created without microsoftId, and it gets linked during OAuth flow
+        const microsoftId = null;
 
         const newUser = await userRepository.create({
             fullName: userData.fullName,
-            username: userData.username,
-            passwordHash: null, // No password authentication
             role: userData.role,
             isActive: userData.isActive !== undefined ? userData.isActive : true,
-            microsoftId: userData.microsoftId,
-            email: userData.email || null
+            microsoftId: microsoftId,
+            email: userData.email || null,
+            cooperativeId: userData.cooperativeId || 1 // Default to cooperative 1
         });
 
         logger.info('User created successfully', {
             userId: newUser.userId,
-            username: newUser.username,
-            role: newUser.role
+            email: newUser.email
         });
 
         return {
             userId: newUser.userId,
             fullName: newUser.fullName,
-            username: newUser.username,
             email: newUser.email,
             role: newUser.role,
             isActive: newUser.isActive,
             hasMicrosoftAccount: !!newUser.microsoftId,
             createdAt: newUser.createdAt
         };
+
     } catch (error) {
-        if (error.isOperational) {
-            throw error;
-        }
+        if (error.isOperational) throw error;
 
         logger.error('Error creating user:', error);
         throw new UserError(
@@ -196,17 +176,17 @@ const createUser = async (userData) => {
 };
 
 /**
- * Update user information
+ * Update a user's data.
+ * Ensures username/email uniqueness and only updates allowed fields.
  *
  * @param {number} userId - User ID
  * @param {Object} updates - Fields to update
  * @returns {Promise<Object>} Updated user object
- * @throws {UserError} If validation fails
  */
 const updateUser = async (userId, updates) => {
     try {
-        // Verify user exists
         const existingUser = await userRepository.findById(userId);
+
         if (!existingUser) {
             throw new UserError(
                 MESSAGES.USER_NOT_FOUND,
@@ -215,19 +195,7 @@ const updateUser = async (userId, updates) => {
             );
         }
 
-        // Check if username is being changed and if it already exists
-        if (updates.username && updates.username !== existingUser.username) {
-            const userWithUsername = await userRepository.findByUsername(updates.username);
-            if (userWithUsername) {
-                throw new UserError(
-                    MESSAGES.USERNAME_EXISTS,
-                    ERROR_CODES.USERNAME_EXISTS,
-                    409
-                );
-            }
-        }
-
-        // Check if email is being changed and if it already exists
+        // Email uniqueness check
         if (updates.email && updates.email !== existingUser.email) {
             const userWithEmail = await userRepository.findByEmail(updates.email);
             if (userWithEmail) {
@@ -242,21 +210,9 @@ const updateUser = async (userId, updates) => {
         // Build update object
         const updateData = {};
 
-        if (updates.fullName !== undefined) {
-            updateData.full_name = updates.fullName;
-        }
-
-        if (updates.username !== undefined) {
-            updateData.username = updates.username;
-        }
-
-        if (updates.email !== undefined) {
-            updateData.email = updates.email;
-        }
-
-        if (updates.role !== undefined) {
-            updateData.role = updates.role;
-        }
+        if (updates.fullName !== undefined) updateData.full_name = updates.fullName;
+        if (updates.email !== undefined) updateData.email = updates.email;
+        if (updates.role !== undefined) updateData.role = updates.role;
 
         if (Object.keys(updateData).length === 0) {
             throw new UserError(
@@ -276,17 +232,15 @@ const updateUser = async (userId, updates) => {
         return {
             userId: updatedUser.userId,
             fullName: updatedUser.fullName,
-            username: updatedUser.username,
             email: updatedUser.email,
             role: updatedUser.role,
             isActive: updatedUser.isActive,
             hasMicrosoftAccount: !!updatedUser.microsoftId,
             updatedAt: updatedUser.updatedAt
         };
+
     } catch (error) {
-        if (error.isOperational) {
-            throw error;
-        }
+        if (error.isOperational) throw error;
 
         logger.error('Error updating user:', error);
         throw new UserError(
@@ -298,12 +252,11 @@ const updateUser = async (userId, updates) => {
 };
 
 /**
- * Deactivate user (soft delete)
- * Cannot deactivate the last active administrator
+ * Deactivate a user (soft delete).
+ * Prevents deactivating the last active administrator.
  *
  * @param {number} userId - User ID
- * @returns {Promise<Object>} Updated user object
- * @throws {UserError} If validation fails
+ * @returns {Promise<Object>} Updated user data
  */
 const deactivateUser = async (userId) => {
     try {
@@ -325,7 +278,6 @@ const deactivateUser = async (userId) => {
             );
         }
 
-        // Prevent deactivating the last active administrator
         if (user.role === 'administrator') {
             const activeAdminCount = await userRepository.countActiveAdministrators();
             if (activeAdminCount <= 1) {
@@ -339,23 +291,19 @@ const deactivateUser = async (userId) => {
 
         const deactivatedUser = await userRepository.deactivate(userId);
 
-        logger.info('User deactivated successfully', {
-            userId: deactivatedUser.userId
-        });
+        logger.info('User deactivated successfully', { userId });
 
         return {
             userId: deactivatedUser.userId,
             fullName: deactivatedUser.fullName,
-            username: deactivatedUser.username,
             email: deactivatedUser.email,
             role: deactivatedUser.role,
             isActive: deactivatedUser.isActive,
             updatedAt: deactivatedUser.updatedAt
         };
+
     } catch (error) {
-        if (error.isOperational) {
-            throw error;
-        }
+        if (error.isOperational) throw error;
 
         logger.error('Error deactivating user:', error);
         throw new UserError(
@@ -367,11 +315,10 @@ const deactivateUser = async (userId) => {
 };
 
 /**
- * Activate user
+ * Activate a previously deactivated user.
  *
  * @param {number} userId - User ID
- * @returns {Promise<Object>} Updated user object
- * @throws {UserError} If user not found
+ * @returns {Promise<Object>} Updated user data
  */
 const activateUser = async (userId) => {
     try {
@@ -395,23 +342,19 @@ const activateUser = async (userId) => {
 
         const activatedUser = await userRepository.activate(userId);
 
-        logger.info('User activated successfully', {
-            userId: activatedUser.userId
-        });
+        logger.info('User activated successfully', { userId });
 
         return {
             userId: activatedUser.userId,
             fullName: activatedUser.fullName,
-            username: activatedUser.username,
             email: activatedUser.email,
             role: activatedUser.role,
             isActive: activatedUser.isActive,
             updatedAt: activatedUser.updatedAt
         };
+
     } catch (error) {
-        if (error.isOperational) {
-            throw error;
-        }
+        if (error.isOperational) throw error;
 
         logger.error('Error activating user:', error);
         throw new UserError(

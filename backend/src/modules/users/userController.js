@@ -1,6 +1,6 @@
 /**
  * User Controller
- * Handles HTTP requests for user management endpoints
+ * Handles HTTP requests for user management endpoints.
  *
  * @module modules/users/userController
  */
@@ -12,30 +12,36 @@ const ERROR_CODES = require('../../constants/errorCodes');
 const logger = require('../../utils/logger');
 
 /**
- * Get all users with optional filters
+ * Get all users with optional filters (compatible with Members behavior)
+ *
+ * - Accepts empty filters without causing validation errors.
+ * - Normalizes pagination and search parameters.
+ * - Delegates flexible filtering logic to the service layer.
  *
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
 const getAllUsers = async (req, res) => {
     try {
+        // Normalize filters (replicates Members behavior)
         const filters = {
-            role: req.query.role,
-            isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : undefined
+            search: req.query.search || '',
+            role: req.query.role || '',
+            isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : ''
         };
 
-        const page = parseInt(req.query.page, 10) || 1;
-        const limit = parseInt(req.query.limit, 10) || 20;
+        // Normalize pagination
+        const page = Number(req.query.page) > 0 ? Number(req.query.page) : 1;
+        const limit = Number(req.query.limit) > 0 ? Number(req.query.limit) : 20;
 
         const result = await userService.getAllUsers(filters, page, limit);
 
-        return successResponse(
-            res,
-            'Usuarios obtenidos exitosamente',
-            result.users,
-            200,
-            result.pagination
-        );
+        return res.status(200).json({
+            success: true,
+            message: 'Usuarios obtenidos exitosamente',
+            data: result.users,
+            pagination: result.pagination
+        });
     } catch (error) {
         if (error.isOperational) {
             return errorResponse(
@@ -110,8 +116,6 @@ const createUser = async (req, res) => {
     try {
         const userData = {
             fullName: req.body.fullName,
-            username: req.body.username,
-            password: req.body.password,
             email: req.body.email,
             role: req.body.role,
             isActive: req.body.isActive,
@@ -162,17 +166,13 @@ const updateUser = async (req, res) => {
         const { id } = req.params;
         const updates = {
             fullName: req.body.fullName,
-            username: req.body.username,
             email: req.body.email,
-            role: req.body.role,
-            password: req.body.password
+            role: req.body.role
         };
 
         // Remove undefined fields
         Object.keys(updates).forEach(key => {
-            if (updates[key] === undefined) {
-                delete updates[key];
-            }
+            if (updates[key] === undefined) delete updates[key];
         });
 
         const updatedUser = await userService.updateUser(parseInt(id, 10), updates);

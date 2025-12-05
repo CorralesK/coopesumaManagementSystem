@@ -32,7 +32,12 @@ const findById = async (userId) => {
         `;
 
         const result = await db.query(query, [userId]);
-        return result.rows[0] || null;
+        const user = result.rows[0];
+
+        if (!user) return null;
+
+        // Data is already in camelCase from keysToCamel conversion in database.js
+        return user;
     } catch (error) {
         logger.error('Error finding user by ID:', error);
         throw error;
@@ -66,7 +71,12 @@ const findByMicrosoftId = async (microsoftId) => {
         `;
 
         const result = await db.query(query, [microsoftId]);
-        return result.rows[0] || null;
+        const user = result.rows[0];
+
+        if (!user) return null;
+
+        // Data is already in camelCase from keysToCamel conversion in database.js
+        return user;
     } catch (error) {
         logger.error('Error finding user by Microsoft ID:', error);
         throw error;
@@ -97,7 +107,12 @@ const findByEmail = async (email) => {
         `;
 
         const result = await db.query(query, [email]);
-        return result.rows[0] || null;
+        const user = result.rows[0];
+
+        if (!user) return null;
+
+        // Data is already in camelCase from keysToCamel conversion in database.js
+        return user;
     } catch (error) {
         logger.error('Error finding user by email:', error);
         throw error;
@@ -143,7 +158,10 @@ const create = async (userData) => {
         ];
 
         const result = await db.query(query, values);
-        return result.rows[0];
+        const user = result.rows[0];
+
+        // Data is already in camelCase from keysToCamel conversion in database.js
+        return user;
     } catch (error) {
         logger.error('Error creating user:', error);
         throw error;
@@ -185,7 +203,10 @@ const update = async (userId, updates) => {
         `;
 
         const result = await db.query(query, values);
-        return result.rows[0];
+        const user = result.rows[0];
+
+        // Data is already in camelCase from keysToCamel conversion in database.js
+        return user;
     } catch (error) {
         logger.error('Error updating user:', error);
         throw error;
@@ -246,13 +267,32 @@ const findAll = async (filters = {}, limit = 20, offset = 0) => {
         const params = [];
         let paramIndex = 1;
 
-        if (filters.role) {
+        // Search filter (name or email) - case and accent insensitive
+        if (filters.search && filters.search.trim() !== '') {
+            // Normaliza la búsqueda reemplazando vocales con tildes por pattern que acepte ambas
+            const searchTerm = filters.search.trim()
+                .replace(/a/gi, '[aáàäâ]')
+                .replace(/e/gi, '[eéèëê]')
+                .replace(/i/gi, '[iíìïî]')
+                .replace(/o/gi, '[oóòöô]')
+                .replace(/u/gi, '[uúùüû]')
+                .replace(/n/gi, '[nñ]');
+
+            baseQuery += ` AND (
+                full_name ~* $${paramIndex}
+                OR email ~* $${paramIndex}
+            )`;
+            params.push(searchTerm);
+            paramIndex++;
+        }
+
+        if (filters.role && filters.role.trim() !== '') {
             baseQuery += ` AND role = $${paramIndex}`;
             params.push(filters.role);
             paramIndex++;
         }
 
-        if (filters.isActive !== undefined) {
+        if (filters.isActive !== undefined && filters.isActive !== '') {
             baseQuery += ` AND is_active = $${paramIndex}`;
             params.push(filters.isActive);
             paramIndex++;
@@ -263,7 +303,7 @@ const findAll = async (filters = {}, limit = 20, offset = 0) => {
         const countResult = await db.query(countQuery, params);
         const total = parseInt(countResult.rows[0].total, 10);
 
-        // Get paginated results
+        // Get paginated results - ordered by role, status, and name
         const dataQuery = `
             SELECT
                 user_id,
@@ -276,7 +316,16 @@ const findAll = async (filters = {}, limit = 20, offset = 0) => {
                 created_at,
                 updated_at
             ${baseQuery}
-            ORDER BY created_at DESC
+            ORDER BY
+                CASE role
+                    WHEN 'administrator' THEN 1
+                    WHEN 'registrar' THEN 2
+                    WHEN 'manager' THEN 3
+                    WHEN 'member' THEN 4
+                    ELSE 5
+                END,
+                is_active DESC,
+                full_name ASC
             LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
         `;
 

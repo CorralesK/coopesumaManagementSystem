@@ -30,7 +30,7 @@ const { USER_ROLES } = require('../../constants/roles');
  * Accessible by: Administrator only
  *
  * Query parameters:
- * - role: "administrator" | "registrar" | "treasurer" (optional)
+ * - role: "administrator" | "registrar" | "manager" | "member" (optional)
  * - isActive: "true" | "false" (optional)
  *
  * Response: List of users
@@ -70,7 +70,7 @@ router.get(
  *   "username": "string" (required, 3-50 chars, alphanumeric + underscore),
  *   "password": "string" (optional, min 8 chars, must contain uppercase, lowercase, number),
  *   "email": "string" (optional, valid email),
- *   "role": "administrator" | "registrar" | "treasurer" (required),
+ *   "role": "administrator" | "registrar" | "manager" | "member" (required),
  *   "isActive": boolean (optional, default: true),
  *   "microsoftId": "string" (optional)
  * }
@@ -99,7 +99,7 @@ router.post(
  *   "username": "string" (optional, 3-50 chars, alphanumeric + underscore),
  *   "password": "string" (optional, min 8 chars, must contain uppercase, lowercase, number),
  *   "email": "string" (optional, valid email),
- *   "role": "administrator" | "registrar" | "treasurer" (optional)
+ *   "role": "administrator" | "registrar" | "manager" | "member" (optional)
  * }
  *
  * Note: At least one field must be provided
