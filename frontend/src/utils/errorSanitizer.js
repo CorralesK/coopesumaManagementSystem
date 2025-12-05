@@ -3,9 +3,12 @@
  *
  * Sanitizes error messages to prevent exposing internal system details
  * to end users. Replaces technical error messages with user-friendly ones.
+ * Translates backend error messages from English to Spanish.
  *
  * @module utils/errorSanitizer
  */
+
+import { translateError } from './errorTranslations';
 
 /**
  * Technical keywords that indicate an error message contains sensitive information
@@ -183,6 +186,14 @@ const getGenericMessage = (message, statusCode) => {
  * @returns {string} - Sanitized user-friendly message
  */
 export const sanitizeErrorMessage = (message, statusCode = 500) => {
+    // First, try to translate the message from English to Spanish
+    const translatedMessage = translateError(message);
+
+    // If translation was successful (not the default generic message), use it
+    if (translatedMessage !== 'Ha ocurrido un error. Por favor, intente nuevamente') {
+        return translatedMessage;
+    }
+
     // If message is already safe (doesn't contain technical info), return it
     if (!containsTechnicalInfo(message)) {
         return message;

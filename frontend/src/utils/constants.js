@@ -6,13 +6,17 @@
  */
 
 /**
- * User roles
+ * User roles (updated to match database schema)
  */
 export const USER_ROLES = {
     ADMINISTRATOR: 'administrator',
     REGISTRAR: 'registrar',
-    TREASURER: 'treasurer',
-    STUDENT: 'student',
+    MANAGER: 'manager',        // Changed from TREASURER
+    MEMBER: 'member',          // Changed from STUDENT
+
+    // Deprecated aliases for backwards compatibility
+    TREASURER: 'manager',      // Alias for MANAGER
+    STUDENT: 'member',         // Alias for MEMBER
 };
 
 /**
@@ -33,14 +37,13 @@ export const RECURRENCE_PATTERNS = {
 };
 
 /**
- * Grade options (1-6 for elementary school)
+ * Member quality options (fetched from API)
+ * 1 = Estudiante, 2 = Funcionario
  */
-export const GRADES = ['1', '2', '3', '4', '5', '6'];
-
-/**
- * Section options
- */
-export const SECTIONS = ['A', 'B', 'C', 'D'];
+export const MEMBER_QUALITIES = {
+    STUDENT: 1,
+    EMPLOYEE: 2,
+};
 
 /**
  * Pagination defaults
@@ -123,6 +126,11 @@ export const API_ENDPOINTS = {
     // Reports
     REPORTS_ATTENDANCE: (assemblyId) => `/reports/attendance/${assemblyId}`,
     REPORTS_ATTENDANCE_STATS: (assemblyId) => `/reports/attendance-stats/${assemblyId}`,
+
+    // Catalogs
+    CATALOGS_QUALITIES: '/catalogs/qualities',
+    CATALOGS_LEVELS: '/catalogs/levels',
+    CATALOGS_ACCOUNT_TYPES: '/catalogs/account-types',
 };
 
 /**
