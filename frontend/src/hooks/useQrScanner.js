@@ -40,24 +40,42 @@ export const useQrScanner = (options = {}) => {
      */
     const initScanner = useCallback(async () => {
         try {
+            // Check if browser supports camera access
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Tu navegador no soporta acceso a la cámara');
+            }
+
+            // Check if page is in secure context (HTTPS or localhost)
+            if (!window.isSecureContext) {
+                throw new Error('Se requiere HTTPS o localhost para acceder a la cámara');
+            }
+
             // Dynamically import html5-qrcode
             const { Html5Qrcode } = await import('html5-qrcode');
 
             // Get available cameras
             const devices = await Html5Qrcode.getCameras();
+
+            if (!devices || devices.length === 0) {
+                throw new Error('No se encontraron cámaras disponibles');
+            }
+
             setCameras(devices);
 
             // Select rear camera by default if available
             const rearCamera = devices.find(device =>
                 device.label.toLowerCase().includes('back') ||
-                device.label.toLowerCase().includes('rear')
+                device.label.toLowerCase().includes('rear') ||
+                device.label.toLowerCase().includes('trasera')
             );
             setSelectedCamera(rearCamera || devices[0]);
 
             // Create scanner instance
             scannerRef.current = new Html5Qrcode(elementId);
         } catch (err) {
-            setError('Error al inicializar el escáner: ' + err.message);
+            console.error('Error initializing QR scanner:', err);
+            const errorMessage = err.message || err.toString() || 'Error desconocido';
+            setError('Error al inicializar el escáner: ' + errorMessage);
         }
     }, [elementId]);
 
@@ -71,13 +89,27 @@ export const useQrScanner = (options = {}) => {
             setError(null);
             setIsScanning(true);
 
+            // Request camera permissions explicitly
+            try {
+                await navigator.mediaDevices.getUserMedia({ video: true });
+            } catch (permErr) {
+                throw new Error('Permisos de cámara denegados. Por favor, permite el acceso a la cámara.');
+            }
+
             const cameraId = selectedCamera?.id || { facingMode: 'environment' };
 
             await scannerRef.current.start(
                 cameraId,
                 {
-                    fps,
-                    qrbox
+                    fps: 30, // Increased from 10 to 30 for faster scanning
+                    qrbox: { width: 250, height: 250 }, // Better detection area
+                    aspectRatio: 1.0,
+                    disableFlip: false, // Allow horizontal flip for better detection
+                    videoConstraints: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
                 },
                 (decodedText, decodedResult) => {
                     setScannedData(decodedText);
@@ -95,7 +127,9 @@ export const useQrScanner = (options = {}) => {
                 }
             );
         } catch (err) {
-            setError('Error al iniciar el escaneo: ' + err.message);
+            console.error('Error starting QR scanner:', err);
+            const errorMessage = err.message || err.toString() || 'Error desconocido';
+            setError('Error al iniciar el escaneo: ' + errorMessage);
             setIsScanning(false);
         }
     }, [selectedCamera, fps, qrbox, onScanSuccess, onScanError, isScanning]);

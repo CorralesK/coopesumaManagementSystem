@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     getAllMembers,
     getMemberById,
+    affiliateMember,
     createMember,
     updateMember,
     deactivateMember,
@@ -25,7 +26,8 @@ export const useMembers = (initialFilters = {}) => {
     const [error, setError] = useState(null);
     const [filters, setFilters] = useState({
         search: '',
-        grade: '',
+        qualityId: '',
+        levelId: '',
         isActive: 'true',
         page: 1,
         limit: 20,
@@ -49,13 +51,14 @@ export const useMembers = (initialFilters = {}) => {
                 page: filters.page,
                 limit: filters.limit,
                 ...(filters.search && { search: filters.search }),
-                ...(filters.grade && { grade: filters.grade }),
+                ...(filters.qualityId && { qualityId: filters.qualityId }),
+                ...(filters.levelId && { levelId: filters.levelId }),
                 ...(filters.isActive && { isActive: filters.isActive })
             };
 
             const response = await getAllMembers(params);
 
-            // Sort members: active first, then by name, then by grade
+            // Sort members: active first, then by name, then by quality/level
             const sortedMembers = (response.data || []).sort((a, b) => {
                 // First: Sort by status (active first)
                 if (a.isActive !== b.isActive) {
@@ -68,8 +71,11 @@ export const useMembers = (initialFilters = {}) => {
                     return nameComparison;
                 }
 
-                // Third: Sort by grade
-                return a.grade - b.grade;
+                // Third: Sort by quality, then level
+                if (a.qualityId !== b.qualityId) {
+                    return (a.qualityId || 0) - (b.qualityId || 0);
+                }
+                return (a.levelId || 0) - (b.levelId || 0);
             });
 
             setMembers(sortedMembers);
@@ -112,7 +118,8 @@ export const useMembers = (initialFilters = {}) => {
     const resetFilters = useCallback(() => {
         setFilters({
             search: '',
-            grade: '',
+            qualityId: '',
+            levelId: '',
             isActive: 'true',
             page: 1,
             limit: 20,
@@ -190,7 +197,30 @@ export const useMemberOperations = () => {
     const [success, setSuccess] = useState(false);
 
     /**
-     * Create a new member
+     * Affiliate a new member (includes ₡500 affiliation fee + receipt)
+     * @param {Object} memberData - Member data
+     * @returns {Promise<Object>} Created member with receipt info
+     */
+    const affiliate = useCallback(async (memberData) => {
+        try {
+            setLoading(true);
+            setError(null);
+            setSuccess(false);
+
+            const response = await affiliateMember(memberData);
+            setSuccess(true);
+
+            return response;
+        } catch (err) {
+            setError(err.message || 'Error al afiliar el miembro');
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    /**
+     * Create a new member (DEPRECATED - Use affiliate instead)
      * @param {Object} memberData - Member data
      * @returns {Promise<Object>} Created member
      */
@@ -294,6 +324,7 @@ export const useMemberOperations = () => {
         loading,
         error,
         success,
+        affiliate,
         create,
         update,
         deactivate,
