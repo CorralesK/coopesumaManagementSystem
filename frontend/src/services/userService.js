@@ -11,12 +11,13 @@ import api from './api';
  * @param {Object} params - Query parameters
  * @param {number} params.page - Page number
  * @param {number} params.limit - Items per page
+ * @param {string} params.search - Search term (name or email)
  * @param {string} params.role - Filter by role
  * @param {string} params.isActive - Filter by active status
  * @returns {Promise<Object>} Response with data and pagination info
  */
 export const getAllUsers = async (params = {}) => {
-    const response = await api.get('/users', { params });
+    const response = await api.get("/users", { params });
     return response;
 };
 

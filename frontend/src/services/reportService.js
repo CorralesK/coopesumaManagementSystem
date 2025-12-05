@@ -82,10 +82,10 @@ export const getMemberStats = async (params = {}) => {
 };
 
 /**
- * Get attendance statistics by grade
+ * Get attendance statistics by quality/level
  * @param {Object} params - Query parameters
  * @param {string} params.assemblyId - Assembly ID (optional)
- * @returns {Promise<Object>} Attendance by grade statistics
+ * @returns {Promise<Object>} Attendance by quality/level statistics
  */
 export const getAttendanceByGrade = async (params = {}) => {
     const response = await api.get('/reports/attendance/by-grade', { params });

@@ -12,7 +12,8 @@ import api from './api';
  * @param {number} params.page - Page number
  * @param {number} params.limit - Items per page
  * @param {string} params.search - Search term
- * @param {string} params.grade - Filter by grade
+ * @param {number} params.qualityId - Filter by quality ID
+ * @param {number} params.levelId - Filter by level ID
  * @param {string} params.isActive - Filter by active status
  * @returns {Promise<Object>} Response with data and pagination info
  */
@@ -32,12 +33,33 @@ export const getMemberById = async (memberId) => {
 };
 
 /**
- * Create a new member
+ * Affiliate a new member (includes ₡500 affiliation fee + receipt generation)
  * @param {Object} memberData - Member data
  * @param {string} memberData.fullName - Full name
  * @param {string} memberData.identification - Identification number
  * @param {string} memberData.institutionalEmail - Institutional email
- * @param {number} memberData.grade - Grade level
+ * @param {number} memberData.qualityId - Quality ID (1=Student, 2=Employee)
+ * @param {number} memberData.levelId - Level ID (optional for employees)
+ * @param {string} memberData.gender - Gender (M/F) (optional)
+ * @param {string} memberData.memberCode - Member code (optional)
+ * @param {string} memberData.photoUrl - Photo URL (optional)
+ * @returns {Promise<Object>} Created member data with receipt info
+ */
+export const affiliateMember = async (memberData) => {
+    const response = await api.post('/members/affiliate', memberData);
+    return response;
+};
+
+/**
+ * Create a new member (DEPRECATED - Use affiliateMember instead)
+ * @param {Object} memberData - Member data
+ * @param {string} memberData.fullName - Full name
+ * @param {string} memberData.identification - Identification number
+ * @param {string} memberData.institutionalEmail - Institutional email
+ * @param {number} memberData.qualityId - Quality ID (1=Student, 2=Employee)
+ * @param {number} memberData.levelId - Level ID (optional for employees)
+ * @param {string} memberData.gender - Gender (M/F) (optional)
+ * @param {string} memberData.memberCode - Member code (optional)
  * @param {string} memberData.photoUrl - Photo URL (optional)
  * @returns {Promise<Object>} Created member data
  */
