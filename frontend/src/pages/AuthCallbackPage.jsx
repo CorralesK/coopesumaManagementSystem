@@ -61,13 +61,26 @@ const AuthCallbackPage = () => {
 
                     login(token, userData);
 
-                    console.log('Login successful, navigating based on role');
+                    console.log('Login successful, navigating based on role:', userData.role);
 
                     // Navigate based on user role
-                    if (userData.role === USER_ROLES.REGISTRAR) {
-                        navigate('/attendance/scan', { replace: true });
-                    } else {
-                        navigate('/dashboard', { replace: true });
+                    switch (userData.role) {
+                        case USER_ROLES.MEMBER:
+                            navigate('/my-dashboard', { replace: true });
+                            break;
+                        case USER_ROLES.REGISTRAR:
+                            navigate('/attendance/scan', { replace: true });
+                            break;
+                        case USER_ROLES.ADMINISTRATOR:
+                            navigate('/dashboard', { replace: true });
+                            break;
+                        case USER_ROLES.MANAGER:
+                            navigate('/dashboard', { replace: true });
+                            break;
+                        default:
+                            // Fallback to home page which will handle role-based redirect
+                            navigate('/', { replace: true });
+                            break;
                     }
                 } catch (err) {
                     console.error('Error processing token:', err);

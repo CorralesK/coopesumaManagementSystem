@@ -5,17 +5,24 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
 
 const UnauthorizedPage = () => {
     const navigate = useNavigate();
+    const { logout } = useAuth();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login', { replace: true });
+    };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-            <div className="max-w-md w-full text-center">
-                <div className="mb-8">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+            <div className="max-w-md w-full text-center p-8 md:p-12 bg-white rounded-2xl shadow-md">
+                <div className="mb-8 flex justify-center">
                     <svg
-                        className="mx-auto h-24 w-24 text-red-500"
+                        className="h-24 w-24 text-red-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -37,21 +44,14 @@ const UnauthorizedPage = () => {
                     No tienes permisos para acceder a esta página. Por favor contacta al administrador si crees que esto es un error.
                 </p>
 
-                <div className="space-y-3">
+                <div className="flex flex-col gap-4 w-full">
                     <Button
-                        onClick={() => navigate('/dashboard')}
+                        type="button"
+                        onClick={handleLogout}
                         variant="primary"
-                        fullWidth
+                        className="w-full"
                     >
-                        Ir al Dashboard
-                    </Button>
-
-                    <Button
-                        onClick={() => navigate(-1)}
-                        variant="outline"
-                        fullWidth
-                    >
-                        Volver Atrás
+                        Volver a Iniciar Sesión
                     </Button>
                 </div>
             </div>

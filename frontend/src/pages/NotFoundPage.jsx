@@ -11,8 +11,8 @@ const NotFoundPage = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-            <div className="max-w-md w-full text-center">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+            <div className="max-w-md w-full text-center p-8 md:p-12 bg-white rounded-2xl shadow-md">
                 <div className="mb-8">
                     <h1 className="text-9xl font-bold text-primary-600">404</h1>
                 </div>
@@ -25,11 +25,11 @@ const NotFoundPage = () => {
                     Lo sentimos, la página que buscas no existe o ha sido movida.
                 </p>
 
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 w-full">
                     <Button
                         onClick={() => navigate('/dashboard')}
                         variant="primary"
-                        fullWidth
+                        className="w-full"
                     >
                         Ir al Dashboard
                     </Button>
@@ -37,7 +37,7 @@ const NotFoundPage = () => {
                     <Button
                         onClick={() => navigate(-1)}
                         variant="outline"
-                        fullWidth
+                        className="w-full"
                     >
                         Volver Atrás
                     </Button>
