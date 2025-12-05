@@ -13,7 +13,8 @@ import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
-import { GRADES } from '../../utils/constants';
+import { getAllQualities, getAllLevels } from '../../services/catalogService';
+import { MEMBER_QUALITIES } from '../../utils/constants';
 
 /**
  * MemberFormPage Component
@@ -26,18 +27,63 @@ const MemberFormPage = () => {
 
     // Use custom hooks
     const { member, loading: loadingMember } = useMember(id);
-    const { create, update, loading: submitting, error: operationError } = useMemberOperations();
+    const { affiliate, update, loading: submitting, error: operationError } = useMemberOperations();
+
+    // Catalog state
+    const [qualities, setQualities] = useState([]);
+    const [levels, setLevels] = useState([]);
+    const [loadingCatalogs, setLoadingCatalogs] = useState(true);
 
     // Form state
     const [formData, setFormData] = useState({
         fullName: '',
         identification: '',
-        grade: '',
+        qualityId: '',
+        levelId: '',
+        gender: '',
         institutionalEmail: '',
         photoUrl: ''
     });
     const [errors, setErrors] = useState({});
     const [formError, setFormError] = useState('');
+
+    // Load catalogs
+    useEffect(() => {
+        const loadCatalogs = async () => {
+            try {
+                const qualitiesData = await getAllQualities();
+                setQualities(qualitiesData);
+                setLoadingCatalogs(false);
+            } catch (error) {
+                setFormError('Error al cargar los catálogos');
+                setLoadingCatalogs(false);
+            }
+        };
+        loadCatalogs();
+    }, []);
+
+    // Load levels when quality changes
+    useEffect(() => {
+        const loadLevels = async () => {
+            if (!formData.qualityId) {
+                setLevels([]);
+                return;
+            }
+
+            try {
+                const quality = qualities.find(q => q.qualityId === parseInt(formData.qualityId));
+                if (quality && quality.qualityCode) {
+                    const levelsData = await getAllLevels(quality.qualityCode);
+                    setLevels(levelsData);
+                } else {
+                    setLevels([]);
+                }
+            } catch (error) {
+                setLevels([]);
+            }
+        };
+        loadLevels();
+    }, [formData.qualityId, qualities]);
 
     // Load member data in edit mode
     useEffect(() => {
@@ -45,7 +91,9 @@ const MemberFormPage = () => {
             setFormData({
                 fullName: member.fullName || '',
                 identification: member.identification || '',
-                grade: member.grade || '',
+                qualityId: member.qualityId || '',
+                levelId: member.levelId || '',
+                gender: member.gender || '',
                 institutionalEmail: member.institutionalEmail || '',
                 photoUrl: member.photoUrl || ''
             });
@@ -55,7 +103,14 @@ const MemberFormPage = () => {
     // Handle input changes
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+
+        // If changing quality, reset level
+        if (name === 'qualityId') {
+            setFormData(prev => ({ ...prev, [name]: value, levelId: '' }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
@@ -77,18 +132,21 @@ const MemberFormPage = () => {
             newErrors.identification = 'La identificación solo debe contener números y guiones';
         }
 
-        if (!formData.grade) {
-            newErrors.grade = 'El grado es requerido';
+        if (!formData.qualityId) {
+            newErrors.qualityId = 'La calidad es requerida';
         }
 
-        if (!isEditMode) {
-            if (!formData.institutionalEmail.trim()) {
-                newErrors.institutionalEmail = 'El correo institucional es requerido';
-            } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.institutionalEmail)) {
-                newErrors.institutionalEmail = 'El formato del correo no es válido';
-            } else if (!formData.institutionalEmail.toLowerCase().endsWith('mep.go.cr')) {
-                newErrors.institutionalEmail = 'Debe ser un correo institucional del MEP';
-            }
+        // Level is optional for employees, required for students
+        if (parseInt(formData.qualityId) === MEMBER_QUALITIES.STUDENT && !formData.levelId) {
+            newErrors.levelId = 'El nivel es requerido para estudiantes';
+        }
+
+        if (!formData.institutionalEmail.trim()) {
+            newErrors.institutionalEmail = 'El correo institucional es requerido';
+        } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.institutionalEmail)) {
+            newErrors.institutionalEmail = 'El formato del correo no es válido';
+        } else if (!formData.institutionalEmail.toLowerCase().endsWith('mep.go.cr')) {
+            newErrors.institutionalEmail = 'Debe ser un correo institucional del MEP';
         }
 
         if (formData.photoUrl && !/^https?:\/\/.+/.test(formData.photoUrl)) {
@@ -114,31 +172,78 @@ const MemberFormPage = () => {
             const payload = {
                 fullName: formData.fullName.trim(),
                 identification: formData.identification.trim(),
-                grade: formData.grade,
+                institutionalEmail: formData.institutionalEmail.trim(),
+                qualityId: parseInt(formData.qualityId),
+                levelId: formData.levelId ? parseInt(formData.levelId) : null,
+                gender: formData.gender || null,
                 photoUrl: formData.photoUrl.trim() || null
             };
-
-            if (!isEditMode) {
-                payload.institutionalEmail = formData.institutionalEmail.trim();
-            }
 
             if (isEditMode) {
                 await update(id, payload);
                 navigate(`/members/${id}`);
             } else {
-                await create(payload);
+                const result = await affiliate(payload);
+
+                // Download receipt if available
+                if (result?.data?.affiliationTransaction?.receipt?.receipt_id) {
+                    const receiptId = result.data.affiliationTransaction.receipt.receipt_id;
+                    const receiptNumber = result.data.affiliationTransaction.receipt.receipt_number;
+
+                    // Download receipt PDF
+                    try {
+                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+                        const token = sessionStorage.getItem('token');
+
+                        const response = await fetch(`${API_URL}/receipts/${receiptId}/download`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+
+                        if (response.ok) {
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `recibo-afiliacion-${receiptNumber}.pdf`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(url);
+                        }
+                    } catch (receiptError) {
+                        console.error('Error downloading receipt:', receiptError);
+                        // Don't fail the whole operation if receipt download fails
+                    }
+                }
+
                 navigate('/members');
             }
         } catch (err) {
-            setFormError(err.message || `Error al ${isEditMode ? 'actualizar' : 'crear'} el miembro`);
+            setFormError(err.message || `Error al ${isEditMode ? 'actualizar' : 'afiliar'} el miembro`);
         }
     };
 
-    if (loadingMember) {
-        return <Loading message="Cargando datos del miembro..." />;
+    if (loadingMember || loadingCatalogs) {
+        return <Loading message="Cargando datos..." />;
     }
 
-    const gradeOptions = GRADES.map(grade => ({ value: grade, label: `${grade}° grado` }));
+    const qualityOptions = qualities.map(q => ({
+        value: q.qualityId,
+        label: q.qualityName
+    }));
+
+    const levelOptions = levels.map(l => ({
+        value: l.levelId,
+        label: l.levelName
+    }));
+
+    const genderOptions = [
+        { value: 'M', label: 'Masculino' },
+        { value: 'F', label: 'Femenino' }
+    ];
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
@@ -146,10 +251,10 @@ const MemberFormPage = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                        {isEditMode ? 'Editar Miembro' : 'Agregar Miembro'}
+                        {isEditMode ? 'Editar Miembro' : 'Afiliar Miembro'}
                     </h1>
                     <p className="text-gray-600 mt-1 text-sm sm:text-base">
-                        {isEditMode ? 'Actualiza la información del miembro' : 'Completa el formulario para agregar un nuevo miembro'}
+                        {isEditMode ? 'Actualiza la información del miembro' : 'Completa el formulario de afiliación (Cuota: ₡500)'}
                     </p>
                 </div>
             </div>
@@ -163,7 +268,7 @@ const MemberFormPage = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Main Card */}
                 <Card>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div className="flex flex-col gap-6">
                         {/* Información Personal */}
                         <div>
                             <h2 className="text-lg font-semibold text-gray-900 mb-4">Información Personal</h2>
@@ -189,28 +294,48 @@ const MemberFormPage = () => {
                                     disabled={isEditMode}
                                 />
 
-                                {!isEditMode && (
-                                    <Input
-                                        label="Correo Institucional"
-                                        name="institutionalEmail"
-                                        type="email"
-                                        value={formData.institutionalEmail}
-                                        onChange={handleInputChange}
-                                        error={errors.institutionalEmail}
-                                        required
-                                        placeholder="Ej: estudiante@educacion.mep.go.cr"
-                                    />
-                                )}
+                                <Input
+                                    label="Correo Institucional"
+                                    name="institutionalEmail"
+                                    type="email"
+                                    value={formData.institutionalEmail}
+                                    onChange={handleInputChange}
+                                    error={errors.institutionalEmail}
+                                    required
+                                    placeholder="Ej: estudiante@educacion.mep.go.cr"
+                                />
 
                                 <Select
-                                    label="Grado"
-                                    name="grade"
-                                    value={formData.grade}
+                                    label="Calidad"
+                                    name="qualityId"
+                                    value={formData.qualityId}
                                     onChange={handleInputChange}
-                                    options={gradeOptions}
-                                    error={errors.grade}
+                                    options={qualityOptions}
+                                    error={errors.qualityId}
                                     required
-                                    placeholder="Seleccione el grado"
+                                    placeholder="Seleccione la calidad"
+                                />
+
+                                <Select
+                                    label="Nivel"
+                                    name="levelId"
+                                    value={formData.levelId}
+                                    onChange={handleInputChange}
+                                    options={levelOptions}
+                                    error={errors.levelId}
+                                    required={parseInt(formData.qualityId) === MEMBER_QUALITIES.STUDENT}
+                                    placeholder="Seleccione el nivel"
+                                    disabled={!formData.qualityId || levels.length === 0}
+                                />
+
+                                <Select
+                                    label="Género"
+                                    name="gender"
+                                    value={formData.gender}
+                                    onChange={handleInputChange}
+                                    options={genderOptions}
+                                    error={errors.gender}
+                                    placeholder="Seleccione el género (opcional)"
                                 />
                             </div>
                         </div>
@@ -263,7 +388,7 @@ const MemberFormPage = () => {
                         disabled={submitting}
                         className="w-full sm:w-auto"
                     >
-                        {submitting ? (isEditMode ? 'Guardando...' : 'Creando...') : (isEditMode ? 'Guardar Cambios' : 'Crear Miembro')}
+                        {submitting ? (isEditMode ? 'Guardando...' : 'Afiliando...') : (isEditMode ? 'Guardar Cambios' : 'Afiliar Miembro (₡500)')}
                     </Button>
                 </div>
             </form>

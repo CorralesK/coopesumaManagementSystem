@@ -4,7 +4,7 @@
  * @module pages/members
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMembers, useMemberOperations } from '../../hooks/useMembers';
 import Card from '../../components/common/Card';
@@ -16,7 +16,7 @@ import Pagination from '../../components/common/Pagination';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import BatchQrPrintModal from '../../components/members/BatchQrPrintModal';
-import { GRADES } from '../../utils/constants';
+import { getAllQualities, getAllLevels } from '../../services/catalogService';
 
 /**
  * MembersListPage Component
@@ -26,6 +26,11 @@ const MembersListPage = () => {
     const navigate = useNavigate();
     const [successMessage, setSuccessMessage] = useState('');
     const [showBatchQrModal, setShowBatchQrModal] = useState(false);
+
+    // Catalog state
+    const [qualities, setQualities] = useState([]);
+    const [levels, setLevels] = useState([]);
+    const [loadingCatalogs, setLoadingCatalogs] = useState(true);
 
     // Use custom hooks for members management
     const {
@@ -42,19 +47,44 @@ const MembersListPage = () => {
 
     const { deactivate, loading: deactivating } = useMemberOperations();
 
+    // Load catalogs
+    useEffect(() => {
+        const loadCatalogs = async () => {
+            try {
+                const [qualitiesData, levelsData] = await Promise.all([
+                    getAllQualities(),
+                    getAllLevels()
+                ]);
+
+                setQualities(qualitiesData);
+                setLevels(levelsData);
+                setLoadingCatalogs(false);
+            } catch (error) {
+                setLoadingCatalogs(false);
+            }
+        };
+        loadCatalogs();
+    }, []);
+
     // Event handlers
     const handleFilterChange = (field, value) => {
         updateFilters({ [field]: value });
     };
 
-    const handleDeactivateMember = async (memberId) => {
-        if (!window.confirm('¿Estás seguro de que deseas desactivar este miembro?')) {
+    const handleDeleteMember = async (memberId, memberName) => {
+        const confirmed = window.confirm(
+            `¿Estás seguro de que deseas ELIMINAR a ${memberName}?\n\n` +
+            `Esta acción iniciará el proceso de liquidación por retiro del miembro.\n` +
+            `Esta acción no se puede deshacer.`
+        );
+
+        if (!confirmed) {
             return;
         }
 
         try {
             await deactivate(memberId);
-            setSuccessMessage('Miembro desactivado exitosamente');
+            setSuccessMessage('Miembro eliminado. Proceso de liquidación iniciado.');
             refetch();
         } catch (err) {
             // Error already handled by hook
@@ -63,6 +93,17 @@ const MembersListPage = () => {
 
     // Table columns configuration
     const tableColumns = [
+        {
+            key: 'memberCode',
+            label: 'Código',
+            render: (member) => (
+                <div className="text-center">
+                    <span className="text-sm font-medium text-gray-900">
+                        {member.memberCode || '-'}
+                    </span>
+                </div>
+            )
+        },
         {
             key: 'fullName',
             label: 'Miembro',
@@ -90,11 +131,18 @@ const MembersListPage = () => {
             )
         },
         {
-            key: 'grade',
-            label: 'Grado',
+            key: 'quality',
+            label: 'Calidad / Nivel',
             render: (member) => (
-                <div className="text-gray-600 font-medium text-sm">
-                    {member.grade}°
+                <div className="text-left">
+                    <div className="flex flex-col">
+                        <span className="font-medium text-sm text-gray-900">
+                            {member.qualityName}
+                        </span>
+                        {member.levelName && member.levelName !== 'N/A' && member.levelName !== 'No aplica' && (
+                            <span className="text-xs text-gray-500">Nivel {member.levelName}</span>
+                        )}
+                    </div>
                 </div>
             )
         },
@@ -115,19 +163,19 @@ const MembersListPage = () => {
             key: 'actions',
             label: 'Acciones',
             render: (member) => (
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center gap-2">
                     {member.isActive && (
                         <Button
-                            onClick={() => handleDeactivateMember(member.memberId)}
-                            variant="secondary"
+                            onClick={() => handleDeleteMember(member.memberId, member.fullName)}
+                            variant="danger"
                             size="sm"
                             disabled={deactivating}
-                            className="!px-3 sm:!px-4"
+                            className="!px-2 sm:!px-3"
                         >
-                            <svg className="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            <span className="hidden sm:inline">Desactivar</span>
+                            <span className="hidden sm:inline">Eliminar</span>
                         </Button>
                     )}
                 </div>
@@ -135,14 +183,27 @@ const MembersListPage = () => {
         }
     ];
 
-    const gradeOptions = GRADES.map(grade => ({ value: grade, label: `${grade}° grado` }));
+    const qualityOptions = [
+        ...qualities.map(q => ({
+            value: q.qualityId,
+            label: q.qualityName
+        }))
+    ];
+
+    const levelOptions = [
+        ...levels.map(l => ({
+            value: l.levelId,
+            label: l.levelName
+        }))
+    ];
+
     const statusOptions = [
         { value: '', label: 'Todos' },
         { value: 'true', label: 'Activos' },
         { value: 'false', label: 'Inactivos' }
     ];
 
-    if (loading && members.length === 0) {
+    if ((loading && members.length === 0) || loadingCatalogs) {
         return <Loading message="Cargando miembros..." />;
     }
 
@@ -155,7 +216,7 @@ const MembersListPage = () => {
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                     </svg>
-                    Agregar Miembro
+                    Afiliar Miembro
                 </Button>
             </div>
 
@@ -167,7 +228,7 @@ const MembersListPage = () => {
             <div className="space-y-0">
                 {/* Filters */}
                 <Card title="Filtros de Búsqueda">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <Input
                             label="Buscar"
                             name="search"
@@ -177,12 +238,20 @@ const MembersListPage = () => {
                             placeholder="Nombre o identificación..."
                         />
                         <Select
-                            label="Grado"
-                            name="grade"
-                            value={filters.grade}
-                            onChange={(e) => handleFilterChange('grade', e.target.value)}
-                            options={gradeOptions}
-                            placeholder="Todos los grados"
+                            label="Calidad"
+                            name="qualityId"
+                            value={filters.qualityId}
+                            onChange={(e) => handleFilterChange('qualityId', e.target.value)}
+                            options={qualityOptions}
+                            placeholder="Todas las calidades"
+                        />
+                        <Select
+                            label="Nivel"
+                            name="levelId"
+                            value={filters.levelId}
+                            onChange={(e) => handleFilterChange('levelId', e.target.value)}
+                            options={levelOptions}
+                            placeholder="Todos los niveles"
                         />
                         <Select
                             label="Estado"
@@ -207,7 +276,7 @@ const MembersListPage = () => {
                             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                             </svg>
-                            Imprimir QR en Lote
+                            Imprimir QR en lote
                         </Button>
                     </div>
                 </Card>
@@ -220,8 +289,10 @@ const MembersListPage = () => {
                     </div>
                 ) : (
                     <>
-                        <Table columns={tableColumns} data={members} emptyMessage="No se encontraron miembros" />
-                        <div className="px-6 py-4">
+                        <div className="overflow-x-auto">
+                            <Table columns={tableColumns} data={members} emptyMessage="No se encontraron miembros" />
+                        </div>
+                        <div className="px-4 py-3">
                             <Pagination
                                 currentPage={pagination.currentPage}
                                 totalPages={pagination.totalPages}
@@ -238,7 +309,8 @@ const MembersListPage = () => {
                 isOpen={showBatchQrModal}
                 onClose={() => setShowBatchQrModal(false)}
                 members={members}
-                filterGrade={filters.grade}
+                filterQualityId={filters.qualityId}
+                filterLevelId={filters.levelId}
             />
         </div>
     );

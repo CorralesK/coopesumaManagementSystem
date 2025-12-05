@@ -80,7 +80,7 @@ const MemberDetailPage = () => {
     }
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Detalle del Miembro</h1>
@@ -92,9 +92,9 @@ const MemberDetailPage = () => {
             {successMessage && <Alert type="success" message={successMessage} onClose={() => setSuccessMessage('')} />}
 
             {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-5 xl:grid-cols-4 gap-6">
                 {/* Left Column - Member Info */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-3 xl:col-span-3 space-y-6">
                     <Card>
                         <div className="flex flex-col sm:flex-row items-start gap-6">
                             {/* Photo */}
@@ -133,45 +133,103 @@ const MemberDetailPage = () => {
                                 {/* Info Simple */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: '1.5rem' }}>
                                     <div className="pb-3 border-b border-gray-200">
+                                        <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Código de Asociado</dt>
+                                        <dd className="text-base text-gray-900 font-semibold" style={{ marginBottom: 0 }}>{member.memberCode || 'No asignado'}</dd>
+                                    </div>
+
+                                    <div className="pb-3 border-b border-gray-200">
                                         <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Identificación</dt>
                                         <dd className="text-base text-gray-900" style={{ marginBottom: 0 }}>{member.identification}</dd>
                                     </div>
 
                                     <div className="pb-3 border-b border-gray-200">
-                                        <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Grado</dt>
-                                        <dd className="text-base text-gray-900" style={{ marginBottom: 0 }}>{member.grade}° grado</dd>
+                                        <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Calidad</dt>
+                                        <dd className="text-base text-gray-900" style={{ marginBottom: 0 }}>{member.qualityName || 'N/A'}</dd>
                                     </div>
+
+                                    <div className="pb-3 border-b border-gray-200">
+                                        <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Nivel</dt>
+                                        <dd className="text-base text-gray-900" style={{ marginBottom: 0 }}>
+                                            {member.levelName && member.levelName !== 'N/A' && member.levelName !== 'No aplica' ? member.levelName : 'N/A'}
+                                        </dd>
+                                    </div>
+
+                                    {member.gender && (
+                                        <div className="pb-3 border-b border-gray-200">
+                                            <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Género</dt>
+                                            <dd className="text-base text-gray-900" style={{ marginBottom: 0 }}>
+                                                {member.gender === 'M' ? 'Masculino' : member.gender === 'F' ? 'Femenino' : member.gender}
+                                            </dd>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     </Card>
 
-                    <Card title="Información Adicional">
-                        <div className="member-detail-info" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                            {/* Dates */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: '2rem' }}>
-                                <div className="pb-3 border-b border-gray-200">
-                                    <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Fecha de Registro</dt>
-                                    <dd className="text-base text-gray-900" style={{ marginBottom: 0 }}>{formatDate(member.createdAt)}</dd>
-                                </div>
-
-                                <div className="pb-3 border-b border-gray-200">
-                                    <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Última Actualización</dt>
-                                    <dd className="text-base text-gray-900" style={{ marginBottom: 0 }}>{formatDate(member.updatedAt)}</dd>
-                                </div>
+                    <Card title="Información de Afiliación">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div className="pb-3 border-b border-gray-200">
+                                <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Fecha de Afiliación</dt>
+                                <dd className="text-base text-gray-900 font-semibold" style={{ marginBottom: 0 }}>{formatDate(member.affiliationDate)}</dd>
                             </div>
 
-                            {/* QR Hash */}
-                            <div style={{ marginTop: '1rem' }}>
-                                <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.5rem' }}>Hash del Código QR</dt>
-                                <dd className="text-xs text-gray-700 font-mono break-all bg-gray-50 p-3 rounded border border-gray-200" style={{ marginBottom: 0 }}>{member.qrHash}</dd>
+                            <div className="pb-3 border-b border-gray-200">
+                                <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Cuota de Afiliación</dt>
+                                <dd className="text-base text-gray-900 font-semibold" style={{ marginBottom: 0 }}>₡500.00</dd>
+                            </div>
+
+                            {member.lastLiquidationDate && (
+                                <div className="pb-3 border-b border-gray-200">
+                                    <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Última Liquidación</dt>
+                                    <dd className="text-base text-gray-900" style={{ marginBottom: 0 }}>{formatDate(member.lastLiquidationDate)}</dd>
+                                </div>
+                            )}
+
+                            <div className="pb-3 border-b border-gray-200">
+                                <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Última Actualización</dt>
+                                <dd className="text-base text-gray-900" style={{ marginBottom: 0 }}>{formatDate(member.updatedAt)}</dd>
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card title="Saldos de Cuentas">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <dt className="text-sm font-medium text-blue-700 mb-2">Cuenta de Ahorros</dt>
+                                <dd className="text-2xl font-bold text-blue-900">
+                                    ₡{member.savingsBalance ? parseFloat(member.savingsBalance).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                                </dd>
+                            </div>
+
+                            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                                <dt className="text-sm font-medium text-green-700 mb-2">Cuenta de Aportaciones</dt>
+                                <dd className="text-2xl font-bold text-green-900">
+                                    ₡{member.contributionsBalance ? parseFloat(member.contributionsBalance).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                                </dd>
+                            </div>
+
+                            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                <dt className="text-sm font-medium text-purple-700 mb-2">Cuenta de Excedentes</dt>
+                                <dd className="text-2xl font-bold text-purple-900">
+                                    ₡{member.surplusBalance ? parseFloat(member.surplusBalance).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                                </dd>
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card title="Información Técnica">
+                        <div className="space-y-4">
+                            <div>
+                                <dt className="text-sm font-medium text-gray-500 mb-2">Hash del Código QR</dt>
+                                <dd className="text-xs text-gray-700 font-mono break-all bg-gray-50 p-3 rounded border border-gray-200">{member.qrHash}</dd>
                             </div>
                         </div>
                     </Card>
                 </div>
 
                 {/* Right Column - QR Code */}
-                <div className="space-y-6">
+                <div className="lg:col-span-2 xl:col-span-1 space-y-6">
                     <Card title="Código QR">
                         <div className="flex flex-col items-center space-y-4">
                             {/* QR Code Display */}
