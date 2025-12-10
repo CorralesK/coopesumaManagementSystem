@@ -35,9 +35,6 @@ const query = async (text, params) => {
         const result = await pool.query(text, params);
         const duration = Date.now() - start;
 
-        if (config.nodeEnv === 'development') {
-            console.log('📊 Query executed:', { text, duration, rows: result.rowCount });
-        }
 
         // Convert snake_case column names to camelCase
         if (result.rows && result.rows.length > 0) {

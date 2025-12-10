@@ -17,8 +17,6 @@ const logger = require('../../utils/logger');
 const getAllQualities = async (req, res) => {
     try {
         const qualities = await catalogService.getAllQualities();
-        console.log('📊 Qualities from service:', JSON.stringify(qualities, null, 2));
-
         return successResponse(res, 'Member qualities retrieved successfully', qualities);
     } catch (error) {
         logger.error('Error in getAllQualities controller:', error);
@@ -58,8 +56,6 @@ const getAllLevels = async (req, res) => {
     try {
         const { qualityCode } = req.query;
         const levels = await catalogService.getAllLevels(qualityCode);
-        console.log('📊 Levels from service:', JSON.stringify(levels, null, 2));
-
         return successResponse(res, 'Member levels retrieved successfully', levels);
     } catch (error) {
         logger.error('Error in getAllLevels controller:', error);

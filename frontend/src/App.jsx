@@ -50,7 +50,6 @@ import ReportsPage from './pages/reports/ReportsPage';
 import WithdrawalRequestPage from './pages/withdrawals/WithdrawalRequestPage';
 import WithdrawalRequestsManagementPage from './pages/withdrawals/WithdrawalRequestsManagementPage';
 import SurplusDistributionPage from './pages/surplus/SurplusDistributionPage';
-import LiquidationsManagementPage from './pages/liquidations/LiquidationsManagementPage';
 import SavingsManagementPage from './pages/savings/SavingsManagementPage';
 import SavingsInventoryPage from './pages/savings/SavingsInventoryPage';
 import SavingsMonthlyDetailPage from './pages/savings/SavingsMonthlyDetailPage';
@@ -301,18 +300,6 @@ function App() {
                             <ProtectedRoute requiredRole={[USER_ROLES.ADMINISTRATOR, USER_ROLES.MANAGER]}>
                                 <Layout>
                                     <SurplusDistributionPage />
-                                </Layout>
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    {/* Liquidations Management (Administrator only) */}
-                    <Route
-                        path="/liquidations"
-                        element={
-                            <ProtectedRoute requiredRole={USER_ROLES.ADMINISTRATOR}>
-                                <Layout>
-                                    <LiquidationsManagementPage />
                                 </Layout>
                             </ProtectedRoute>
                         }

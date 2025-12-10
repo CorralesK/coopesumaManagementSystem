@@ -5,8 +5,8 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const morgan = require('morgan');
 
 const config = require('./config/environment');
 const corsOptions = require('./config/corsConfig');
