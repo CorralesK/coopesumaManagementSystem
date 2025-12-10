@@ -4,11 +4,12 @@
  * @module pages/assemblies
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAssemblies, useAssemblyOperations } from '../../hooks/useAssemblies';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import Input from '../../components/common/Input';
 import Table from '../../components/common/Table';
 import Pagination from '../../components/common/Pagination';
 import Loading from '../../components/common/Loading';
@@ -21,14 +22,40 @@ import Alert from '../../components/common/Alert';
 const AssembliesListPage = () => {
     const navigate = useNavigate();
     const [successMessage, setSuccessMessage] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
-    // Use custom hooks
-    const { assemblies, loading, error, pagination, setPage, refetch } = useAssemblies({ limit: 20 });
-    const { activate, deactivate, remove, loading: operating } = useAssemblyOperations();
+    // Use custom hooks - fetch all assemblies for client-side filtering
+    const { assemblies: allAssemblies, loading, error, refetch } = useAssemblies({ limit: 100 });
+    const { activate, deactivate, loading: operating } = useAssemblyOperations();
 
-    // Event handlers
+    // Filter assemblies based on search term
+    const filteredAssemblies = useMemo(() => {
+        if (!searchTerm.trim()) return allAssemblies;
+
+        const search = searchTerm.toLowerCase();
+        return allAssemblies.filter(assembly =>
+            assembly.title?.toLowerCase().includes(search) ||
+            new Date(assembly.scheduledDate).toLocaleDateString('es-CR').includes(search)
+        );
+    }, [allAssemblies, searchTerm]);
+
+    // Paginate filtered results
+    const totalPages = Math.ceil(filteredAssemblies.length / itemsPerPage);
+    const paginatedAssemblies = filteredAssemblies.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    // Reset to page 1 when search changes
+    const handleSearchChange = (value) => {
+        setSearchTerm(value);
+        setCurrentPage(1);
+    };
+
     // Check if there's an active assembly
-    const hasActiveAssembly = assemblies.some(assembly => assembly.isActive);
+    const hasActiveAssembly = allAssemblies.some(assembly => assembly.isActive);
 
     const handleStartAssembly = async (assemblyId) => {
         try {
@@ -153,7 +180,7 @@ const AssembliesListPage = () => {
         }
     ];
 
-    if (loading && assemblies.length === 0) {
+    if (loading && allAssemblies.length === 0) {
         return <Loading message="Cargando asambleas..." />;
     }
 
@@ -174,24 +201,43 @@ const AssembliesListPage = () => {
             {error && <Alert type="error" message={error} onClose={() => {}} />}
             {successMessage && <Alert type="success" message={successMessage} onClose={() => setSuccessMessage('')} />}
 
+            {/* Filters */}
+            <Card title="Filtros de Búsqueda">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                        label="Buscar"
+                        name="search"
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        onClear={() => handleSearchChange('')}
+                        placeholder="Nombre de asamblea o fecha..."
+                    />
+                </div>
+            </Card>
+
             {/* Assemblies Table */}
             <Card padding="none">
                 {loading ? (
-                    <Loading message="Cargando..." />
+                    <div className="py-8">
+                        <Loading message="Cargando..." />
+                    </div>
                 ) : (
                     <>
                         <Table
                             columns={tableColumns}
-                            data={assemblies}
+                            data={paginatedAssemblies}
                             emptyMessage="No se encontraron asambleas"
                             isRowActive={(assembly) => assembly.isActive}
                         />
-                        {pagination.totalPages > 1 && (
-                            <Pagination
-                                currentPage={pagination.currentPage}
-                                totalPages={pagination.totalPages}
-                                onPageChange={setPage}
-                            />
+                        {totalPages > 1 && (
+                            <div className="px-6 py-4">
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                />
+                            </div>
                         )}
                     </>
                 )}
