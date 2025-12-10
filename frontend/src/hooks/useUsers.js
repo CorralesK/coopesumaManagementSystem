@@ -5,104 +5,99 @@
  * @module hooks/useUsers
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useApi } from "./useApi";
 import * as userService from "../services/userService";
+import { normalizeText } from "../utils/formatters";
 
 /* ============================================================================
    HOOK: useUsers
    ----------------------------------------------------------------------------
-   Retrieves a paginated and filterable list of users.
-   Automatically cleans empty filter values to prevent backend validation errors.
+   Retrieves all users and filters/paginates in frontend for better UX
+   with accent-insensitive search.
    ============================================================================ */
 export const useUsers = (params = {}) => {
-  const [users, setUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    limit: params.limit || 20,
-  });
-
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Store previous filter values to detect changes
-  const prevFiltersRef = useRef({
-    search: params.search,
-    role: params.role,
-    isActive: params.isActive,
-  });
+  const limit = params.limit || 10;
 
   /**
-   * Reset page number when filter parameters change.
-   */
-  useEffect(() => {
-    const prev = prevFiltersRef.current;
-
-    if (
-      prev.search !== params.search ||
-      prev.role !== params.role ||
-      prev.isActive !== params.isActive
-    ) {
-      setCurrentPage(1);
-      prevFiltersRef.current = {
-        search: params.search,
-        role: params.role,
-        isActive: params.isActive,
-      };
-    }
-  }, [params.search, params.role, params.isActive]);
-
-  /**
-   * Fetch user list from the API.
-   * Removes empty filter values to avoid backend validation failures (HTTP 400).
+   * Fetch all users from the API (backend filters by role and isActive only)
    */
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Build a clean parameter object without empty or undefined values
-      const cleanParams = { page: currentPage, limit: pagination.limit };
+      // Only send backend filters (not search, that's done in frontend)
+      // Backend has a max limit of 100, so we use that
+      const cleanParams = { limit: 100 };
 
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== "" && value !== null && value !== undefined) {
-          // Convert string "true"/"false" to boolean for API compatibility
-          if (key === "isActive") {
-            cleanParams[key] = value === "true";
-          } else {
-            cleanParams[key] = value;
-          }
-        }
-      });
+      if (params.role && params.role !== "") {
+        cleanParams.role = params.role;
+      }
+      if (params.isActive !== "" && params.isActive !== null && params.isActive !== undefined) {
+        cleanParams.isActive = params.isActive === "true";
+      }
 
       const response = await userService.getAllUsers(cleanParams);
 
-      setUsers(response.data || []);
-      setPagination({
-        currentPage: response.pagination?.page || currentPage,
-        totalPages: response.pagination?.totalPages || 1,
-        totalItems: response.pagination?.total || 0,
-        limit: response.pagination?.limit || pagination.limit,
+      // Sort users: active first, then by name
+      const sortedUsers = (response.data || []).sort((a, b) => {
+        if (a.isActive !== b.isActive) {
+          return b.isActive - a.isActive;
+        }
+        return (a.fullName || "").localeCompare(b.fullName || "", "es");
       });
 
+      setAllUsers(sortedUsers);
     } catch (err) {
       setError(err.message || "Error al cargar los usuarios");
+      setAllUsers([]);
     } finally {
       setLoading(false);
     }
-  }, [currentPage, JSON.stringify(params)]);
+  }, [params.role, params.isActive]);
 
-  // Trigger data loading when dependencies change
+  // Filter users by search term in frontend (supports accents)
+  const filteredUsers = useMemo(() => {
+    if (!params.search) return allUsers;
+    const normalizedSearch = normalizeText(params.search);
+    return allUsers.filter(user =>
+      normalizeText(user.fullName || "").includes(normalizedSearch) ||
+      normalizeText(user.email || "").includes(normalizedSearch)
+    );
+  }, [allUsers, params.search]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [params.search]);
+
+  // Pagination in frontend
+  const totalPages = Math.ceil(filteredUsers.length / limit);
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * limit;
+    return filteredUsers.slice(startIndex, startIndex + limit);
+  }, [filteredUsers, currentPage, limit]);
+
+  const pagination = useMemo(() => ({
+    currentPage,
+    totalPages: totalPages || 1,
+    totalItems: filteredUsers.length,
+    limit,
+  }), [currentPage, totalPages, filteredUsers.length, limit]);
+
+  // Trigger data loading when backend filters change
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
   return {
-    users,
+    users: paginatedUsers,
+    allUsers: filteredUsers,
     loading,
     error,
     pagination,
