@@ -164,11 +164,9 @@ const WithdrawalRequestPage = () => {
         }
     };
 
-    // Account type options
+    // Account type options - Only savings account is allowed for withdrawal requests
     const accountTypeOptions = [
-        { value: 'savings', label: 'Ahorro' },
-        { value: 'contributions', label: 'Aportaciones' },
-        { value: 'surplus', label: 'Excedentes' }
+        { value: 'savings', label: 'Ahorro' }
     ];
 
     // Table columns for requests

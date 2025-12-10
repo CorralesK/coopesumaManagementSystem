@@ -9,6 +9,7 @@ import { useWithdrawalRequests } from '../../hooks/useWithdrawalRequests';
 import { useWithdrawalOperations } from '../../hooks/useWithdrawalOperations';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import ClearFiltersButton from '../../components/common/ClearFiltersButton';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
 import Table from '../../components/common/Table';
@@ -28,9 +29,9 @@ const WithdrawalRequestsManagementPage = () => {
     const [modalNotes, setModalNotes] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
-    // Use hooks
+    // Use hooks - TEMPORARILY filter only savings (contributions and surplus hidden)
     const {
-        requests,
+        requests: allRequests,
         loading,
         error,
         filters,
@@ -38,6 +39,9 @@ const WithdrawalRequestsManagementPage = () => {
         resetFilters,
         refetch
     } = useWithdrawalRequests();
+
+    // TEMPORARILY HIDDEN - Filter to show only savings withdrawal requests
+    const requests = allRequests.filter(req => req.accountType === 'savings');
 
     const {
         approveRequest,
@@ -140,27 +144,28 @@ const WithdrawalRequestsManagementPage = () => {
                 </div>
             )
         },
-        {
-            key: 'accountType',
-            label: 'Cuenta',
-            render: (req) => {
-                const accountLabels = {
-                    savings: 'Ahorro',
-                    contributions: 'Aportaciones',
-                    surplus: 'Excedentes'
-                };
-                const accountColors = {
-                    savings: 'bg-green-100 text-green-800',
-                    contributions: 'bg-blue-100 text-blue-800',
-                    surplus: 'bg-purple-100 text-purple-800'
-                };
-                return (
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${accountColors[req.accountType] || 'bg-gray-100 text-gray-800'}`}>
-                        {accountLabels[req.accountType] || req.accountType}
-                    </span>
-                );
-            }
-        },
+        // TEMPORARILY HIDDEN - Account type column (only savings shown)
+        // {
+        //     key: 'accountType',
+        //     label: 'Cuenta',
+        //     render: (req) => {
+        //         const accountLabels = {
+        //             savings: 'Ahorro',
+        //             contributions: 'Aportaciones',
+        //             surplus: 'Excedentes'
+        //         };
+        //         const accountColors = {
+        //             savings: 'bg-green-100 text-green-800',
+        //             contributions: 'bg-blue-100 text-blue-800',
+        //             surplus: 'bg-purple-100 text-purple-800'
+        //         };
+        //         return (
+        //             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${accountColors[req.accountType] || 'bg-gray-100 text-gray-800'}`}>
+        //                 {accountLabels[req.accountType] || req.accountType}
+        //             </span>
+        //         );
+        //     }
+        // },
         {
             key: 'requestedAmount',
             label: 'Monto',
@@ -236,18 +241,18 @@ const WithdrawalRequestsManagementPage = () => {
 
     // Filter options
     const statusOptions = [
-        { value: '', label: 'Todos los estados' },
         { value: 'pending', label: 'Pendientes' },
         { value: 'approved', label: 'Aprobadas' },
         { value: 'rejected', label: 'Rechazadas' }
     ];
 
-    const accountTypeOptions = [
-        { value: '', label: 'Todas las cuentas' },
-        { value: 'savings', label: 'Ahorro' },
-        { value: 'contributions', label: 'Aportaciones' },
-        { value: 'surplus', label: 'Excedentes' }
-    ];
+    // TEMPORARILY HIDDEN - Account type filter options (only savings shown)
+    // const accountTypeOptions = [
+    //     { value: '', label: 'Todas las cuentas' },
+    //     { value: 'savings', label: 'Ahorro' },
+    //     { value: 'contributions', label: 'Aportaciones' },
+    //     { value: 'surplus', label: 'Excedentes' }
+    // ];
 
     if (loading && requests.length === 0) {
         return <Loading message="Cargando solicitudes..." />;
@@ -258,8 +263,8 @@ const WithdrawalRequestsManagementPage = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Retiros</h1>
-                    <p className="text-gray-600 mt-1">Administra las solicitudes de retiro de los miembros</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Solicitudes de Retiro de Ahorros</h1>
+                    <p className="text-gray-600 mt-1">Aprueba o rechaza las solicitudes de retiro de fondos de ahorro de los miembros</p>
                 </div>
             </div>
 
@@ -270,14 +275,25 @@ const WithdrawalRequestsManagementPage = () => {
 
             {/* Filters */}
             <Card title="Filtros de Búsqueda">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                        label="Buscar"
+                        name="search"
+                        type="text"
+                        value={filters.memberId}
+                        onChange={(e) => handleFilterChange('memberId', e.target.value)}
+                        onClear={() => handleFilterChange('memberId', '')}
+                        placeholder="Nombre o código de miembro..."
+                    />
                     <Select
                         label="Estado"
                         name="status"
                         value={filters.status}
                         onChange={(e) => handleFilterChange('status', e.target.value)}
                         options={statusOptions}
+                        placeholder="Todos los estados"
                     />
+                    {/* TEMPORARILY HIDDEN - Account type filter (only savings shown)
                     <Select
                         label="Tipo de Cuenta"
                         name="accountType"
@@ -285,19 +301,13 @@ const WithdrawalRequestsManagementPage = () => {
                         onChange={(e) => handleFilterChange('accountType', e.target.value)}
                         options={accountTypeOptions}
                     />
-                    <Input
-                        label="ID de Miembro"
-                        name="memberId"
-                        type="number"
-                        value={filters.memberId}
-                        onChange={(e) => handleFilterChange('memberId', e.target.value)}
-                        placeholder="Buscar por ID..."
-                    />
+                    */}
                 </div>
-                <div className="mt-4">
-                    <Button onClick={resetFilters} variant="outline" size="md">
-                        Limpiar Filtros
-                    </Button>
+                <div className="mt-6 flex flex-wrap gap-3">
+                    <ClearFiltersButton
+                        show={filters.memberId || filters.status}
+                        onClick={() => resetFilters()}
+                    />
                 </div>
             </Card>
 
