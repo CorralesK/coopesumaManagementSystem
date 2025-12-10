@@ -115,12 +115,18 @@ const getSavingsSummary = async (req, res, next) => {
     try {
         const cooperativeId = req.user.cooperativeId || 1;
 
-        const data = await savingsService.getAllMembersSavingsSummary(cooperativeId);
+        const result = await savingsService.getAllMembersSavingsSummary(cooperativeId);
+
+        logger.info('📊 Sending savings summary:', {
+            membersCount: result.members.length,
+            firstMember: result.members[0],
+            summary: result.summary
+        });
 
         res.status(200).json({
             success: true,
             message: 'Resumen de ahorros obtenido successfully',
-            data
+            ...result
         });
     } catch (error) {
         logger.error('Controller error - getSavingsSummary:', error);
@@ -182,17 +188,17 @@ const getSavingsInventoryByMonth = async (req, res, next) => {
 /**
  * Register a withdrawal
  * POST /api/savings/withdrawals
- * Body: { memberId, amount, receiptNumber, transactionDate?, description? }
+ * Body: { memberId, amount, transactionDate?, description? }
  */
 const registerWithdrawal = async (req, res, next) => {
     try {
-        const { memberId, amount, receiptNumber, transactionDate, description } = req.body;
+        const { memberId, amount, transactionDate, description } = req.body;
 
         // Validate required fields
-        if (!memberId || !amount || !receiptNumber) {
+        if (!memberId || !amount) {
             return res.status(400).json({
                 success: false,
-                message: 'Member ID, monto y número de recibo son requeridos',
+                message: 'Member ID y monto son requeridos',
                 error: 'VALIDATION_ERROR'
             });
         }
@@ -208,7 +214,6 @@ const registerWithdrawal = async (req, res, next) => {
         const withdrawalData = {
             memberId: parseInt(memberId),
             amount: parseFloat(amount),
-            receiptNumber,
             transactionDate: transactionDate ? new Date(transactionDate) : new Date(),
             description,
             createdBy: req.user.userId
@@ -227,6 +232,27 @@ const registerWithdrawal = async (req, res, next) => {
     }
 };
 
+/**
+ * Get all savings transactions for a member
+ * GET /api/savings/:memberId/transactions
+ */
+const getMemberSavingsTransactions = async (req, res, next) => {
+    try {
+        const { memberId } = req.params;
+
+        const transactions = await savingsService.getMemberSavingsTransactions(parseInt(memberId));
+
+        res.status(200).json({
+            success: true,
+            message: 'Transacciones de ahorros obtenidas exitosamente',
+            data: transactions
+        });
+    } catch (error) {
+        logger.error('Controller error - getMemberSavingsTransactions:', error);
+        next(error);
+    }
+};
+
 module.exports = {
     getMemberSavings,
     registerDeposit,
@@ -234,5 +260,6 @@ module.exports = {
     getSavingsLedger,
     getSavingsSummary,
     getSavingsInventoryByYear,
-    getSavingsInventoryByMonth
+    getSavingsInventoryByMonth,
+    getMemberSavingsTransactions
 };
