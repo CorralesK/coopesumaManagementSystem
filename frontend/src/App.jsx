@@ -49,12 +49,14 @@ import ReportsPage from './pages/reports/ReportsPage';
 // Financial Pages
 import WithdrawalRequestPage from './pages/withdrawals/WithdrawalRequestPage';
 import WithdrawalRequestsManagementPage from './pages/withdrawals/WithdrawalRequestsManagementPage';
-import SurplusDistributionPage from './pages/surplus/SurplusDistributionPage';
+// TEMPORARILY HIDDEN - Surplus distribution feature not ready for presentation
+// import SurplusDistributionPage from './pages/surplus/SurplusDistributionPage';
 import SavingsManagementPage from './pages/savings/SavingsManagementPage';
 import SavingsInventoryPage from './pages/savings/SavingsInventoryPage';
 import SavingsMonthlyDetailPage from './pages/savings/SavingsMonthlyDetailPage';
 import MemberSavingsDashboardPage from './pages/savings/MemberSavingsDashboardPage';
-import ContributionsManagementPage from './pages/contributions/ContributionsManagementPage';
+// TEMPORARILY HIDDEN - Contributions feature not ready for presentation
+// import ContributionsManagementPage from './pages/contributions/ContributionsManagementPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 
 function App() {
@@ -293,8 +295,8 @@ function App() {
                         }
                     />
 
-                    {/* Surplus Distribution (Administrator and Manager) */}
-                    <Route
+                    {/* TEMPORARILY HIDDEN - Surplus Distribution (Administrator and Manager) */}
+                    {/* <Route
                         path="/surplus"
                         element={
                             <ProtectedRoute requiredRole={[USER_ROLES.ADMINISTRATOR, USER_ROLES.MANAGER]}>
@@ -303,7 +305,7 @@ function App() {
                                 </Layout>
                             </ProtectedRoute>
                         }
-                    />
+                    /> */}
 
                     {/* Savings Management (Administrator and Manager) */}
                     <Route
@@ -347,8 +349,8 @@ function App() {
                         }
                     />
 
-                    {/* Contributions Management (Administrator and Manager) */}
-                    <Route
+                    {/* TEMPORARILY HIDDEN - Contributions Management (Administrator and Manager) */}
+                    {/* <Route
                         path="/contributions"
                         element={
                             <ProtectedRoute requiredRole={[USER_ROLES.ADMINISTRATOR, USER_ROLES.MANAGER]}>
@@ -357,7 +359,7 @@ function App() {
                                 </Layout>
                             </ProtectedRoute>
                         }
-                    />
+                    /> */}
 
                     {/* Notifications (Administrator only) */}
                     <Route

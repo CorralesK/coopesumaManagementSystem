@@ -103,7 +103,7 @@ api.interceptors.response.use(
             // Error in request configuration
             console.error('Request error:', error.message);
             return Promise.reject({
-                message: 'Error al configurar la solicitud',
+                message: 'Error configuring request',
                 error: 'REQUEST_ERROR',
                 statusCode: 0,
             });

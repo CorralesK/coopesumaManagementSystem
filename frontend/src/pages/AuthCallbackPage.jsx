@@ -19,13 +19,6 @@ const AuthCallbackPage = () => {
         const errorParam = searchParams.get('error');
         const errorMessage = searchParams.get('message');
 
-        console.log('AuthCallback - URL params:', {
-            token: token ? 'present' : 'missing',
-            error: errorParam,
-            message: errorMessage,
-            allParams: Object.fromEntries(searchParams)
-        });
-
         if (errorParam) {
             const displayError = errorMessage || 'Error de autenticación. Por favor, intenta de nuevo.';
             setError(displayError);
@@ -37,18 +30,14 @@ const AuthCallbackPage = () => {
             // Use queueMicrotask to defer processing and avoid React 19 warnings
             queueMicrotask(() => {
                 try {
-                    console.log('Token received, length:', token.length);
-
                     // Decode JWT to get user info (simple base64 decode)
                     const parts = token.split('.');
-                    console.log('Token parts:', parts.length);
 
                     if (parts.length !== 3) {
                         throw new Error('Invalid token format');
                     }
 
                     const payload = JSON.parse(atob(parts[1]));
-                    console.log('Decoded payload:', payload);
 
                     const userData = {
                         userId: payload.userId,
@@ -57,11 +46,7 @@ const AuthCallbackPage = () => {
                         role: payload.role
                     };
 
-                    console.log('User data prepared:', userData);
-
                     login(token, userData);
-
-                    console.log('Login successful, navigating based on role:', userData.role);
 
                     // Navigate based on user role
                     switch (userData.role) {
@@ -83,14 +68,11 @@ const AuthCallbackPage = () => {
                             break;
                     }
                 } catch (err) {
-                    console.error('Error processing token:', err);
-                    console.error('Error details:', err.message, err.stack);
                     setError(`Error al procesar la autenticación: ${err.message}`);
                     setTimeout(() => navigate('/login', { replace: true }), 3000);
                 }
             });
         } else {
-            console.error('No token in URL parameters');
             setError('Token no recibido.');
             setTimeout(() => navigate('/login', { replace: true }), 3000);
         }

@@ -14,7 +14,8 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Loading from '../components/common/Loading';
 import Alert from '../components/common/Alert';
-import LiquidationsWidget from '../components/dashboard/LiquidationsWidget';
+// TEMPORARILY HIDDEN - Liquidations feature not ready for presentation
+// import LiquidationsWidget from '../components/dashboard/LiquidationsWidget';
 import { USER_ROLES } from '../utils/constants';
 
 /**
@@ -159,9 +160,11 @@ const DashboardPage = () => {
                         </div>
                     </Card>
 
+                    {/* TEMPORARILY HIDDEN - Liquidations Widget
                     <div className="sm:col-span-2 lg:col-span-1">
                         <LiquidationsWidget />
                     </div>
+                    */}
                 </div>
             )}
 

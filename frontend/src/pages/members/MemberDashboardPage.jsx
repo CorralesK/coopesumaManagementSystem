@@ -74,7 +74,17 @@ const MemberDashboardPage = () => {
         );
     }
 
-    const { member, accounts, recentTransactions, contributionStatus, pendingRequests } = dashboardData;
+    const { member, accounts, recentTransactions, /* contributionStatus - TEMPORARILY HIDDEN */ pendingRequests } = dashboardData;
+
+    // TEMPORARILY HIDDEN - Filter to show only savings accounts (hide contributions and surplus)
+    const savingsAccounts = accounts.filter(account =>
+        account.accountType === 'savings' || account.displayName?.toLowerCase().includes('ahorro')
+    );
+
+    // TEMPORARILY HIDDEN - Filter transactions to only show savings-related ones
+    const savingsTransactions = recentTransactions.filter(tx =>
+        tx.accountType === 'savings' || tx.accountDisplayName?.toLowerCase().includes('ahorro')
+    );
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -110,9 +120,9 @@ const MemberDashboardPage = () => {
                 </div>
             </Card>
 
-            {/* Accounts Grid */}
+            {/* Accounts Grid - TEMPORARILY showing only savings accounts */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {accounts.map((account) => (
+                {savingsAccounts.map((account) => (
                     <Card key={account.accountId}>
                         <div className="text-center">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -139,7 +149,7 @@ const MemberDashboardPage = () => {
                 ))}
             </div>
 
-            {/* Contribution Status */}
+            {/* TEMPORARILY HIDDEN - Contribution Status
             {contributionStatus && (
                 <Card title={`Estado de Aportaciones - Año Fiscal ${contributionStatus.fiscalYear}`}>
                     <div className="space-y-4">
@@ -158,7 +168,6 @@ const MemberDashboardPage = () => {
                             </div>
                         </div>
 
-                        {/* Progress Bar */}
                         <div>
                             <div className="flex justify-between text-sm mb-1">
                                 <span className="text-gray-600">Progreso</span>
@@ -176,7 +185,6 @@ const MemberDashboardPage = () => {
                             </div>
                         </div>
 
-                        {/* Paid and Pending Tracts */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
                             {contributionStatus.paidTracts.length > 0 && (
                                 <div>
@@ -202,6 +210,7 @@ const MemberDashboardPage = () => {
                     </div>
                 </Card>
             )}
+            */}
 
             {/* Pending Requests */}
             {pendingRequests.length > 0 && (
@@ -232,8 +241,8 @@ const MemberDashboardPage = () => {
                 </Card>
             )}
 
-            {/* Recent Transactions */}
-            {recentTransactions.length > 0 && (
+            {/* Recent Transactions - TEMPORARILY showing only savings transactions */}
+            {savingsTransactions.length > 0 && (
                 <Card title="Transacciones Recientes">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
@@ -254,7 +263,7 @@ const MemberDashboardPage = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {recentTransactions.map((tx) => (
+                                {savingsTransactions.map((tx) => (
                                     <tr key={tx.transactionId} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {formatDate(tx.transactionDate)}
