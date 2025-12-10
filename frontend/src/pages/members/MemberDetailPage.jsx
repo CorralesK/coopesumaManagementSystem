@@ -4,7 +4,7 @@
  * @module pages/members
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMember, useMemberOperations } from '../../hooks/useMembers';
 import Card from '../../components/common/Card';
@@ -13,6 +13,12 @@ import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Modal from '../../components/common/Modal';
 import MemberCard from '../../components/members/MemberCard';
+import MemberLiquidationHistory from '../../components/members/MemberLiquidationHistory';
+import MemberLiquidationSection from '../../components/members/MemberLiquidationSection';
+import MemberSavingsHistory from '../../components/members/MemberSavingsHistory';
+import { formatCurrency } from '../../utils/formatters';
+import { printSavingsReceipt } from '../../utils/printUtils';
+import api from '../../services/api';
 
 /**
  * MemberDetailPage Component
@@ -23,10 +29,21 @@ const MemberDetailPage = () => {
     const { id } = useParams();
     const [qrModalOpen, setQrModalOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+    const liquidationSectionRef = useRef(null);
+
+    // Savings modals state
+    const [showDepositModal, setShowDepositModal] = useState(false);
+    const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+    const [depositData, setDepositData] = useState({ amount: '', description: '' });
+    const [withdrawalData, setWithdrawalData] = useState({ amount: '', description: '' });
+    const [submitting, setSubmitting] = useState(false);
+    const [depositModalError, setDepositModalError] = useState('');
+    const [withdrawalModalError, setWithdrawalModalError] = useState('');
 
     // Use custom hooks
     const { member, loading, error, refetch } = useMember(id);
-    const { regenerateQR, loading: regenerating, error: regenerateError } = useMemberOperations();
+    const { regenerateQR, deactivate, loading: regenerating, error: regenerateError } = useMemberOperations();
 
     // Event handlers
     const handleRegenerateQR = async () => {
@@ -47,12 +64,181 @@ const MemberDetailPage = () => {
         }
     };
 
-    const handlePrintCard = () => {
-        setQrModalOpen(true);
-        // Wait for modal to render then print
-        setTimeout(() => {
-            window.print();
-        }, 100);
+    const handleLiquidateMember = () => {
+        // Call the openLiquidationModal method exposed by MemberLiquidationSection
+        if (liquidationSectionRef.current) {
+            liquidationSectionRef.current.openLiquidationModal();
+        }
+    };
+
+    const handleDeleteMember = async () => {
+        const confirmed = window.confirm(
+            `¿Estás seguro de que deseas ELIMINAR a ${member.fullName}?\n\n` +
+            `Esta acción iniciará el proceso de liquidación por retiro del miembro.\n` +
+            `Esta acción no se puede deshacer.`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            await deactivate(id);
+            setSuccessMessage('Miembro eliminado. Proceso de liquidación iniciado.');
+            refetch();
+        } catch (err) {
+            // Error handled by hook
+        }
+    };
+
+    const handleOpenDepositModal = () => {
+        setDepositData({ amount: '', description: '' });
+        setDepositModalError('');
+        setShowDepositModal(true);
+    };
+
+    const handleOpenWithdrawalModal = () => {
+        setWithdrawalData({ amount: '', description: '' });
+        setWithdrawalModalError('');
+        setShowWithdrawalModal(true);
+    };
+
+    const handleSubmitDeposit = async (e) => {
+        e.preventDefault();
+        setDepositModalError('');
+
+        const amount = parseFloat(depositData.amount);
+        if (!depositData.amount || amount <= 0) {
+            setDepositModalError('El monto debe ser mayor a cero');
+            return;
+        }
+
+        const previousBalance = parseFloat(member.savingsBalance) || 0;
+        const newBalance = previousBalance + amount;
+        const transactionDate = new Date();
+
+        try {
+            setSubmitting(true);
+            const response = await api.post('/savings/deposits', {
+                memberId: parseInt(id),
+                amount: amount,
+                description: depositData.description || `Depósito de ahorros - ${member.fullName}`,
+                transactionDate: transactionDate.toISOString()
+            });
+
+            // Print receipt after successful transaction
+            printSavingsReceipt({
+                transactionType: 'deposit',
+                member: {
+                    member_id: parseInt(id),
+                    full_name: member.fullName,
+                    member_code: member.memberCode,
+                    current_balance: previousBalance
+                },
+                amount: amount,
+                previousBalance: previousBalance,
+                newBalance: newBalance,
+                description: depositData.description,
+                transactionDate: transactionDate,
+                transactionId: response?.data?.transactionId || ''
+            });
+
+            setSuccessMessage('Depósito registrado exitosamente. Imprimiendo recibo...');
+            setShowDepositModal(false);
+            setDepositData({ amount: '', description: '' });
+            refetch();
+        } catch (err) {
+            let errorMsg = 'Error al registrar el depósito';
+
+            if (err.response?.status === 403) {
+                errorMsg = 'No se puede realizar depósitos: El miembro está inactivo en el sistema';
+                // Refresh member data to get updated status
+                refetch();
+            } else if (err.response?.data?.message) {
+                errorMsg = err.response.data.message;
+            } else if (err.message) {
+                errorMsg = err.message;
+            }
+
+            setDepositModalError(errorMsg);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleSubmitWithdrawal = async (e) => {
+        e.preventDefault();
+        setWithdrawalModalError('');
+
+        const currentBalance = parseFloat(member.savingsBalance) || 0;
+
+        if (currentBalance <= 0) {
+            setWithdrawalModalError('El miembro no tiene saldo disponible para retirar');
+            return;
+        }
+
+        const amount = parseFloat(withdrawalData.amount);
+        if (!withdrawalData.amount || amount <= 0) {
+            setWithdrawalModalError('El monto debe ser mayor a cero');
+            return;
+        }
+
+        if (amount > currentBalance) {
+            setWithdrawalModalError(`El monto de retiro (${formatCurrency(amount)}) no puede ser mayor al saldo disponible (${formatCurrency(currentBalance)})`);
+            return;
+        }
+
+        const previousBalance = currentBalance;
+        const newBalance = previousBalance - amount;
+        const transactionDate = new Date();
+
+        try {
+            setSubmitting(true);
+            const response = await api.post('/savings/withdrawals', {
+                memberId: parseInt(id),
+                amount: amount,
+                description: withdrawalData.description || `Retiro de ahorros - ${member.fullName}`,
+                transactionDate: transactionDate.toISOString()
+            });
+
+            // Print receipt after successful transaction
+            printSavingsReceipt({
+                transactionType: 'withdrawal',
+                member: {
+                    member_id: parseInt(id),
+                    full_name: member.fullName,
+                    member_code: member.memberCode,
+                    current_balance: previousBalance
+                },
+                amount: amount,
+                previousBalance: previousBalance,
+                newBalance: newBalance,
+                description: withdrawalData.description,
+                transactionDate: transactionDate,
+                transactionId: response?.data?.transactionId || ''
+            });
+
+            setSuccessMessage('Retiro registrado exitosamente. Imprimiendo recibo...');
+            setShowWithdrawalModal(false);
+            setWithdrawalData({ amount: '', description: '' });
+            refetch();
+        } catch (err) {
+            let errorMsg = 'Error al registrar el retiro';
+
+            if (err.response?.status === 403) {
+                errorMsg = 'No se puede realizar retiros: El miembro está inactivo en el sistema';
+                // Refresh member data to get updated status
+                refetch();
+            } else if (err.response?.data?.message) {
+                errorMsg = err.response.data.message;
+            } else if (err.message) {
+                errorMsg = err.message;
+            }
+
+            setWithdrawalModalError(errorMsg);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const formatDate = (dateString) => {
@@ -88,7 +274,7 @@ const MemberDetailPage = () => {
             </div>
 
             {/* Alerts */}
-            {(error || regenerateError) && <Alert type="error" message={error || regenerateError} onClose={() => {}} />}
+            {(error || regenerateError || errorMessage) && <Alert type="error" message={error || regenerateError || errorMessage} onClose={() => setErrorMessage('')} />}
             {successMessage && <Alert type="success" message={successMessage} onClose={() => setSuccessMessage('')} />}
 
             {/* Main Content */}
@@ -193,7 +379,8 @@ const MemberDetailPage = () => {
                         </div>
                     </Card>
 
-                    <Card title="Saldos de Cuentas">
+                    {/* Commented out - Account Balances Section */}
+                    {/* <Card title="Saldos de Cuentas">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                                 <dt className="text-sm font-medium text-blue-700 mb-2">Cuenta de Ahorros</dt>
@@ -216,19 +403,10 @@ const MemberDetailPage = () => {
                                 </dd>
                             </div>
                         </div>
-                    </Card>
-
-                    <Card title="Información Técnica">
-                        <div className="space-y-4">
-                            <div>
-                                <dt className="text-sm font-medium text-gray-500 mb-2">Hash del Código QR</dt>
-                                <dd className="text-xs text-gray-700 font-mono break-all bg-gray-50 p-3 rounded border border-gray-200">{member.qrHash}</dd>
-                            </div>
-                        </div>
-                    </Card>
+                    </Card> */}
                 </div>
 
-                {/* Right Column - QR Code */}
+                {/* Right Column - QR Code & Actions */}
                 <div className="lg:col-span-2 xl:col-span-1 space-y-6">
                     <Card title="Código QR">
                         <div className="flex flex-col items-center space-y-4">
@@ -310,8 +488,100 @@ const MemberDetailPage = () => {
                             )}
                         </div>
                     </Card>
+
+                    {/* Actions Card */}
+                    <Card title="Acciones">
+                        <div className="flex flex-col space-y-3">
+                            {member.isActive ? (
+                                <>
+                                    <Button
+                                        onClick={handleOpenDepositModal}
+                                        variant="primary"
+                                        fullWidth
+                                        className="group transition-all"
+                                    >
+                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                        Depositar Ahorros
+                                    </Button>
+
+                                    <Button
+                                        onClick={handleOpenWithdrawalModal}
+                                        variant="outline"
+                                        fullWidth
+                                        className="group transition-all"
+                                    >
+                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                                        </svg>
+                                        Retirar Ahorros
+                                    </Button>
+
+                                    <Button
+                                        onClick={handleLiquidateMember}
+                                        variant="secondary"
+                                        fullWidth
+                                        className="group transition-all"
+                                    >
+                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        Liquidar Miembro
+                                    </Button>
+
+                                    <Button
+                                        onClick={handleDeleteMember}
+                                        variant="danger"
+                                        fullWidth
+                                        className="group transition-all"
+                                    >
+                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Eliminar Miembro
+                                    </Button>
+                                </>
+                            ) : (
+                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                                    <svg className="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                    <p className="text-sm text-gray-600 font-medium">Miembro Inactivo</p>
+                                    <p className="text-xs text-gray-500 mt-1">No hay acciones disponibles</p>
+                                </div>
+                            )}
+                        </div>
+                    </Card>
                 </div>
             </div>
+
+            {/* Full Width History Sections */}
+            <div className="space-y-6">
+                {/* Savings History */}
+                <Card title="Historial de Ahorros">
+                    <MemberSavingsHistory
+                        memberId={parseInt(id)}
+                        currentBalance={member.savingsBalance ? parseFloat(member.savingsBalance) : 0}
+                        lastLiquidationDate={member.lastLiquidationDate}
+                    />
+                </Card>
+
+                {/* Liquidation History */}
+                <Card title="Historial de Liquidaciones">
+                    <MemberLiquidationHistory memberId={parseInt(id)} />
+                </Card>
+            </div>
+
+            {/* Hidden Liquidation Section - Triggered by "Liquidar Miembro" button */}
+            <MemberLiquidationSection
+                ref={liquidationSectionRef}
+                member={member}
+                onLiquidationComplete={() => {
+                    refetch();
+                    setSuccessMessage('Liquidación ejecutada exitosamente. Se ha generado el recibo automáticamente.');
+                }}
+            />
 
             {/* Card Modal - Shows Member Card */}
             {qrModalOpen && (
@@ -327,6 +597,131 @@ const MemberDetailPage = () => {
                     </div>
                 </Modal>
             )}
+
+            {/* Deposit Modal */}
+            <Modal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} title="Registrar Depósito" size="lg">
+                <form onSubmit={handleSubmitDeposit} className="space-y-6">
+                    {depositModalError && (
+                        <Alert type="error" message={depositModalError} onClose={() => setDepositModalError('')} />
+                    )}
+
+                    <div className="p-4 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-gray-700"><strong>Miembro:</strong> {member.fullName} ({member.memberCode})</p>
+                        <p className="text-sm text-gray-700 mt-1"><strong>Saldo actual:</strong> {formatCurrency(parseFloat(member.savingsBalance) || 0)}</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Monto del Depósito *</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span className="text-gray-500">₡</span>
+                            </div>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                value={depositData.amount}
+                                onChange={(e) => setDepositData({ ...depositData, amount: e.target.value })}
+                                className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                placeholder="0.00"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Nota (Opcional)</label>
+                        <textarea
+                            value={depositData.description}
+                            onChange={(e) => setDepositData({ ...depositData, description: e.target.value })}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="Descripción del depósito..."
+                        />
+                    </div>
+
+                    <div className="flex justify-center space-x-3">
+                        <Button type="button" onClick={() => setShowDepositModal(false)} variant="outline">
+                            Cancelar
+                        </Button>
+                        <Button type="submit" variant="primary" disabled={submitting}>
+                            {submitting ? 'Procesando...' : 'Registrar Depósito'}
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Withdrawal Modal */}
+            <Modal isOpen={showWithdrawalModal} onClose={() => setShowWithdrawalModal(false)} title="Registrar Retiro" size="lg">
+                <form onSubmit={handleSubmitWithdrawal} className="space-y-6">
+                    {withdrawalModalError && (
+                        <Alert type="error" message={withdrawalModalError} onClose={() => setWithdrawalModalError('')} />
+                    )}
+
+                    <div className="p-4 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-gray-700"><strong>Miembro:</strong> {member.fullName} ({member.memberCode})</p>
+                        <p className="text-sm text-gray-700 mt-1"><strong>Saldo disponible:</strong> {formatCurrency(parseFloat(member.savingsBalance) || 0)}</p>
+                        {parseFloat(member.savingsBalance) <= 0 && (
+                            <span className="inline-flex items-center px-2 py-0.5 mt-2 rounded text-xs font-medium bg-orange-200 text-orange-800">
+                                Sin saldo disponible
+                            </span>
+                        )}
+                    </div>
+
+                    {parseFloat(member.savingsBalance) <= 0 && (
+                        <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                            <div className="flex items-start gap-2">
+                                <svg className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <p className="text-sm text-orange-800">
+                                    Este miembro <strong>no tiene saldo disponible</strong> para realizar retiros.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Monto del Retiro *</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span className="text-gray-500">₡</span>
+                            </div>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                max={parseFloat(member.savingsBalance) || 0}
+                                value={withdrawalData.amount}
+                                onChange={(e) => setWithdrawalData({ ...withdrawalData, amount: e.target.value })}
+                                className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                placeholder="0.00"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Nota (Opcional)</label>
+                        <textarea
+                            value={withdrawalData.description}
+                            onChange={(e) => setWithdrawalData({ ...withdrawalData, description: e.target.value })}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="Motivo del retiro..."
+                        />
+                    </div>
+
+                    <div className="flex justify-center space-x-3">
+                        <Button type="button" onClick={() => setShowWithdrawalModal(false)} variant="outline">
+                            Cancelar
+                        </Button>
+                        <Button type="submit" variant="danger" disabled={submitting}>
+                            {submitting ? 'Procesando...' : 'Registrar Retiro'}
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
 
             {/* Print Styles */}
             <style>{`
