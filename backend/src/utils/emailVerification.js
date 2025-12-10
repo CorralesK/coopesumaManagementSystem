@@ -23,7 +23,7 @@ const verifyInstitutionalEmail = async (email) => {
         if (!email || typeof email !== 'string') {
             return {
                 isValid: false,
-                error: 'Email inválido'
+                error: 'Invalid email'
             };
         }
 
@@ -32,7 +32,7 @@ const verifyInstitutionalEmail = async (email) => {
         if (!emailRegex.test(email.toLowerCase())) {
             return {
                 isValid: false,
-                error: 'El correo debe ser un correo institucional válido del MEP (debe terminar en mep.go.cr)'
+                error: 'Email must be a valid MEP institutional email (must end with mep.go.cr)'
             };
         }
 
@@ -56,7 +56,7 @@ const verifyInstitutionalEmail = async (email) => {
         logger.error('Error verifying email:', error);
         return {
             isValid: false,
-            error: 'Error al verificar el correo electrónico'
+            error: 'Error verifying email'
         };
     }
 };
