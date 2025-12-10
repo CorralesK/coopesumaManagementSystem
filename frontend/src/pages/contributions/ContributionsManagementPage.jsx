@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import Alert from '../../components/common/Alert';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, normalizeText } from '../../utils/formatters';
 
 const ContributionsManagementPage = () => {
     const [report, setReport] = useState([]);
@@ -98,11 +98,12 @@ const ContributionsManagementPage = () => {
         }
     };
 
-    const filteredReport = report.filter(member =>
-        member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.member_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.identification?.includes(searchTerm)
-    );
+    const filteredReport = report.filter(member => {
+        const normalizedSearch = normalizeText(searchTerm);
+        return normalizeText(member.full_name).includes(normalizedSearch) ||
+            normalizeText(member.member_code).includes(normalizedSearch) ||
+            member.identification?.includes(searchTerm);
+    });
 
     const getCompletionBadge = (member) => {
         const completed = member.tracts_completed || 0;
@@ -148,8 +149,20 @@ const ContributionsManagementPage = () => {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Buscar por nombre, código o cédula..."
-                            className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                            className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                         />
+                        {searchTerm && (
+                            <button
+                                type="button"
+                                onClick={() => setSearchTerm('')}
+                                className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+                                title="Limpiar"
+                            >
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        )}
                     </div>
                 </div>
                 <div>
