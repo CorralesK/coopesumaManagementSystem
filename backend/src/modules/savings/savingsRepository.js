@@ -199,14 +199,48 @@ const getSavingsSummary = async (cooperativeId) => {
  * Get savings inventory by fiscal year (Excel-like annual view)
  * Returns all members with their monthly deposits/withdrawals
  *
+ * NOTE: This query uses calendar year for display (matching Excel format)
+ * - "Año Anterior" = Previous year accumulated balance (transactions marked as such)
+ * - Monthly columns = Transactions from each calendar month of the selected year
+ *
  * @param {number} cooperativeId - Cooperative ID
- * @param {number} fiscalYear - Fiscal year
+ * @param {number} fiscalYear - Calendar year to display (e.g., 2025)
  * @returns {Promise<Array>} Array of member savings by month
  */
 const getSavingsInventoryByYear = async (cooperativeId, fiscalYear) => {
     try {
+        // For the inventory view, we use calendar year (like the Excel)
+        // fiscalYear parameter is actually the calendar year we want to display
+        const calendarYear = fiscalYear;
+
         const query = `
-            WITH monthly_transactions AS (
+            WITH previous_year_balance AS (
+                -- Get "Año Anterior" balance: transactions marked as previous year balance
+                -- OR all transactions before January 1st of the selected year
+                SELECT
+                    m.member_id,
+                    COALESCE(SUM(CASE
+                        WHEN t.transaction_type = 'deposit' THEN t.amount
+                        WHEN t.transaction_type = 'withdrawal' THEN -t.amount
+                        ELSE 0
+                    END), 0) as prev_balance
+                FROM members m
+                JOIN accounts a ON m.member_id = a.member_id AND a.account_type = 'savings'
+                LEFT JOIN transactions t ON a.account_id = t.account_id
+                    AND t.status = 'completed'
+                    AND (
+                        -- Transactions explicitly marked as previous year balance
+                        t.description LIKE '%Saldo acumulado años anteriores%'
+                        OR
+                        -- OR transactions from before this calendar year
+                        EXTRACT(YEAR FROM t.transaction_date) < $2
+                    )
+                WHERE m.cooperative_id = $1
+                GROUP BY m.member_id
+            ),
+            monthly_transactions AS (
+                -- Get monthly transactions for the selected calendar year
+                -- Excluding "Año Anterior" transactions
                 SELECT
                     m.member_id,
                     EXTRACT(MONTH FROM t.transaction_date) as month,
@@ -218,32 +252,18 @@ const getSavingsInventoryByYear = async (cooperativeId, fiscalYear) => {
                 FROM members m
                 JOIN accounts a ON m.member_id = a.member_id AND a.account_type = 'savings'
                 LEFT JOIN transactions t ON a.account_id = t.account_id
-                    AND t.fiscal_year = $2
                     AND t.status = 'completed'
+                    AND EXTRACT(YEAR FROM t.transaction_date) = $2
+                    -- Exclude "Año Anterior" transactions (they go to previous_year_balance)
+                    AND t.description NOT LIKE '%Saldo acumulado años anteriores%'
                 WHERE m.cooperative_id = $1 AND m.is_active = true
                 GROUP BY m.member_id, EXTRACT(MONTH FROM t.transaction_date)
-            ),
-            previous_balance AS (
-                SELECT
-                    m.member_id,
-                    COALESCE(SUM(CASE
-                        WHEN t.transaction_type = 'deposit' THEN t.amount
-                        WHEN t.transaction_type = 'withdrawal' THEN -t.amount
-                        ELSE 0
-                    END), 0) as prev_balance
-                FROM members m
-                JOIN accounts a ON m.member_id = a.member_id AND a.account_type = 'savings'
-                LEFT JOIN transactions t ON a.account_id = t.account_id
-                    AND t.fiscal_year < $2
-                    AND t.status = 'completed'
-                WHERE m.cooperative_id = $1
-                GROUP BY m.member_id
             )
             SELECT
                 m.member_id,
                 m.member_code,
                 m.full_name,
-                COALESCE(pb.prev_balance, 0) as previous_year_balance,
+                COALESCE(pyb.prev_balance, 0) as previous_year_balance,
                 COALESCE(SUM(CASE WHEN mt.month = 1 THEN mt.net_amount END), 0) as january,
                 COALESCE(SUM(CASE WHEN mt.month = 2 THEN mt.net_amount END), 0) as february,
                 COALESCE(SUM(CASE WHEN mt.month = 3 THEN mt.net_amount END), 0) as march,
@@ -261,13 +281,13 @@ const getSavingsInventoryByYear = async (cooperativeId, fiscalYear) => {
             FROM members m
             JOIN accounts a ON m.member_id = a.member_id AND a.account_type = 'savings'
             LEFT JOIN monthly_transactions mt ON m.member_id = mt.member_id
-            LEFT JOIN previous_balance pb ON m.member_id = pb.member_id
+            LEFT JOIN previous_year_balance pyb ON m.member_id = pyb.member_id
             WHERE m.cooperative_id = $1 AND m.is_active = true
-            GROUP BY m.member_id, m.member_code, m.full_name, pb.prev_balance, a.current_balance
+            GROUP BY m.member_id, m.member_code, m.full_name, pyb.prev_balance, a.current_balance
             ORDER BY m.member_code
         `;
 
-        const result = await db.query(query, [cooperativeId, fiscalYear]);
+        const result = await db.query(query, [cooperativeId, calendarYear]);
         return result.rows;
     } catch (error) {
         logger.error('Error getting savings inventory by year:', error);

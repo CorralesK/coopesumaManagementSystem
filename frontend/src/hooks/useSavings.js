@@ -5,7 +5,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { getMemberSavings, getSavingsLedger } from '../services/savingsService';
+import { getMemberSavings, getSavingsLedger, getMemberSavingsTransactions } from '../services/savingsService';
+
+// Export management hooks
+export { useSavingsManagement, useSavingsOperations } from './useSavingsManagement';
 
 /**
  * Hook for fetching member savings
@@ -95,6 +98,48 @@ export const useSavingsLedger = (memberId, filters = {}) => {
         loading,
         error,
         refetch: fetchLedger
+    };
+};
+
+/**
+ * Hook for fetching member savings transactions (deposits and withdrawals)
+ * @param {number} memberId - Member ID
+ * @returns {Object} Transactions state and operations
+ */
+export const useSavingsTransactions = (memberId) => {
+    const [transactions, setTransactions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const fetchTransactions = useCallback(async () => {
+        if (!memberId) {
+            setLoading(false);
+            return;
+        }
+
+        try {
+            setLoading(true);
+            setError(null);
+
+            const response = await getMemberSavingsTransactions(memberId);
+            setTransactions(response.data || []);
+        } catch (err) {
+            setError(err.message || 'Error al cargar las transacciones de ahorros');
+            setTransactions([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [memberId]);
+
+    useEffect(() => {
+        fetchTransactions();
+    }, [fetchTransactions]);
+
+    return {
+        transactions,
+        loading,
+        error,
+        refetch: fetchTransactions
     };
 };
 

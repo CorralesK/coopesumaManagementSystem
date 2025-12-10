@@ -96,4 +96,16 @@ router.get(
     savingsController.getSavingsLedger
 );
 
+/**
+ * @route GET /api/savings/:memberId/transactions
+ * @desc Get all savings transactions (deposits and withdrawals) for a member
+ * @access Private - Member can view own data, Manager/Administrator can view all
+ */
+router.get(
+    '/:memberId/transactions',
+    authenticate,
+    checkMemberOwnership,
+    savingsController.getMemberSavingsTransactions
+);
+
 module.exports = router;

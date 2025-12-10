@@ -69,3 +69,12 @@ export const getSavingsInventoryByMonth = async (fiscalYear, month) => {
 export const registerWithdrawal = async (withdrawalData) => {
     return api.post('/savings/withdrawals', withdrawalData);
 };
+
+/**
+ * Get all savings transactions (deposits and withdrawals) for a member
+ * @param {number} memberId - Member ID
+ * @returns {Promise} Array of transactions
+ */
+export const getMemberSavingsTransactions = async (memberId) => {
+    return api.get(`/savings/${memberId}/transactions`);
+};
