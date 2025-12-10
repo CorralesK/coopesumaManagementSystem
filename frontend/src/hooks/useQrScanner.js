@@ -75,7 +75,7 @@ export const useQrScanner = (options = {}) => {
         } catch (err) {
             console.error('Error initializing QR scanner:', err);
             const errorMessage = err.message || err.toString() || 'Error desconocido';
-            setError('Error al inicializar el escáner: ' + errorMessage);
+            setError('Error initializing scanner: ' + errorMessage);
         }
     }, [elementId]);
 
@@ -129,7 +129,7 @@ export const useQrScanner = (options = {}) => {
         } catch (err) {
             console.error('Error starting QR scanner:', err);
             const errorMessage = err.message || err.toString() || 'Error desconocido';
-            setError('Error al iniciar el escaneo: ' + errorMessage);
+            setError('Error starting scan: ' + errorMessage);
             setIsScanning(false);
         }
     }, [selectedCamera, fps, qrbox, onScanSuccess, onScanError, isScanning]);

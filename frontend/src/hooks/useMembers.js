@@ -64,7 +64,7 @@ export const useMembers = (initialFilters = {}) => {
 
             setAllMembers(sortedMembers);
         } catch (err) {
-            setError(err.message || 'Error al cargar los miembros');
+            setError(err.message || 'Error loading members');
             setAllMembers([]);
         } finally {
             setLoading(false);
@@ -172,7 +172,7 @@ export const useMember = (memberId) => {
             const response = await getMemberById(memberId);
             setMember(response.data);
         } catch (err) {
-            setError(err.message || 'Error al cargar el miembro');
+            setError(err.message || 'Error loading member');
             setMember(null);
         } finally {
             setLoading(false);
@@ -216,7 +216,7 @@ export const useMemberOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al afiliar el miembro');
+            setError(err.message || 'Error affiliating member');
             throw err;
         } finally {
             setLoading(false);
@@ -239,7 +239,7 @@ export const useMemberOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al crear el miembro');
+            setError(err.message || 'Error creating member');
             throw err;
         } finally {
             setLoading(false);
@@ -263,7 +263,7 @@ export const useMemberOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al actualizar el miembro');
+            setError(err.message || 'Error updating member');
             throw err;
         } finally {
             setLoading(false);
@@ -286,7 +286,7 @@ export const useMemberOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al desactivar el miembro');
+            setError(err.message || 'Error deactivating member');
             throw err;
         } finally {
             setLoading(false);
@@ -309,7 +309,7 @@ export const useMemberOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al regenerar el código QR');
+            setError(err.message || 'Error regenerating QR code');
             throw err;
         } finally {
             setLoading(false);

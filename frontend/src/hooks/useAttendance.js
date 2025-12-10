@@ -60,7 +60,7 @@ export const useAttendance = (initialFilters = {}) => {
                 total: response.pagination?.total || 0
             });
         } catch (err) {
-            setError(err.message || 'Error al cargar la asistencia');
+            setError(err.message || 'Error loading attendance');
             setAttendance([]);
         } finally {
             setLoading(false);
@@ -148,7 +148,7 @@ export const useAssemblyAttendance = (assemblyId) => {
             setAttendance(attendanceResponse.data || []);
             setStats(statsResponse.data || null);
         } catch (err) {
-            setError(err.message || 'Error al cargar la asistencia');
+            setError(err.message || 'Error loading attendance');
             setAttendance([]);
             setStats(null);
         } finally {
@@ -203,7 +203,7 @@ export const useAttendanceRecording = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al registrar asistencia');
+            setError(err.message || 'Error recording attendance');
             throw err;
         } finally {
             setLoading(false);
@@ -235,7 +235,7 @@ export const useAttendanceRecording = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al registrar asistencia manual');
+            setError(err.message || 'Error recording manual attendance');
             throw err;
         } finally {
             setLoading(false);

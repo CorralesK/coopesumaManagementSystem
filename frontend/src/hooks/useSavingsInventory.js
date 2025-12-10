@@ -26,14 +26,6 @@ export const useSavingsInventoryByYear = (fiscalYear) => {
             // axios interceptor extracts response.data, which is { success, message, data }
             // We need to access response.data for the actual inventory data
             const inventoryData = response?.data || response;
-            console.log('📊 Inventory Response:', {
-                response,
-                inventoryData,
-                fiscalYear,
-                membersCount: inventoryData?.members?.length,
-                firstMember: inventoryData?.members?.[0],
-                totals: inventoryData?.totals
-            });
             setData(inventoryData || null);
         } catch (err) {
             console.error('Error fetching inventory by year:', err);

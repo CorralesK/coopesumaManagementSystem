@@ -31,7 +31,7 @@ export const useContributions = (memberId, fiscalYear = null) => {
             const response = await getMemberContributions(memberId, fiscalYear);
             setContributions(response.data);
         } catch (err) {
-            setError(err.message || 'Error al cargar las aportaciones');
+            setError(err.message || 'Error loading contributions');
             setContributions(null);
         } finally {
             setLoading(false);

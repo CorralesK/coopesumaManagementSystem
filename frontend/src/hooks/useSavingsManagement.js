@@ -46,13 +46,6 @@ export const useSavingsManagement = (initialFilters = {}) => {
             // Note: axios interceptor already extracts .data, so response IS the data
             const responseData = response || {};
 
-            console.log('🔍 Response Data:', {
-                responseData,
-                members: responseData.members,
-                firstMember: responseData.members?.[0],
-                summary: responseData.summary
-            });
-
             setSummary(responseData.summary || {});
             setMembers(responseData.members || []);
         } catch (err) {

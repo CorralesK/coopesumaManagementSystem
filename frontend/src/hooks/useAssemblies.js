@@ -63,7 +63,7 @@ export const useAssemblies = (initialFilters = {}) => {
                 total: response.pagination?.total || 0
             });
         } catch (err) {
-            setError(err.message || 'Error al cargar las asambleas');
+            setError(err.message || 'Error loading assemblies');
             setAssemblies([]);
         } finally {
             setLoading(false);
@@ -144,7 +144,7 @@ export const useAssembly = (assemblyId) => {
             const response = await getAssemblyById(assemblyId);
             setAssembly(response.data);
         } catch (err) {
-            setError(err.message || 'Error al cargar la asamblea');
+            setError(err.message || 'Error loading assembly');
             setAssembly(null);
         } finally {
             setLoading(false);
@@ -185,7 +185,7 @@ export const useActiveAssembly = () => {
                 setActiveAssembly(null);
                 setError(null);
             } else {
-                setError(err.message || 'Error al cargar la asamblea activa');
+                setError(err.message || 'Error loading active assembly');
             }
         } finally {
             setLoading(false);
@@ -229,7 +229,7 @@ export const useAssemblyOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al crear la asamblea');
+            setError(err.message || 'Error creating assembly');
             throw err;
         } finally {
             setLoading(false);
@@ -253,7 +253,7 @@ export const useAssemblyOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al actualizar la asamblea');
+            setError(err.message || 'Error updating assembly');
             throw err;
         } finally {
             setLoading(false);
@@ -276,7 +276,7 @@ export const useAssemblyOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al eliminar la asamblea');
+            setError(err.message || 'Error deleting assembly');
             throw err;
         } finally {
             setLoading(false);
@@ -299,7 +299,7 @@ export const useAssemblyOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al activar la asamblea');
+            setError(err.message || 'Error activating assembly');
             throw err;
         } finally {
             setLoading(false);
@@ -322,7 +322,7 @@ export const useAssemblyOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al desactivar la asamblea');
+            setError(err.message || 'Error deactivating assembly');
             throw err;
         } finally {
             setLoading(false);
@@ -345,7 +345,7 @@ export const useAssemblyOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al cerrar la asamblea');
+            setError(err.message || 'Error closing assembly');
             throw err;
         } finally {
             setLoading(false);

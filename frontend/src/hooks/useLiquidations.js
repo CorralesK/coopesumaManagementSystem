@@ -29,7 +29,7 @@ export const usePendingLiquidations = () => {
             const response = await getMembersPendingLiquidation();
             setPendingMembers(response.data?.members || []);
         } catch (err) {
-            setError(err.message || 'Error al cargar miembros pendientes de liquidación');
+            setError(err.message || 'Error loading members pending liquidation');
             setPendingMembers([]);
         } finally {
             setLoading(false);
@@ -74,7 +74,7 @@ export const useLiquidationHistory = (filters = {}) => {
             const response = await getLiquidationHistory(params);
             setHistory(response.data || []);
         } catch (err) {
-            setError(err.message || 'Error al cargar el historial de liquidaciones');
+            setError(err.message || 'Error loading liquidation history');
             setHistory([]);
         } finally {
             setLoading(false);
@@ -117,7 +117,7 @@ export const useLiquidationOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al obtener la vista previa de liquidación');
+            setError(err.message || 'Error getting liquidation preview');
             throw err;
         } finally {
             setLoading(false);
@@ -138,7 +138,7 @@ export const useLiquidationOperations = () => {
 
             return response;
         } catch (err) {
-            setError(err.message || 'Error al ejecutar la liquidación');
+            setError(err.message || 'Error executing liquidation');
             throw err;
         } finally {
             setLoading(false);
