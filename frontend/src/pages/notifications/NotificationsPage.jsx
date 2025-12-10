@@ -4,10 +4,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Alert from '../../components/common/Alert';
 import api from '../../services/api';
+import { checkWithdrawalRequestStatus } from '../../services/withdrawalService';
 
 const NotificationsPage = () => {
+    const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -19,10 +22,38 @@ const NotificationsPage = () => {
     });
     const [sending, setSending] = useState(false);
     const [filter, setFilter] = useState('all'); // all, read, unread
+    const [withdrawalStatuses, setWithdrawalStatuses] = useState({}); // Cache for withdrawal request statuses
 
     useEffect(() => {
         fetchNotifications();
     }, []);
+
+    // Fetch withdrawal request statuses for withdrawal_request notifications
+    useEffect(() => {
+        const fetchWithdrawalStatuses = async () => {
+            const withdrawalNotifications = notifications.filter(
+                n => n.notification_type === 'withdrawal_request' && n.related_entity_id
+            );
+
+            for (const notification of withdrawalNotifications) {
+                if (!withdrawalStatuses[notification.related_entity_id]) {
+                    try {
+                        const response = await checkWithdrawalRequestStatus(notification.related_entity_id);
+                        setWithdrawalStatuses(prev => ({
+                            ...prev,
+                            [notification.related_entity_id]: response.data.data
+                        }));
+                    } catch (err) {
+                        console.error('Error fetching withdrawal status:', err);
+                    }
+                }
+            }
+        };
+
+        if (notifications.length > 0) {
+            fetchWithdrawalStatuses();
+        }
+    }, [notifications]);
 
     const fetchNotifications = async () => {
         try {
@@ -216,44 +247,77 @@ const NotificationsPage = () => {
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-200">
-                        {filteredNotifications.map((notification) => (
-                            <div
-                                key={notification.notification_id}
-                                className={`p-4 hover:bg-gray-50 transition-colors ${
-                                    !notification.is_read ? 'bg-blue-50' : ''
-                                }`}
-                            >
-                                <div className="flex items-start gap-4">
-                                    {getNotificationIcon(notification.notification_type)}
+                        {filteredNotifications.map((notification) => {
+                            const withdrawalStatus = notification.notification_type === 'withdrawal_request'
+                                ? withdrawalStatuses[notification.related_entity_id]
+                                : null;
+                            const isProcessed = withdrawalStatus?.isProcessed;
 
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="flex-1">
-                                                <p className="text-sm font-semibold text-gray-900">
-                                                    {notification.title}
-                                                </p>
-                                                <p className="text-sm text-gray-600 mt-1">
-                                                    {notification.message}
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs text-gray-500 whitespace-nowrap">
-                                                    {formatDate(notification.created_at)}
-                                                </span>
-                                                {!notification.is_read && (
-                                                    <button
-                                                        onClick={() => handleMarkAsRead(notification.notification_id)}
-                                                        className="text-primary-600 hover:text-primary-700 text-xs font-medium whitespace-nowrap"
-                                                    >
-                                                        Marcar leída
-                                                    </button>
-                                                )}
+                            return (
+                                <div
+                                    key={notification.notification_id}
+                                    className={`p-4 hover:bg-gray-50 transition-colors ${
+                                        !notification.is_read ? 'bg-blue-50' : ''
+                                    }`}
+                                >
+                                    <div className="flex items-start gap-4">
+                                        {getNotificationIcon(notification.notification_type)}
+
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-semibold text-gray-900">
+                                                        {notification.title}
+                                                    </p>
+                                                    <p className="text-sm text-gray-600 mt-1">
+                                                        {notification.message}
+                                                    </p>
+
+                                                    {/* Show withdrawal request status */}
+                                                    {notification.notification_type === 'withdrawal_request' && withdrawalStatus && (
+                                                        <div className="mt-2">
+                                                            {isProcessed ? (
+                                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                                    withdrawalStatus.status === 'approved'
+                                                                        ? 'bg-green-100 text-green-800'
+                                                                        : 'bg-red-100 text-red-800'
+                                                                }`}>
+                                                                    {withdrawalStatus.status === 'approved' ? '✓ Aprobada' : '✗ Rechazada'}
+                                                                    {withdrawalStatus.reviewedByName && ` por ${withdrawalStatus.reviewedByName}`}
+                                                                </span>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => navigate('/withdrawals')}
+                                                                    className="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors"
+                                                                >
+                                                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                                    </svg>
+                                                                    Gestionar Solicitud
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-gray-500 whitespace-nowrap">
+                                                        {formatDate(notification.created_at)}
+                                                    </span>
+                                                    {!notification.is_read && (
+                                                        <button
+                                                            onClick={() => handleMarkAsRead(notification.notification_id)}
+                                                            className="text-primary-600 hover:text-primary-700 text-xs font-medium whitespace-nowrap"
+                                                        >
+                                                            Marcar leída
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>

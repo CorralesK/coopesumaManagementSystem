@@ -16,7 +16,7 @@ const getUserNotifications = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: 'Notificaciones obtenidas successfully',
+            message: 'Notifications retrieved successfully',
             data: notifications
         });
     } catch (error) {
@@ -37,14 +37,14 @@ const markAsRead = async (req, res, next) => {
         if (!notification) {
             return res.status(404).json({
                 success: false,
-                message: 'Notificación no encontrada',
+                message: 'Notification not found',
                 error: 'NOT_FOUND'
             });
         }
 
         res.status(200).json({
             success: true,
-            message: 'Notificación marcada como leída',
+            message: 'Notification marked as read',
             data: notification
         });
     } catch (error) {
@@ -60,7 +60,7 @@ const broadcastToMembers = async (req, res, next) => {
         if (!title || !message) {
             return res.status(400).json({
                 success: false,
-                message: 'Título y mensaje are required',
+                message: 'Title and message are required',
                 error: 'VALIDATION_ERROR'
             });
         }
@@ -69,7 +69,7 @@ const broadcastToMembers = async (req, res, next) => {
 
         res.status(201).json({
             success: true,
-            message: `Notificación enviada a ${notifications.length} miembros`,
+            message: `Notification sent to ${notifications.length} members`,
             data: { count: notifications.length }
         });
     } catch (error) {
@@ -78,8 +78,45 @@ const broadcastToMembers = async (req, res, next) => {
     }
 };
 
+/**
+ * Check if a withdrawal request has already been processed
+ * Used when admin clicks on a withdrawal notification
+ */
+const checkWithdrawalRequestStatus = async (req, res, next) => {
+    try {
+        const { requestId } = req.params;
+
+        const status = await notificationService.checkWithdrawalRequestStatus(parseInt(requestId));
+
+        if (!status) {
+            return res.status(404).json({
+                success: false,
+                message: 'Request not found',
+                error: 'NOT_FOUND'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Request status retrieved',
+            data: {
+                requestId: status.request_id,
+                status: status.status,
+                isProcessed: status.status !== 'pending',
+                reviewedBy: status.reviewed_by,
+                reviewedByName: status.reviewed_by_name,
+                reviewedAt: status.reviewed_at
+            }
+        });
+    } catch (error) {
+        logger.error('Controller error - checkWithdrawalRequestStatus:', error);
+        next(error);
+    }
+};
+
 module.exports = {
     getUserNotifications,
     markAsRead,
-    broadcastToMembers
+    broadcastToMembers,
+    checkWithdrawalRequestStatus
 };

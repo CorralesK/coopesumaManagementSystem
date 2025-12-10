@@ -193,6 +193,62 @@ const notifyLiquidationsDue = async () => {
 };
 
 /**
+ * Mark all notifications related to a withdrawal request as processed
+ * This is called when an admin approves/rejects a request to notify other admins
+ */
+const markWithdrawalNotificationsAsProcessed = async (requestId) => {
+    try {
+        const query = `
+            UPDATE notifications
+            SET is_read = true, read_at = CURRENT_TIMESTAMP
+            WHERE related_entity_type = 'withdrawal_request'
+            AND related_entity_id = $1
+            AND notification_type = 'withdrawal_request'
+            AND is_read = false
+            RETURNING notification_id, user_id
+        `;
+
+        const result = await db.query(query, [requestId]);
+
+        logger.info('Withdrawal notifications marked as processed', {
+            requestId,
+            notificationsUpdated: result.rows.length
+        });
+
+        return result.rows;
+    } catch (error) {
+        logger.error('Error marking withdrawal notifications as processed:', error);
+        throw error;
+    }
+};
+
+/**
+ * Check if a withdrawal request has already been processed
+ * Returns the request status if found
+ */
+const checkWithdrawalRequestStatus = async (requestId) => {
+    try {
+        const query = `
+            SELECT
+                wr.request_id,
+                wr.status,
+                wr.reviewed_by,
+                wr.reviewed_at,
+                u.display_name as reviewed_by_name
+            FROM withdrawal_requests wr
+            LEFT JOIN users u ON wr.reviewed_by = u.user_id
+            WHERE wr.request_id = $1
+        `;
+
+        const result = await db.query(query, [requestId]);
+        return result.rows[0] || null;
+    } catch (error) {
+        logger.error('Error checking withdrawal request status:', error);
+        throw error;
+    }
+};
+
+/**
  * Notify member about withdrawal response
  */
 const notifyWithdrawalResponse = async (request, status) => {
@@ -238,5 +294,7 @@ module.exports = {
     notifyWithdrawalRequest,
     broadcastToMembers,
     notifyLiquidationsDue,
-    notifyWithdrawalResponse
+    notifyWithdrawalResponse,
+    markWithdrawalNotificationsAsProcessed,
+    checkWithdrawalRequestStatus
 };

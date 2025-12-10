@@ -44,4 +44,16 @@ router.post(
     notificationController.broadcastToMembers
 );
 
+/**
+ * @route GET /api/notifications/withdrawal-status/:requestId
+ * @desc Check if a withdrawal request has been processed
+ * @access Private (administrators and managers)
+ */
+router.get(
+    '/withdrawal-status/:requestId',
+    authenticate,
+    checkPermission('approve_withdrawals'),
+    notificationController.checkWithdrawalRequestStatus
+);
+
 module.exports = router;
