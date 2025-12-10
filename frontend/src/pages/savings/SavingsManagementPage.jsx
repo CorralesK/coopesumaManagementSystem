@@ -367,7 +367,7 @@ const SavingsManagementPage = () => {
                         </div>
                         <div className="flex-1">
                             <p className="text-sm font-medium text-gray-600">Año Anterior</p>
-                            <p className="text-2xl font-bold text-blue-600 mt-1">
+                            <p className="text-2xl font-bold text-gray-900 mt-1">
                                 {formatCurrency(inventory?.totals?.previousYearBalance || 0)}
                             </p>
                         </div>
