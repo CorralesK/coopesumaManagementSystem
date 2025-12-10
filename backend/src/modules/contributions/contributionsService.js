@@ -191,12 +191,12 @@ const getMemberContributions = async (memberId, fiscalYear = null) => {
 
         return {
             member: {
-                memberId: member.member_id,
-                fullName: member.full_name,
+                memberId: member.memberId,
+                fullName: member.fullName,
                 identification: member.identification,
-                memberCode: member.member_code,
-                qualityName: member.quality_name,
-                levelName: member.level_name
+                memberCode: member.memberCode,
+                qualityName: member.qualityName,
+                levelName: member.levelName
             },
             fiscalYear: year,
             account: {
@@ -255,7 +255,7 @@ const registerContribution = async (contributionData) => {
             );
         }
 
-        if (!member.is_active) {
+        if (!member.isActive) {
             throw new ContributionsError(
                 MESSAGES.MEMBER_INACTIVE,
                 ERROR_CODES.MEMBER_INACTIVE,
@@ -314,7 +314,7 @@ const registerContribution = async (contributionData) => {
                 }
 
                 // Crear transacción para este tracto
-                const description = `Aportación Tracto ${tractNum} (pago completo) - ${member.full_name}`;
+                const description = `Aportación Tracto ${tractNum} (pago completo) - ${member.fullName}`;
 
                 const transaction = await contributionsRepository.registerContribution({
                     accountId: account.account_id,
@@ -355,9 +355,9 @@ const registerContribution = async (contributionData) => {
 
             return {
                 member: {
-                    memberId: member.member_id,
-                    fullName: member.full_name,
-                    memberCode: member.member_code
+                    memberId: member.memberId,
+                    fullName: member.fullName,
+                    memberCode: member.memberCode
                 },
                 transactions: results,
                 totalAmount: contributionData.amount,
@@ -401,7 +401,7 @@ const registerContribution = async (contributionData) => {
 
         // 6. Create contribution transaction
         const description = contributionData.description ||
-            `Aportación Tracto ${contributionData.tractNumber} - ${member.full_name}`;
+            `Aportación Tracto ${contributionData.tractNumber} - ${member.fullName}`;
 
         const transaction = await contributionsRepository.registerContribution({
             accountId: account.account_id,
@@ -438,10 +438,10 @@ const registerContribution = async (contributionData) => {
         return {
             transaction,
             member: {
-                memberId: member.member_id,
-                fullName: member.full_name,
+                memberId: member.memberId,
+                fullName: member.fullName,
                 identification: member.identification,
-                memberCode: member.member_code
+                memberCode: member.memberCode
             },
             period: {
                 tractNumber: contributionData.tractNumber,

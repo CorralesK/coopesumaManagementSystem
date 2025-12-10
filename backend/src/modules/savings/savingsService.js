@@ -110,9 +110,16 @@ const registerDeposit = async (depositData) => {
             );
         }
 
-        if (!member.is_active) {
+        console.log('[SAVINGS DEPOSIT] Verificando miembro:', {
+            memberId: depositData.memberId,
+            memberName: member.fullName,
+            memberCode: member.memberCode,
+            isActive: member.isActive
+        });
+
+        if (!member.isActive) {
             throw new SavingsError(
-                MESSAGES.MEMBER_INACTIVE,
+                `El miembro ${member.fullName} (${member.memberCode}) está marcado como inactivo en la base de datos`,
                 ERROR_CODES.MEMBER_INACTIVE,
                 403
             );
@@ -145,23 +152,18 @@ const registerDeposit = async (depositData) => {
             amount: depositData.amount,
             transactionDate: depositData.transactionDate || new Date(),
             fiscalYear: fiscalYear,
-            description: depositData.description || `Depósito de ahorros - ${member.full_name}`,
+            description: depositData.description || `Depósito de ahorros - ${member.fullName}`,
             createdBy: depositData.createdBy
         }, client);
 
-        // 5. Update account balance (trigger should handle this, but we do it manually for safety)
-        const updateBalanceQuery = `
-            UPDATE accounts
-            SET current_balance = current_balance + $1,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE account_id = $2
-            RETURNING current_balance
+        // 5. Get updated balance (trigger handles the update automatically)
+        const balanceQuery = `
+            SELECT current_balance
+            FROM accounts
+            WHERE account_id = $1
         `;
 
-        const balanceResult = await client.query(updateBalanceQuery, [
-            depositData.amount,
-            account.account_id
-        ]);
+        const balanceResult = await client.query(balanceQuery, [account.account_id]);
 
         await client.query('COMMIT');
 
@@ -174,10 +176,10 @@ const registerDeposit = async (depositData) => {
         return {
             transaction,
             member: {
-                memberId: member.member_id,
-                fullName: member.full_name,
+                memberId: member.memberId,
+                fullName: member.fullName,
                 identification: member.identification,
-                memberCode: member.member_code
+                memberCode: member.memberCode
             },
             newBalance: parseFloat(balanceResult.rows[0].current_balance)
         };
@@ -243,12 +245,12 @@ const getSavingsLedger = async (memberId, filters = {}) => {
 
         return {
             member: {
-                memberId: member.member_id,
-                fullName: member.full_name,
+                memberId: member.memberId,
+                fullName: member.fullName,
                 identification: member.identification,
-                memberCode: member.member_code,
-                qualityName: member.quality_name,
-                levelName: member.level_name
+                memberCode: member.memberCode,
+                qualityName: member.qualityName,
+                levelName: member.levelName
             },
             account: {
                 accountId: account.account_id,
@@ -285,8 +287,14 @@ const getAllMembersSavingsSummary = async (cooperativeId) => {
     try {
         const members = await savingsRepository.getSavingsSummary(cooperativeId);
 
-        // Calculate summary statistics
-        const totalSavings = members.reduce((sum, item) => sum + parseFloat(item.current_balance || 0), 0);
+        logger.info('📋 Raw members from repository:', {
+            count: members.length,
+            firstMember: members[0],
+            memberKeys: members[0] ? Object.keys(members[0]) : []
+        });
+
+        // Calculate summary statistics (database.js already converts to camelCase)
+        const totalSavings = members.reduce((sum, item) => sum + parseFloat(item.currentBalance || 0), 0);
         const totalMembers = members.length;
         const averageBalance = totalMembers > 0 ? totalSavings / totalMembers : 0;
 
@@ -319,9 +327,9 @@ const getSavingsInventoryByYear = async (cooperativeId, fiscalYear) => {
     try {
         const members = await savingsRepository.getSavingsInventoryByYear(cooperativeId, fiscalYear);
 
-        // Calculate column totals
+        // Calculate column totals (database.js already converts to camelCase)
         const totals = {
-            previous_year_balance: 0,
+            previousYearBalance: 0,
             january: 0,
             february: 0,
             march: 0,
@@ -335,11 +343,11 @@ const getSavingsInventoryByYear = async (cooperativeId, fiscalYear) => {
             november: 0,
             december: 0,
             interests: 0,
-            total_saved: 0
+            totalSaved: 0
         };
 
         members.forEach(member => {
-            totals.previous_year_balance += parseFloat(member.previous_year_balance || 0);
+            totals.previousYearBalance += parseFloat(member.previousYearBalance || 0);
             totals.january += parseFloat(member.january || 0);
             totals.february += parseFloat(member.february || 0);
             totals.march += parseFloat(member.march || 0);
@@ -353,7 +361,7 @@ const getSavingsInventoryByYear = async (cooperativeId, fiscalYear) => {
             totals.november += parseFloat(member.november || 0);
             totals.december += parseFloat(member.december || 0);
             totals.interests += parseFloat(member.interests || 0);
-            totals.total_saved += parseFloat(member.total_saved || 0);
+            totals.totalSaved += parseFloat(member.totalSaved || 0);
         });
 
         return {
@@ -458,7 +466,7 @@ const registerWithdrawal = async (withdrawalData) => {
             );
         }
 
-        if (!member.is_active) {
+        if (!member.isActive) {
             throw new SavingsError(
                 MESSAGES.MEMBER_INACTIVE,
                 ERROR_CODES.MEMBER_INACTIVE,
@@ -503,23 +511,18 @@ const registerWithdrawal = async (withdrawalData) => {
             receiptNumber: withdrawalData.receiptNumber,
             transactionDate: withdrawalData.transactionDate || new Date(),
             fiscalYear: fiscalYear,
-            description: withdrawalData.description || `Retiro de ahorros - ${member.full_name}`,
+            description: withdrawalData.description || `Retiro de ahorros - ${member.fullName}`,
             createdBy: withdrawalData.createdBy
         }, client);
 
-        // 6. Update account balance
-        const updateBalanceQuery = `
-            UPDATE accounts
-            SET current_balance = current_balance - $1,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE account_id = $2
-            RETURNING current_balance
+        // 6. Get updated balance (trigger handles the update automatically)
+        const balanceQuery = `
+            SELECT current_balance
+            FROM accounts
+            WHERE account_id = $1
         `;
 
-        const balanceResult = await client.query(updateBalanceQuery, [
-            withdrawalData.amount,
-            account.account_id
-        ]);
+        const balanceResult = await client.query(balanceQuery, [account.account_id]);
 
         await client.query('COMMIT');
 
@@ -532,10 +535,10 @@ const registerWithdrawal = async (withdrawalData) => {
         return {
             transaction,
             member: {
-                memberId: member.member_id,
-                fullName: member.full_name,
+                memberId: member.memberId,
+                fullName: member.fullName,
                 identification: member.identification,
-                memberCode: member.member_code
+                memberCode: member.memberCode
             },
             newBalance: parseFloat(balanceResult.rows[0].current_balance)
         };
@@ -558,6 +561,59 @@ const registerWithdrawal = async (withdrawalData) => {
     }
 };
 
+/**
+ * Get all savings transactions (deposits and withdrawals) for a member
+ *
+ * @param {number} memberId - Member ID
+ * @returns {Promise<Array>} Array of transactions with user details
+ */
+const getMemberSavingsTransactions = async (memberId) => {
+    try {
+        // Verify member exists
+        const member = await memberRepository.findById(memberId);
+        if (!member) {
+            throw new SavingsError(
+                MESSAGES.MEMBER_NOT_FOUND,
+                ERROR_CODES.MEMBER_NOT_FOUND,
+                404
+            );
+        }
+
+        // Get savings account
+        const account = await savingsRepository.getSavingsAccount(memberId);
+        if (!account) {
+            throw new SavingsError(
+                'No se encontró cuenta de ahorros para este miembro',
+                ERROR_CODES.ACCOUNT_NOT_FOUND,
+                404
+            );
+        }
+
+        // Get all transactions for this account
+        const transactions = await savingsRepository.getTransactions(account.accountId);
+
+        // database.js already converts to camelCase, just ensure amounts are parsed
+        const processedTransactions = transactions.map(t => ({
+            ...t,
+            amount: parseFloat(t.amount),
+            processedByName: t.createdByName // Use the alias from JOIN
+        }));
+
+        return processedTransactions;
+    } catch (error) {
+        if (error.isOperational) {
+            throw error;
+        }
+
+        logger.error('Error getting member savings transactions:', error);
+        throw new SavingsError(
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    }
+};
+
 module.exports = {
     getMemberSavings,
     registerDeposit,
@@ -566,5 +622,6 @@ module.exports = {
     getAllMembersSavingsSummary,
     getSavingsInventoryByYear,
     getSavingsInventoryByMonth,
+    getMemberSavingsTransactions,
     SavingsError
 };

@@ -40,15 +40,38 @@ const findById = async (memberId) => {
                 mq.quality_name,
                 -- Level information
                 ml.level_code,
-                ml.level_name
+                ml.level_name,
+                -- Account balances
+                a_savings.current_balance as savings_balance,
+                a_contributions.current_balance as contributions_balance,
+                a_surplus.current_balance as surplus_balance
             FROM members m
             JOIN member_qualities mq ON m.quality_id = mq.quality_id
             LEFT JOIN member_levels ml ON m.level_id = ml.level_id
+            LEFT JOIN accounts a_savings ON m.member_id = a_savings.member_id
+                AND a_savings.account_type = 'savings'
+            LEFT JOIN accounts a_contributions ON m.member_id = a_contributions.member_id
+                AND a_contributions.account_type = 'contributions'
+            LEFT JOIN accounts a_surplus ON m.member_id = a_surplus.member_id
+                AND a_surplus.account_type = 'surplus'
             WHERE m.member_id = $1
         `;
 
         const result = await db.query(query, [memberId]);
-        return result.rows[0] || null;
+        const member = result.rows[0] || null;
+
+        // Log para debugging
+        if (member) {
+            console.log('[MEMBER REPOSITORY] findById result keys:', Object.keys(member));
+            console.log('[MEMBER REPOSITORY] findById sample values:', {
+                full_name: member.full_name,
+                fullName: member.fullName,
+                is_active: member.is_active,
+                isActive: member.isActive
+            });
+        }
+
+        return member;
     } catch (error) {
         logger.error('Error finding member by ID:', error);
         throw error;
@@ -212,16 +235,7 @@ const findAll = async (filters = {}) => {
             paramIndex++;
         }
 
-        // Search filter
-        if (filters.search) {
-            query += ` AND (
-                m.full_name ILIKE $${paramIndex} OR
-                m.identification ILIKE $${paramIndex} OR
-                m.member_code ILIKE $${paramIndex}
-            )`;
-            params.push(`%${filters.search}%`);
-            paramIndex++;
-        }
+        // Search filter removed - filtering is now done in frontend with normalizeText
 
         query += ' ORDER BY m.full_name ASC';
 
@@ -280,15 +294,7 @@ const count = async (filters = {}) => {
             paramIndex++;
         }
 
-        // Search filter
-        if (filters.search) {
-            query += ` AND (
-                m.full_name ILIKE $${paramIndex} OR
-                m.identification ILIKE $${paramIndex} OR
-                m.member_code ILIKE $${paramIndex}
-            )`;
-            params.push(`%${filters.search}%`);
-        }
+        // Search filter removed - filtering is now done in frontend with normalizeText
 
         const result = await db.query(query, params);
         return parseInt(result.rows[0].count, 10);

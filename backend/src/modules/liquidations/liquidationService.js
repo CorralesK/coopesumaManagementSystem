@@ -61,19 +61,17 @@ const getLiquidationPreview = async (memberId) => {
 
         return {
             member: {
-                memberId: member.member_id,
-                fullName: member.full_name,
+                memberId: member.memberId,
+                fullName: member.fullName,
                 identification: member.identification,
-                memberCode: member.member_code,
-                affiliationDate: member.affiliation_date,
-                lastLiquidationDate: member.last_liquidation_date
+                memberCode: member.memberCode,
+                affiliationDate: member.affiliationDate,
+                lastLiquidationDate: member.lastLiquidationDate
             },
-            balances: {
-                savings: balances.savings.balance,
-                contributions: balances.contributions.balance,
-                surplus: balances.surplus.balance,
-                total: totalAmount
-            }
+            savingsBalance: balances.savings.balance,
+            contributionsBalance: balances.contributions.balance,
+            surplusBalance: balances.surplus.balance,
+            totalAmount: totalAmount
         };
     } catch (error) {
         if (error.isOperational) {
@@ -155,7 +153,7 @@ const executeLiquidation = async (liquidationData) => {
                         accountData.accountId,
                         accountData.balance,
                         fiscalYear,
-                        `Liquidación ${liquidationType === 'periodic' ? 'periódica' : 'por retiro'} - ${member.full_name}`,
+                        `Liquidación ${liquidationType === 'periodic' ? 'periódica' : 'por retiro'} - ${member.fullName}`,
                         processedBy
                     ];
 
@@ -201,8 +199,8 @@ const executeLiquidation = async (liquidationData) => {
 
             results.push({
                 memberId,
-                memberName: member.full_name,
-                liquidationId: liquidation.liquidation_id,
+                memberName: member.fullName,
+                liquidationId: liquidation.liquidationId,
                 totalLiquidated: totalAmount,
                 transactions: liquidationTransactions
             });
@@ -217,8 +215,8 @@ const executeLiquidation = async (liquidationData) => {
                     liquidationId: result.liquidationId
                 });
 
-                result.receiptId = receipt.receipt_id;
-                result.receiptNumber = receipt.receipt_number;
+                result.receiptId = receipt.receipt_id || receipt.receiptId;
+                result.receiptNumber = receipt.receipt_number || receipt.receiptNumber;
 
             } catch (receiptError) {
                 logger.error('Error generating liquidation receipt:', receiptError);
@@ -295,11 +293,61 @@ const getLiquidationHistory = async (filters = {}) => {
     }
 };
 
+/**
+ * Get liquidation statistics for dashboard
+ */
+const getLiquidationStats = async (cooperativeId) => {
+    try {
+        // Get pending members count
+        const pendingMembers = await liquidationRepository.getMembersPendingLiquidation(cooperativeId);
+
+        // Get liquidations from current fiscal year
+        const currentYear = new Date().getFullYear();
+        const yearStart = `${currentYear}-01-01`;
+        const yearEnd = `${currentYear}-12-31`;
+
+        const yearLiquidations = await liquidationRepository.getAllLiquidations({
+            cooperativeId,
+            startDate: yearStart,
+            endDate: yearEnd
+        });
+
+        // Calculate totals
+        const totalPending = pendingMembers.length;
+        const totalThisYear = yearLiquidations.length;
+
+        const periodicThisYear = yearLiquidations.filter(l => l.liquidationType === 'periodic').length;
+        const exitThisYear = yearLiquidations.filter(l => l.liquidationType === 'exit').length;
+
+        const totalAmountThisYear = yearLiquidations.reduce((sum, l) => sum + (parseFloat(l.totalAmount) || 0), 0);
+
+        // Get top pending members (most urgent - sorted by years)
+        const topPending = pendingMembers.slice(0, 5);
+
+        return {
+            pending: {
+                count: totalPending,
+                topMembers: topPending
+            },
+            thisYear: {
+                total: totalThisYear,
+                periodic: periodicThisYear,
+                exit: exitThisYear,
+                totalAmount: totalAmountThisYear
+            }
+        };
+    } catch (error) {
+        logger.error('Error getting liquidation statistics:', error);
+        throw new LiquidationError(MESSAGES.INTERNAL_ERROR, ERROR_CODES.INTERNAL_ERROR, 500);
+    }
+};
+
 module.exports = {
     getMembersPendingLiquidation,
     getLiquidationPreview,
     executeLiquidation,
     getLiquidationById,
     getLiquidationHistory,
+    getLiquidationStats,
     LiquidationError
 };
