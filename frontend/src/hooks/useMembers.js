@@ -4,7 +4,7 @@
  * @module hooks/useMembers
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     getAllMembers,
     getMemberById,
@@ -14,43 +14,39 @@ import {
     deactivateMember,
     regenerateMemberQR
 } from '../services/memberService';
+import { normalizeText } from '../utils/formatters';
 
 /**
  * Hook for fetching and managing a list of members
+ * Filtering and pagination is done in frontend for better UX with accent-insensitive search
  * @param {Object} initialFilters - Initial filter values
  * @returns {Object} Members state and operations
  */
 export const useMembers = (initialFilters = {}) => {
-    const [members, setMembers] = useState([]);
+    const [allMembers, setAllMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filters, setFilters] = useState({
         search: '',
         qualityId: '',
         levelId: '',
-        isActive: 'true',
+        isActive: '',
         page: 1,
-        limit: 20,
+        limit: 10,
         ...initialFilters
-    });
-    const [pagination, setPagination] = useState({
-        currentPage: 1,
-        totalPages: 1,
-        total: 0
     });
 
     /**
-     * Fetch members with current filters
+     * Fetch all members from backend (only filters by quality, level, isActive)
      */
     const fetchMembers = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
 
+            // Only send backend filters (not search, that's done in frontend)
             const params = {
-                page: filters.page,
-                limit: filters.limit,
-                ...(filters.search && { search: filters.search }),
+                limit: 1000, // Get all members for frontend filtering
                 ...(filters.qualityId && { qualityId: filters.qualityId }),
                 ...(filters.levelId && { levelId: filters.levelId }),
                 ...(filters.isActive && { isActive: filters.isActive })
@@ -58,39 +54,46 @@ export const useMembers = (initialFilters = {}) => {
 
             const response = await getAllMembers(params);
 
-            // Sort members: active first, then by name, then by quality/level
+            // Sort members: active first, then by name
             const sortedMembers = (response.data || []).sort((a, b) => {
-                // First: Sort by status (active first)
                 if (a.isActive !== b.isActive) {
-                    return b.isActive - a.isActive; // true (1) comes before false (0)
+                    return b.isActive - a.isActive;
                 }
-
-                // Second: Sort by name alphabetically
-                const nameComparison = a.fullName.localeCompare(b.fullName, 'es');
-                if (nameComparison !== 0) {
-                    return nameComparison;
-                }
-
-                // Third: Sort by quality, then level
-                if (a.qualityId !== b.qualityId) {
-                    return (a.qualityId || 0) - (b.qualityId || 0);
-                }
-                return (a.levelId || 0) - (b.levelId || 0);
+                return a.fullName.localeCompare(b.fullName, 'es');
             });
 
-            setMembers(sortedMembers);
-            setPagination({
-                currentPage: response.pagination?.page || 1,
-                totalPages: response.pagination?.totalPages || 1,
-                total: response.pagination?.total || 0
-            });
+            setAllMembers(sortedMembers);
         } catch (err) {
             setError(err.message || 'Error al cargar los miembros');
-            setMembers([]);
+            setAllMembers([]);
         } finally {
             setLoading(false);
         }
-    }, [filters]);
+    }, [filters.qualityId, filters.levelId, filters.isActive]);
+
+    // Filter members by search term in frontend (supports accents)
+    const filteredMembers = useMemo(() => {
+        if (!filters.search) return allMembers;
+        const normalizedSearch = normalizeText(filters.search);
+        return allMembers.filter(member =>
+            normalizeText(member.fullName || '').includes(normalizedSearch) ||
+            normalizeText(member.identification || '').includes(normalizedSearch) ||
+            normalizeText(member.memberCode || '').includes(normalizedSearch)
+        );
+    }, [allMembers, filters.search]);
+
+    // Pagination in frontend
+    const totalPages = Math.ceil(filteredMembers.length / filters.limit);
+    const paginatedMembers = useMemo(() => {
+        const startIndex = (filters.page - 1) * filters.limit;
+        return filteredMembers.slice(startIndex, startIndex + filters.limit);
+    }, [filteredMembers, filters.page, filters.limit]);
+
+    const pagination = useMemo(() => ({
+        currentPage: filters.page,
+        totalPages: totalPages || 1,
+        total: filteredMembers.length
+    }), [filters.page, totalPages, filteredMembers.length]);
 
     /**
      * Update filters
@@ -120,20 +123,21 @@ export const useMembers = (initialFilters = {}) => {
             search: '',
             qualityId: '',
             levelId: '',
-            isActive: 'true',
+            isActive: '',
             page: 1,
-            limit: 20,
+            limit: 10,
             ...initialFilters
         });
     }, [initialFilters]);
 
-    // Fetch members when filters change
+    // Fetch members when backend filters change
     useEffect(() => {
         fetchMembers();
     }, [fetchMembers]);
 
     return {
-        members,
+        members: paginatedMembers,
+        allMembers: filteredMembers,
         loading,
         error,
         filters,

@@ -3,13 +3,10 @@
  * Professional view of savings inventory (similar to Excel but modernized)
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getSavingsInventoryByYear } from '../../services/savingsService';
-import { formatCurrency } from '../../utils/formatters';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
+import { useSavingsInventoryByYear } from '../../hooks/useSavingsInventory';
+import { formatCurrency, normalizeText } from '../../utils/formatters';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 
@@ -32,29 +29,10 @@ const SavingsInventoryPage = () => {
     const navigate = useNavigate();
     const currentYear = new Date().getFullYear();
     const [fiscalYear, setFiscalYear] = useState(currentYear);
-    const [inventory, setInventory] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [selectedMonth, setSelectedMonth] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        fetchInventory();
-    }, [fiscalYear]);
-
-    const fetchInventory = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await getSavingsInventoryByYear(fiscalYear);
-            setInventory(response.data.data);
-        } catch (err) {
-            console.error('Error fetching inventory:', err);
-            setError(err.response?.data?.message || 'Error al cargar el inventario');
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Use custom hook
+    const { data: inventory, loading, error } = useSavingsInventoryByYear(fiscalYear);
 
     const handleMemberClick = (memberId) => {
         navigate(`/members/${memberId}/savings`);
@@ -65,20 +43,14 @@ const SavingsInventoryPage = () => {
         navigate(`/savings/inventory/${fiscalYear}/${monthNumber}`);
     };
 
-    const filteredMembers = inventory?.members?.filter(member =>
-        member.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.member_code?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+    const filteredMembers = inventory?.members?.filter(member => {
+        const normalizedSearch = normalizeText(searchTerm);
+        return normalizeText(member.fullName).includes(normalizedSearch) ||
+            normalizeText(member.memberCode).includes(normalizedSearch);
+    }) || [];
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
-                    <p className="text-gray-600">Cargando inventario...</p>
-                </div>
-            </div>
-        );
+        return <Loading message="Cargando inventario de ahorros..." />;
     }
 
     return (
@@ -139,15 +111,27 @@ const SavingsInventoryPage = () => {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Buscar por nombre o código..."
-                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                             />
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchTerm('')}
+                                    className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+                                    title="Limpiar"
+                                >
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
 
             {error && (
-                <Alert type="error" message={error} onClose={() => setError(null)} />
+                <Alert type="error" message={error} />
             )}
 
             {/* Summary Cards */}
@@ -160,13 +144,13 @@ const SavingsInventoryPage = () => {
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                         <p className="text-sm text-gray-600 mb-1">Año Anterior</p>
                         <p className="text-2xl font-bold text-blue-600">
-                            {formatCurrency(inventory.totals?.previous_year_balance || 0)}
+                            {formatCurrency(inventory.totals?.previousYearBalance || 0)}
                         </p>
                     </div>
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                         <p className="text-sm text-gray-600 mb-1">Total Ahorrado {fiscalYear}</p>
                         <p className="text-2xl font-bold text-green-600">
-                            {formatCurrency(inventory.totals?.total_saved || 0)}
+                            {formatCurrency(inventory.totals?.totalSaved || 0)}
                         </p>
                     </div>
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -214,27 +198,27 @@ const SavingsInventoryPage = () => {
                         <tbody className="bg-white divide-y divide-gray-200">
                             {filteredMembers.map((member, idx) => (
                                 <tr
-                                    key={member.member_id}
+                                    key={member.memberId}
                                     className={`hover:bg-gray-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
                                 >
                                     <td className="px-4 py-3 whitespace-nowrap text-sm sticky left-0 bg-inherit z-10">
                                         <button
-                                            onClick={() => handleMemberClick(member.member_id)}
+                                            onClick={() => handleMemberClick(member.memberId)}
                                             className="font-medium text-primary-600 hover:text-primary-800 hover:underline"
                                         >
-                                            {member.member_code}
+                                            {member.memberCode}
                                         </button>
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm sticky bg-inherit z-10" style={{ left: '120px' }}>
                                         <button
-                                            onClick={() => handleMemberClick(member.member_id)}
+                                            onClick={() => handleMemberClick(member.memberId)}
                                             className="font-medium text-gray-900 hover:text-primary-600 hover:underline text-left"
                                         >
-                                            {member.full_name}
+                                            {member.fullName}
                                         </button>
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-blue-600 font-medium">
-                                        {formatCurrency(member.previous_year_balance || 0)}
+                                        {formatCurrency(member.previousYearBalance || 0)}
                                     </td>
                                     {MONTHS.map(month => (
                                         <td
@@ -256,7 +240,7 @@ const SavingsInventoryPage = () => {
                                         {formatCurrency(member.interests || 0)}
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-bold text-green-700 bg-green-50">
-                                        {formatCurrency(member.total_saved || 0)}
+                                        {formatCurrency(member.totalSaved || 0)}
                                     </td>
                                 </tr>
                             ))}
@@ -268,7 +252,7 @@ const SavingsInventoryPage = () => {
                                         TOTALES
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-blue-700">
-                                        {formatCurrency(inventory.totals.previous_year_balance)}
+                                        {formatCurrency(inventory.totals.previousYearBalance)}
                                     </td>
                                     {MONTHS.map(month => (
                                         <td
@@ -282,7 +266,7 @@ const SavingsInventoryPage = () => {
                                         {formatCurrency(inventory.totals.interests)}
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-green-800 bg-green-100">
-                                        {formatCurrency(inventory.totals.total_saved)}
+                                        {formatCurrency(inventory.totals.totalSaved)}
                                     </td>
                                 </tr>
                             )}

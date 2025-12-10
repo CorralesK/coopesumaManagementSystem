@@ -160,6 +160,20 @@ export const formatPhone = (phone) => {
     return phone;
 };
 
+/**
+ * Normalize text by removing diacritics (tildes/accents)
+ * Useful for search comparisons that should ignore accents
+ * @param {string} text - The text to normalize
+ * @returns {string} Normalized text without diacritics
+ */
+export const normalizeText = (text) => {
+    if (!text) return '';
+    return text
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+};
+
 export default {
     formatCurrency,
     formatDate,
@@ -168,5 +182,6 @@ export default {
     formatPercentage,
     truncateText,
     formatIdentification,
-    formatPhone
+    formatPhone,
+    normalizeText
 };
