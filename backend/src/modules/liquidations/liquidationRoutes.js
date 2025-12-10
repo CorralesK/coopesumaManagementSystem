@@ -46,6 +46,18 @@ router.post(
 );
 
 /**
+ * @route GET /api/liquidations/stats
+ * @desc Get liquidation statistics for dashboard
+ * @access Private - Administrator only
+ */
+router.get(
+    '/stats',
+    authenticate,
+    checkPermission('execute_liquidations'),
+    liquidationController.getLiquidationStats
+);
+
+/**
  * @route GET /api/liquidations/history
  * @desc Get liquidation history
  * @access Private - Administrator only

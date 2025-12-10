@@ -7,6 +7,20 @@ const db = require('../../config/database');
 const logger = require('../../utils/logger');
 
 /**
+ * Transform snake_case keys to camelCase
+ */
+const toCamelCase = (obj) => {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(toCamelCase);
+
+    return Object.keys(obj).reduce((acc, key) => {
+        const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+        acc[camelKey] = obj[key];
+        return acc;
+    }, {});
+};
+
+/**
  * Get members pending liquidation (6+ years)
  * Usa tabla existente: members (affiliation_date, last_liquidation_date)
  */
@@ -44,7 +58,7 @@ const getMembersPendingLiquidation = async (cooperativeId) => {
         `;
 
         const result = await db.query(query, [cooperativeId]);
-        return result.rows;
+        return toCamelCase(result.rows);
     } catch (error) {
         logger.error('Error getting pending liquidations:', error);
         throw error;
@@ -127,7 +141,7 @@ const createLiquidation = async (liquidationData, client = db) => {
         ];
 
         const result = await client.query(query, values);
-        return result.rows[0];
+        return toCamelCase(result.rows[0]);
     } catch (error) {
         logger.error('Error creating liquidation:', error);
         throw error;
@@ -153,7 +167,7 @@ const findById = async (liquidationId) => {
         `;
 
         const result = await db.query(query, [liquidationId]);
-        return result.rows[0] || null;
+        return result.rows[0] ? toCamelCase(result.rows[0]) : null;
     } catch (error) {
         logger.error('Error finding liquidation by ID:', error);
         throw error;
@@ -176,7 +190,7 @@ const getLiquidationHistory = async (memberId) => {
         `;
 
         const result = await db.query(query, [memberId]);
-        return result.rows;
+        return toCamelCase(result.rows);
     } catch (error) {
         logger.error('Error getting liquidation history:', error);
         throw error;
@@ -236,7 +250,7 @@ const getAllLiquidations = async (filters = {}) => {
         }
 
         const result = await db.query(query, params);
-        return result.rows;
+        return toCamelCase(result.rows);
     } catch (error) {
         logger.error('Error getting all liquidations:', error);
         throw error;

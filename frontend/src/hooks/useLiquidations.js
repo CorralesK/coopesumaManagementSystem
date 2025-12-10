@@ -27,7 +27,7 @@ export const usePendingLiquidations = () => {
             setError(null);
 
             const response = await getMembersPendingLiquidation();
-            setPendingMembers(response.data || []);
+            setPendingMembers(response.data?.members || []);
         } catch (err) {
             setError(err.message || 'Error al cargar miembros pendientes de liquidación');
             setPendingMembers([]);

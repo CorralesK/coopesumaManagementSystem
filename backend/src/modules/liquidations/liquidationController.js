@@ -190,10 +190,32 @@ const getLiquidationHistory = async (req, res, next) => {
     }
 };
 
+/**
+ * Get liquidation statistics for dashboard
+ * GET /api/liquidations/stats
+ */
+const getLiquidationStats = async (req, res, next) => {
+    try {
+        const cooperativeId = req.user.cooperativeId || 1;
+
+        const stats = await liquidationService.getLiquidationStats(cooperativeId);
+
+        res.status(200).json({
+            success: true,
+            message: 'Liquidation statistics retrieved successfully',
+            data: stats
+        });
+    } catch (error) {
+        logger.error('Controller error - getLiquidationStats:', error);
+        next(error);
+    }
+};
+
 module.exports = {
     getPendingLiquidations,
     getLiquidationPreview,
     executeLiquidation,
     getLiquidationById,
-    getLiquidationHistory
+    getLiquidationHistory,
+    getLiquidationStats
 };

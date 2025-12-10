@@ -53,3 +53,11 @@ export const getLiquidationById = async (liquidationId) => {
 export const getLiquidationHistory = async (params = {}) => {
     return api.get('/liquidations/history', { params });
 };
+
+/**
+ * Get liquidation statistics for dashboard
+ * @returns {Promise} Statistics including pending count and yearly totals
+ */
+export const getLiquidationStats = async () => {
+    return api.get('/liquidations/stats');
+};

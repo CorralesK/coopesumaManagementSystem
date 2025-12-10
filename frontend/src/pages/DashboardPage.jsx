@@ -14,6 +14,7 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Loading from '../components/common/Loading';
 import Alert from '../components/common/Alert';
+import LiquidationsWidget from '../components/dashboard/LiquidationsWidget';
 import { USER_ROLES } from '../utils/constants';
 
 /**
@@ -115,7 +116,7 @@ const DashboardPage = () => {
 
             {/* Statistics Cards (Admin Only) */}
             {isAdministrator && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     <Card padding="normal">
                         <div className="flex items-center">
                             <div className="flex-shrink-0 bg-primary-100 rounded-lg p-3">
@@ -157,6 +158,10 @@ const DashboardPage = () => {
                             </div>
                         </div>
                     </Card>
+
+                    <div className="sm:col-span-2 lg:col-span-1">
+                        <LiquidationsWidget />
+                    </div>
                 </div>
             )}
 

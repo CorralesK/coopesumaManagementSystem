@@ -14,6 +14,7 @@ import Button from '../../components/common/Button';
 import Select from '../../components/common/Select';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import LiquidationsReport from '../../components/reports/LiquidationsReport';
 
 /**
  * ReportsPage Component
@@ -257,6 +258,9 @@ const ReportsPage = () => {
                     )}
                 </Card>
             </div>
+
+            {/* Liquidations Report Section */}
+            <LiquidationsReport />
 
             {/* Export Data Section */}
             <Card title="Exportar Datos a Excel">
