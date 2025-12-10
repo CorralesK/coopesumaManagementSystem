@@ -110,13 +110,6 @@ const registerDeposit = async (depositData) => {
             );
         }
 
-        console.log('[SAVINGS DEPOSIT] Verificando miembro:', {
-            memberId: depositData.memberId,
-            memberName: member.fullName,
-            memberCode: member.memberCode,
-            isActive: member.isActive
-        });
-
         if (!member.isActive) {
             throw new SavingsError(
                 `El miembro ${member.fullName} (${member.memberCode}) está marcado como inactivo en la base de datos`,

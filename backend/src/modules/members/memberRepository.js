@@ -58,20 +58,7 @@ const findById = async (memberId) => {
         `;
 
         const result = await db.query(query, [memberId]);
-        const member = result.rows[0] || null;
-
-        // Log para debugging
-        if (member) {
-            console.log('[MEMBER REPOSITORY] findById result keys:', Object.keys(member));
-            console.log('[MEMBER REPOSITORY] findById sample values:', {
-                full_name: member.full_name,
-                fullName: member.fullName,
-                is_active: member.is_active,
-                isActive: member.isActive
-            });
-        }
-
-        return member;
+        return result.rows[0] || null;
     } catch (error) {
         logger.error('Error finding member by ID:', error);
         throw error;
