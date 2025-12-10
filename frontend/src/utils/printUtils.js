@@ -676,6 +676,290 @@ export const printSavingsReceipt = ({
 };
 
 /**
+ * Print affiliation receipt
+ * @param {Object} options - Print options
+ * @param {Object} options.member - Member information (fullName, memberCode, identification)
+ * @param {number} options.amount - Affiliation fee amount
+ * @param {string} options.receiptNumber - Receipt number
+ * @param {Date} options.date - Transaction date
+ * @param {number} options.fiscalYear - Fiscal year
+ */
+export const printAffiliationReceipt = ({
+    member = {},
+    amount = 500,
+    receiptNumber = '',
+    date = new Date(),
+    fiscalYear = new Date().getFullYear()
+}) => {
+    const printWindow = window.open('', '_blank');
+
+    if (!printWindow) {
+        alert('Por favor, permite las ventanas emergentes para imprimir.');
+        return;
+    }
+
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('es-CR', {
+            style: 'currency',
+            currency: 'CRC',
+            minimumFractionDigits: 2
+        }).format(value || 0);
+    };
+
+    const formatDate = (date) => {
+        return new Date(date).toLocaleDateString('es-CR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    const formatTime = (date) => {
+        return new Date(date).toLocaleTimeString('es-CR', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const printDate = new Date().toLocaleString('es-CR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Recibo de Afiliación - COOPESUMA</title>
+            <style>
+                @media print {
+                    @page {
+                        size: 80mm 200mm;
+                        margin: 5mm;
+                    }
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                }
+
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    font-family: 'Courier New', monospace;
+                    padding: 10px;
+                    background: white;
+                    color: #000;
+                    max-width: 300px;
+                    margin: 0 auto;
+                }
+
+                .receipt {
+                    border: 2px dashed #000;
+                    padding: 15px;
+                }
+
+                .receipt-header {
+                    text-align: center;
+                    border-bottom: 1px dashed #000;
+                    padding-bottom: 10px;
+                    margin-bottom: 10px;
+                }
+
+                .receipt-header h1 {
+                    font-size: 16px;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+
+                .receipt-header .subtitle {
+                    font-size: 11px;
+                    color: #666;
+                }
+
+                .transaction-type {
+                    text-align: center;
+                    padding: 8px;
+                    margin: 10px 0;
+                    background: #2563eb;
+                    color: white;
+                    font-weight: bold;
+                    font-size: 14px;
+                    border-radius: 4px;
+                }
+
+                .receipt-body {
+                    font-size: 11px;
+                    line-height: 1.6;
+                }
+
+                .receipt-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 3px 0;
+                    border-bottom: 1px dotted #ccc;
+                }
+
+                .receipt-row:last-child {
+                    border-bottom: none;
+                }
+
+                .receipt-row .label {
+                    font-weight: bold;
+                    color: #333;
+                }
+
+                .receipt-row .value {
+                    text-align: right;
+                    max-width: 60%;
+                    word-break: break-word;
+                }
+
+                .amount-section {
+                    background: #f5f5f5;
+                    padding: 10px;
+                    margin: 10px 0;
+                    border-radius: 4px;
+                }
+
+                .amount-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 4px 0;
+                    font-size: 11px;
+                }
+
+                .amount-row.total {
+                    border-top: 2px solid #000;
+                    margin-top: 5px;
+                    padding-top: 8px;
+                    font-weight: bold;
+                    font-size: 13px;
+                }
+
+                .amount-row .amount {
+                    font-family: 'Courier New', monospace;
+                }
+
+                .footer-section {
+                    margin-top: 15px;
+                    padding-top: 10px;
+                    border-top: 1px dashed #000;
+                    text-align: center;
+                    font-size: 10px;
+                    color: #666;
+                }
+
+                .signature-line {
+                    margin-top: 20px;
+                    border-top: 1px solid #000;
+                    width: 200px;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
+
+                .signature-label {
+                    text-align: center;
+                    font-size: 10px;
+                    margin-top: 5px;
+                    color: #666;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="receipt">
+                <div class="receipt-header">
+                    <h1>COOPESUMA R.L.</h1>
+                    <div class="subtitle">Escuela Los Chiles, Aguas Zarcas</div>
+                    <div class="subtitle">Cooperativa Estudiantil</div>
+                </div>
+
+                <div class="transaction-type">
+                    RECIBO DE AFILIACIÓN
+                </div>
+
+                <div class="receipt-body">
+                    <div class="receipt-row">
+                        <span class="label">Recibo No:</span>
+                        <span class="value">${receiptNumber}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Fecha:</span>
+                        <span class="value">${formatDate(date)}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Hora:</span>
+                        <span class="value">${formatTime(date)}</span>
+                    </div>
+                </div>
+
+                <div class="amount-section">
+                    <div class="receipt-row">
+                        <span class="label">Nombre:</span>
+                        <span class="value">${member.full_name || member.fullName || ''}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Cédula:</span>
+                        <span class="value">${member.identification || ''}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Código:</span>
+                        <span class="value">${member.member_code || member.memberCode || ''}</span>
+                    </div>
+                </div>
+
+                <div class="amount-section">
+                    <div class="receipt-row">
+                        <span class="label">Concepto:</span>
+                        <span class="value">Cuota de Afiliación</span>
+                    </div>
+                    <div class="amount-row total">
+                        <span class="label">TOTAL:</span>
+                        <span class="amount">${formatCurrency(amount)}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Año Fiscal:</span>
+                        <span class="value">${fiscalYear}</span>
+                    </div>
+                </div>
+
+                <div class="signature-line"></div>
+                <div class="signature-label">Firma del Tesorero/Autorizado</div>
+
+                <div class="footer-section">
+                    <div>Impreso: ${printDate}</div>
+                    <div style="margin-top: 5px;">Sistema de Gestión CoopeSuma</div>
+                    <div style="margin-top: 8px; font-size: 9px;">¡Bienvenido a la familia CoopeSuma!</div>
+                </div>
+            </div>
+
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                    }, 250);
+                };
+            </script>
+        </body>
+        </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+};
+
+/**
  * Download attendance list as PDF (alternative method)
  * Note: This requires backend support or a PDF library
  * @param {Object} options - Download options

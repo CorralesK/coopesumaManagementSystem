@@ -15,6 +15,7 @@ import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import { getAllQualities, getAllLevels } from '../../services/catalogService';
 import { MEMBER_QUALITIES } from '../../utils/constants';
+import { printAffiliationReceipt } from '../../utils/printUtils';
 
 /**
  * MemberFormPage Component
@@ -185,37 +186,19 @@ const MemberFormPage = () => {
             } else {
                 const result = await affiliate(payload);
 
-                // Download receipt if available
-                if (result?.data?.affiliationTransaction?.receipt?.receipt_id) {
-                    const receiptId = result.data.affiliationTransaction.receipt.receipt_id;
-                    const receiptNumber = result.data.affiliationTransaction.receipt.receipt_number;
-
-                    // Download receipt PDF
+                // Print affiliation receipt if available
+                if (result?.data?.member && result?.data?.receipt) {
                     try {
-                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-                        const token = sessionStorage.getItem('token');
-
-                        const response = await fetch(`${API_URL}/receipts/${receiptId}/download`, {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': `Bearer ${token}`
-                            }
+                        printAffiliationReceipt({
+                            member: result.data.member,
+                            amount: result.data.receipt.amount || 500,
+                            receiptNumber: result.data.receipt.receiptNumber,
+                            date: result.data.receipt.date || new Date(),
+                            fiscalYear: result.data.receipt.fiscalYear
                         });
-
-                        if (response.ok) {
-                            const blob = await response.blob();
-                            const url = window.URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = `recibo-afiliacion-${receiptNumber}.pdf`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            window.URL.revokeObjectURL(url);
-                        }
                     } catch (receiptError) {
-                        console.error('Error downloading receipt:', receiptError);
-                        // Don't fail the whole operation if receipt download fails
+                        console.error('Error printing receipt:', receiptError);
+                        // Don't fail the whole operation if receipt printing fails
                     }
                 }
 
