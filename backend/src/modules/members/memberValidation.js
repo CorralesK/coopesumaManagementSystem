@@ -18,10 +18,10 @@ const createMemberSchema = Joi.object({
         .max(100)
         .required()
         .messages({
-            'string.empty': 'El nombre completo es requerido',
-            'string.min': 'El nombre completo debe tener al menos 3 caracteres',
-            'string.max': 'El nombre completo no puede exceder 100 caracteres',
-            'any.required': 'El nombre completo es requerido'
+            'string.empty': 'Full name is required',
+            'string.min': 'Full name must have at least 3 characters',
+            'string.max': 'Full name cannot exceed 100 characters',
+            'any.required': 'Full name is required'
         }),
 
     identification: Joi.string()
@@ -29,9 +29,9 @@ const createMemberSchema = Joi.object({
         .pattern(/^[0-9-]+$/)
         .required()
         .messages({
-            'string.empty': 'El número de identificación es requerido',
-            'string.pattern.base': 'El número de identificación solo puede contener números y guiones',
-            'any.required': 'El número de identificación es requerido'
+            'string.empty': 'Identification number is required',
+            'string.pattern.base': 'Identification number can only contain numbers and hyphens',
+            'any.required': 'Identification number is required'
         }),
 
     qualityId: Joi.number()
@@ -39,9 +39,9 @@ const createMemberSchema = Joi.object({
         .valid(1, 2)
         .required()
         .messages({
-            'number.base': 'La calidad del miembro debe ser un número',
-            'any.only': 'La calidad debe ser 1 (Estudiante) o 2 (Funcionario)',
-            'any.required': 'La calidad del miembro es requerida'
+            'number.base': 'Member quality must be a number',
+            'any.only': 'Quality must be 1 (Student) or 2 (Staff)',
+            'any.required': 'Member quality is required'
         }),
 
     levelId: Joi.number()
@@ -51,9 +51,9 @@ const createMemberSchema = Joi.object({
         .optional()
         .allow(null)
         .messages({
-            'number.base': 'El nivel debe ser un número',
-            'number.min': 'El nivel debe ser mayor o igual a 1',
-            'number.max': 'El nivel debe ser menor o igual a 9'
+            'number.base': 'Level must be a number',
+            'number.min': 'Level must be greater than or equal to 1',
+            'number.max': 'Level must be less than or equal to 9'
         }),
 
     gender: Joi.string()
@@ -62,7 +62,7 @@ const createMemberSchema = Joi.object({
         .optional()
         .allow('', null)
         .messages({
-            'any.only': 'El género debe ser M (Masculino) o F (Femenino)'
+            'any.only': 'Gender must be M (Male) or F (Female)'
         }),
 
     institutionalEmail: Joi.string()
@@ -71,7 +71,7 @@ const createMemberSchema = Joi.object({
         .optional()
         .allow('', null)
         .messages({
-            'string.email': 'El correo institucional debe ser válido'
+            'string.email': 'Institutional email must be valid'
         }),
 
     photoUrl: Joi.string()
@@ -79,7 +79,7 @@ const createMemberSchema = Joi.object({
         .optional()
         .allow('', null)
         .messages({
-            'string.uri': 'La URL de la foto debe ser válida'
+            'string.uri': 'Photo URL must be valid'
         })
 });
 
@@ -95,8 +95,8 @@ const updateMemberSchema = Joi.object({
         .max(100)
         .optional()
         .messages({
-            'string.min': 'El nombre completo debe tener al menos 3 caracteres',
-            'string.max': 'El nombre completo no puede exceder 100 caracteres'
+            'string.min': 'Full name must have at least 3 characters',
+            'string.max': 'Full name cannot exceed 100 characters'
         }),
 
     identification: Joi.string()
@@ -104,7 +104,7 @@ const updateMemberSchema = Joi.object({
         .pattern(/^[0-9-]+$/)
         .optional()
         .messages({
-            'string.pattern.base': 'El número de identificación solo puede contener números y guiones'
+            'string.pattern.base': 'Identification number can only contain numbers and hyphens'
         }),
 
     qualityId: Joi.number()
@@ -112,8 +112,8 @@ const updateMemberSchema = Joi.object({
         .valid(1, 2)
         .optional()
         .messages({
-            'number.base': 'La calidad del miembro debe ser un número',
-            'any.only': 'La calidad debe ser 1 (Estudiante) o 2 (Funcionario)'
+            'number.base': 'Member quality must be a number',
+            'any.only': 'Quality must be 1 (Student) or 2 (Staff)'
         }),
 
     levelId: Joi.number()
@@ -123,9 +123,9 @@ const updateMemberSchema = Joi.object({
         .optional()
         .allow(null)
         .messages({
-            'number.base': 'El nivel debe ser un número',
-            'number.min': 'El nivel debe ser mayor o igual a 1',
-            'number.max': 'El nivel debe ser menor o igual a 9'
+            'number.base': 'Level must be a number',
+            'number.min': 'Level must be greater than or equal to 1',
+            'number.max': 'Level must be less than or equal to 9'
         }),
 
     gender: Joi.string()
@@ -134,7 +134,7 @@ const updateMemberSchema = Joi.object({
         .optional()
         .allow('', null)
         .messages({
-            'any.only': 'El género debe ser M (Masculino) o F (Femenino)'
+            'any.only': 'Gender must be M (Male) or F (Female)'
         }),
 
     institutionalEmail: Joi.string()
@@ -143,7 +143,7 @@ const updateMemberSchema = Joi.object({
         .optional()
         .allow('', null)
         .messages({
-            'string.email': 'El correo institucional debe ser válido'
+            'string.email': 'Institutional email must be valid'
         }),
 
     photoUrl: Joi.string()
@@ -151,13 +151,13 @@ const updateMemberSchema = Joi.object({
         .optional()
         .allow('', null)
         .messages({
-            'string.uri': 'La URL de la foto debe ser válida'
+            'string.uri': 'Photo URL must be valid'
         }),
 
     isActive: Joi.boolean()
         .optional()
         .messages({
-            'boolean.base': 'isActive debe ser un valor booleano'
+            'boolean.base': 'isActive must be a boolean value'
         })
 }).min(1);
 
@@ -170,9 +170,9 @@ const batchQrSchema = Joi.object({
         .min(1)
         .required()
         .messages({
-            'array.base': 'memberIds debe ser un array',
-            'array.min': 'Debe proporcionar al menos un ID de miembro',
-            'any.required': 'memberIds es requerido'
+            'array.base': 'memberIds must be an array',
+            'array.min': 'At least one member ID must be provided',
+            'any.required': 'memberIds is required'
         })
 });
 
@@ -184,8 +184,8 @@ const verifyQrSchema = Joi.object({
         .trim()
         .required()
         .messages({
-            'string.empty': 'El hash del código QR es requerido',
-            'any.required': 'El hash del código QR es requerido'
+            'string.empty': 'QR code hash is required',
+            'any.required': 'QR code hash is required'
         })
 });
 

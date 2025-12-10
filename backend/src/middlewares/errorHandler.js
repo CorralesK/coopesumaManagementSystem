@@ -34,28 +34,28 @@ const errorHandler = (err, req, res, next) => {
                 case '23505': // Unique violation
                     return errorResponse(
                         res,
-                        'Ya existe un registro con estos datos',
+                        'A record with this data already exists',
                         ERROR_CODES.VALIDATION_ERROR,
                         409
                     );
                 case '23503': // Foreign key violation
                     return errorResponse(
                         res,
-                        'El registro referenciado no existe',
+                        'The referenced record does not exist',
                         ERROR_CODES.VALIDATION_ERROR,
                         400
                     );
                 case '23502': // NOT NULL constraint violation
                     return errorResponse(
                         res,
-                        'Faltan datos requeridos para completar la operación',
+                        'Required data is missing to complete the operation',
                         ERROR_CODES.VALIDATION_ERROR,
                         400
                     );
                 case '23514': // CHECK constraint violation
                     return errorResponse(
                         res,
-                        'Los datos no cumplen con las restricciones requeridas',
+                        'Data does not meet the required constraints',
                         ERROR_CODES.VALIDATION_ERROR,
                         400
                     );
@@ -63,7 +63,7 @@ const errorHandler = (err, req, res, next) => {
                     // Other constraint violations
                     return errorResponse(
                         res,
-                        'Error de validación en los datos',
+                        'Validation error in the provided data',
                         ERROR_CODES.VALIDATION_ERROR,
                         400
                     );
@@ -74,7 +74,7 @@ const errorHandler = (err, req, res, next) => {
         if (err.code.startsWith('22')) {
             return errorResponse(
                 res,
-                'Los datos proporcionados tienen un formato inválido',
+                'The provided data has an invalid format',
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );

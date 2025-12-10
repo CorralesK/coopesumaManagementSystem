@@ -24,7 +24,7 @@ const registerByQr = async (req, res) => {
         if (!qrHash) {
             return errorResponse(
                 res,
-                'El hash del código QR es requerido',
+                'QR code hash is required',
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );
@@ -78,7 +78,7 @@ const registerManually = async (req, res) => {
         if (!memberId) {
             return errorResponse(
                 res,
-                'El ID del miembro es requerido',
+                'Member ID is required',
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );

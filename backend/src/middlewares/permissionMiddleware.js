@@ -21,7 +21,7 @@ const checkPermission = (requiredPermission) => {
                 logger.warn('Permission check failed: No role found in user object');
                 return res.status(401).json({
                     success: false,
-                    message: 'No autenticado',
+                    message: 'Not authenticated',
                     error: 'UNAUTHORIZED'
                 });
             }
@@ -41,7 +41,7 @@ const checkPermission = (requiredPermission) => {
 
             return res.status(403).json({
                 success: false,
-                message: 'No tiene permisos para realizar esta acción',
+                message: 'You do not have permission to perform this action',
                 error: 'FORBIDDEN',
                 requiredPermission
             });
@@ -49,7 +49,7 @@ const checkPermission = (requiredPermission) => {
             logger.error('Error in permission middleware:', error);
             return res.status(500).json({
                 success: false,
-                message: 'Error al verificar permisos',
+                message: 'Error verifying permissions',
                 error: 'INTERNAL_ERROR'
             });
         }
@@ -70,7 +70,7 @@ const checkRole = (allowedRoles) => {
             if (!userRole) {
                 return res.status(401).json({
                     success: false,
-                    message: 'No autenticado',
+                    message: 'Not authenticated',
                     error: 'UNAUTHORIZED'
                 });
             }
@@ -87,14 +87,14 @@ const checkRole = (allowedRoles) => {
 
             return res.status(403).json({
                 success: false,
-                message: 'No tiene el rol necesario para realizar esta acción',
+                message: 'You do not have the required role to perform this action',
                 error: 'FORBIDDEN'
             });
         } catch (error) {
             logger.error('Error in role middleware:', error);
             return res.status(500).json({
                 success: false,
-                message: 'Error al verificar rol',
+                message: 'Error verifying role',
                 error: 'INTERNAL_ERROR'
             });
         }

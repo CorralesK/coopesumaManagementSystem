@@ -403,7 +403,7 @@ const generateBatchQrCodes = async (req, res) => {
         if (!memberIds || !Array.isArray(memberIds) || memberIds.length === 0) {
             return errorResponse(
                 res,
-                'Se requiere un array de IDs de miembros',
+                'An array of member IDs is required',
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );
@@ -413,7 +413,7 @@ const generateBatchQrCodes = async (req, res) => {
 
         return successResponse(
             res,
-            `Códigos QR generados: ${qrCodes.filter(qr => !qr.error).length} exitosos, ${qrCodes.filter(qr => qr.error).length} fallidos`,
+            `QR codes generated: ${qrCodes.filter(qr => !qr.error).length} successful, ${qrCodes.filter(qr => qr.error).length} failed`,
             qrCodes
         );
     } catch (error) {
@@ -454,7 +454,7 @@ const verifyMemberByQr = async (req, res) => {
         if (!qrHash) {
             return errorResponse(
                 res,
-                'El hash del código QR es requerido',
+                'QR code hash is required',
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );
@@ -464,7 +464,7 @@ const verifyMemberByQr = async (req, res) => {
 
         return successResponse(
             res,
-            'Miembro verificado exitosamente',
+            'Member verified successfully',
             member
         );
     } catch (error) {
@@ -505,7 +505,7 @@ const publicVerifyMember = async (req, res) => {
         if (!qr) {
             return errorResponse(
                 res,
-                'El parámetro QR es requerido',
+                'QR parameter is required',
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );
@@ -515,7 +515,7 @@ const publicVerifyMember = async (req, res) => {
 
         return successResponse(
             res,
-            'Miembro verificado exitosamente',
+            'Member verified successfully',
             member
         );
     } catch (error) {
@@ -558,7 +558,7 @@ const getMemberDashboard = async (req, res) => {
 
         return successResponse(
             res,
-            'Dashboard del miembro obtenido exitosamente',
+            'Member dashboard retrieved successfully',
             dashboardData
         );
     } catch (error) {

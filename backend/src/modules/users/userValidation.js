@@ -69,11 +69,11 @@ const createUserSchema = Joi.object({
         .max(100)
         .required()
         .messages({
-            'string.base': 'El nombre completo debe ser texto',
-            'string.empty': 'El nombre completo es requerido',
-            'string.min': 'El nombre completo debe tener al menos 3 caracteres',
-            'string.max': 'El nombre completo no puede exceder 100 caracteres',
-            'any.required': 'El nombre completo es requerido'
+            'string.base': 'Full name must be text',
+            'string.empty': 'Full name is required',
+            'string.min': 'Full name must have at least 3 characters',
+            'string.max': 'Full name cannot exceed 100 characters',
+            'any.required': 'Full name is required'
         }),
 
     email: Joi.string()
@@ -82,27 +82,27 @@ const createUserSchema = Joi.object({
         .max(255)
         .required()
         .messages({
-            'string.base': 'El correo electrónico debe ser texto',
-            'string.empty': 'El correo electrónico es requerido',
-            'string.email': 'El formato del correo electrónico no es válido',
-            'string.max': 'El correo electrónico no puede exceder 255 caracteres',
-            'any.required': 'El correo electrónico es requerido'
+            'string.base': 'Email must be text',
+            'string.empty': 'Email is required',
+            'string.email': 'Email format is not valid',
+            'string.max': 'Email cannot exceed 255 characters',
+            'any.required': 'Email is required'
         }),
 
     role: Joi.string()
         .valid(...Object.values(USER_ROLES))
         .required()
         .messages({
-            'string.base': 'El rol debe ser texto',
-            'any.only': 'El rol debe ser uno de los roles válidos del sistema',
-            'any.required': 'El rol es requerido'
+            'string.base': 'Role must be text',
+            'any.only': 'Role must be one of the valid system roles',
+            'any.required': 'Role is required'
         }),
 
     isActive: Joi.boolean()
         .optional()
         .default(true)
         .messages({
-            'boolean.base': 'El estado activo debe ser verdadero o falso'
+            'boolean.base': 'Active status must be true or false'
         })
 });
 
@@ -117,9 +117,9 @@ const updateUserSchema = Joi.object({
         .max(100)
         .optional()
         .messages({
-            'string.base': 'El nombre completo debe ser texto',
-            'string.min': 'El nombre completo debe tener al menos 3 caracteres',
-            'string.max': 'El nombre completo no puede exceder 100 caracteres'
+            'string.base': 'Full name must be text',
+            'string.min': 'Full name must have at least 3 characters',
+            'string.max': 'Full name cannot exceed 100 characters'
         }),
 
     email: Joi.string()
@@ -128,20 +128,20 @@ const updateUserSchema = Joi.object({
         .max(255)
         .optional()
         .messages({
-            'string.base': 'El correo electrónico debe ser texto',
-            'string.email': 'El formato del correo electrónico no es válido',
-            'string.max': 'El correo electrónico no puede exceder 255 caracteres'
+            'string.base': 'Email must be text',
+            'string.email': 'Email format is not valid',
+            'string.max': 'Email cannot exceed 255 characters'
         }),
 
     role: Joi.string()
         .valid(...Object.values(USER_ROLES))
         .optional()
         .messages({
-            'string.base': 'El rol debe ser texto',
-            'any.only': 'El rol debe ser uno de los roles válidos del sistema'
+            'string.base': 'Role must be text',
+            'any.only': 'Role must be one of the valid system roles'
         })
 }).min(1).messages({
-    'object.min': 'Debe proporcionar al menos un campo para actualizar'
+    'object.min': 'At least one field must be provided for update'
 });
 
 module.exports = {

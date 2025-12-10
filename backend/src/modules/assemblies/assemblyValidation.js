@@ -17,17 +17,17 @@ const createAssemblySchema = Joi.object({
         .max(150)
         .required()
         .messages({
-            'string.empty': 'El título es requerido',
-            'string.min': 'El título debe tener al menos 3 caracteres',
-            'string.max': 'El título no puede exceder 150 caracteres',
-            'any.required': 'El título es requerido'
+            'string.empty': 'Title is required',
+            'string.min': 'Title must have at least 3 characters',
+            'string.max': 'Title cannot exceed 150 characters',
+            'any.required': 'Title is required'
         }),
 
     scheduledDate: Joi.date()
         .required()
         .messages({
-            'date.base': 'La fecha programada debe ser una fecha válida',
-            'any.required': 'La fecha programada es requerida'
+            'date.base': 'Scheduled date must be a valid date',
+            'any.required': 'Scheduled date is required'
         }),
 
     startTime: Joi.string()
@@ -35,7 +35,7 @@ const createAssemblySchema = Joi.object({
         .optional()
         .allow('', null)
         .messages({
-            'string.pattern.base': 'La hora de inicio debe estar en formato HH:MM (24 horas)'
+            'string.pattern.base': 'Start time must be in HH:MM format (24 hours)'
         }),
 
     endTime: Joi.string()
@@ -43,13 +43,13 @@ const createAssemblySchema = Joi.object({
         .optional()
         .allow('', null)
         .messages({
-            'string.pattern.base': 'La hora de fin debe estar en formato HH:MM (24 horas)'
+            'string.pattern.base': 'End time must be in HH:MM format (24 hours)'
         })
 }).custom((value, helpers) => {
     // If endTime is provided, it must be after startTime
     if (value.startTime && value.endTime && value.endTime <= value.startTime) {
         return helpers.error('custom.timeRange', {
-            message: 'La hora de fin debe ser posterior a la hora de inicio'
+            message: 'End time must be after start time'
         });
     }
 
@@ -67,14 +67,14 @@ const updateAssemblySchema = Joi.object({
         .max(150)
         .optional()
         .messages({
-            'string.min': 'El título debe tener al menos 3 caracteres',
-            'string.max': 'El título no puede exceder 150 caracteres'
+            'string.min': 'Title must have at least 3 characters',
+            'string.max': 'Title cannot exceed 150 characters'
         }),
 
     scheduledDate: Joi.date()
         .optional()
         .messages({
-            'date.base': 'La fecha programada debe ser una fecha válida'
+            'date.base': 'Scheduled date must be a valid date'
         }),
 
     startTime: Joi.string()
@@ -82,7 +82,7 @@ const updateAssemblySchema = Joi.object({
         .optional()
         .allow('', null)
         .messages({
-            'string.pattern.base': 'La hora de inicio debe estar en formato HH:MM (24 horas)'
+            'string.pattern.base': 'Start time must be in HH:MM format (24 hours)'
         }),
 
     endTime: Joi.string()
@@ -90,13 +90,13 @@ const updateAssemblySchema = Joi.object({
         .optional()
         .allow('', null)
         .messages({
-            'string.pattern.base': 'La hora de fin debe estar en formato HH:MM (24 horas)'
+            'string.pattern.base': 'End time must be in HH:MM format (24 hours)'
         })
 }).min(1).custom((value, helpers) => {
     // If endTime is provided, it must be after startTime
     if (value.startTime && value.endTime && value.endTime <= value.startTime) {
         return helpers.error('custom.timeRange', {
-            message: 'La hora de fin debe ser posterior a la hora de inicio'
+            message: 'End time must be after start time'
         });
     }
 

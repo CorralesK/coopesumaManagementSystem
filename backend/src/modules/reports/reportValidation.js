@@ -16,10 +16,10 @@ const assemblyIdParamSchema = Joi.object({
         .positive()
         .required()
         .messages({
-            'number.base': 'El ID de asamblea debe ser un número',
-            'number.integer': 'El ID de asamblea debe ser un número entero',
-            'number.positive': 'El ID de asamblea debe ser positivo',
-            'any.required': 'El ID de asamblea es requerido'
+            'number.base': 'Assembly ID must be a number',
+            'number.integer': 'Assembly ID must be an integer',
+            'number.positive': 'Assembly ID must be positive',
+            'any.required': 'Assembly ID is required'
         })
 });
 
@@ -32,7 +32,7 @@ const attendanceReportQuerySchema = Joi.object({
         .optional()
         .default('false')
         .messages({
-            'any.only': 'includePhotos debe ser "true" o "false"'
+            'any.only': 'includePhotos must be "true" or "false"'
         })
 });
 
