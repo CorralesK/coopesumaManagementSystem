@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMembers, useMemberOperations } from '../../hooks/useMembers';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import ClearFiltersButton from '../../components/common/ClearFiltersButton';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
 import Table from '../../components/common/Table';
@@ -43,7 +44,7 @@ const MembersListPage = () => {
         setPage,
         resetFilters,
         refetch
-    } = useMembers({ isActive: '', limit: 20 });
+    } = useMembers({ isActive: '', limit: 10 });
 
     const { deactivate, loading: deactivating } = useMemberOperations();
 
@@ -235,6 +236,7 @@ const MembersListPage = () => {
                             type="text"
                             value={filters.search}
                             onChange={(e) => handleFilterChange('search', e.target.value)}
+                            onClear={() => handleFilterChange('search', '')}
                             placeholder="Nombre o identificación..."
                         />
                         <Select
@@ -263,9 +265,10 @@ const MembersListPage = () => {
                         />
                     </div>
                     <div className="mt-6 flex flex-wrap gap-3">
-                        <Button onClick={() => resetFilters()} variant="outline" size="md" className="whitespace-nowrap">
-                            Limpiar Filtros
-                        </Button>
+                        <ClearFiltersButton
+                            show={filters.search || filters.qualityId || filters.levelId || filters.isActive}
+                            onClick={() => resetFilters()}
+                        />
                         <Button
                             onClick={() => setShowBatchQrModal(true)}
                             variant="secondary"

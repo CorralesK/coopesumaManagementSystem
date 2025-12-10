@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUsers, useUserOperations } from '../../hooks/useUsers';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import ClearFiltersButton from '../../components/common/ClearFiltersButton';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
 import Table from '../../components/common/Table';
@@ -204,6 +205,7 @@ const UsersListPage = () => {
                             type="text"
                             value={filters.search}
                             onChange={(e) => handleFilterChange('search', e.target.value)}
+                            onClear={() => handleFilterChange('search', '')}
                             placeholder="Nombre o correo..."
                         />
                         <Select
@@ -224,9 +226,10 @@ const UsersListPage = () => {
                         />
                     </div>
                     <div className="mt-6">
-                        <Button onClick={handleResetFilters} variant="outline" size="md" className="whitespace-nowrap">
-                            Limpiar Filtros
-                        </Button>
+                        <ClearFiltersButton
+                            show={filters.search || filters.role || filters.isActive}
+                            onClick={handleResetFilters}
+                        />
                     </div>
                 </Card>
 
