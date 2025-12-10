@@ -18,7 +18,7 @@ const getDistributionPreview = async (req, res, next) => {
         if (!fiscalYear || !totalAmount) {
             return res.status(400).json({
                 success: false,
-                message: 'Año fiscal y monto total are required',
+                message: 'Fiscal year and total amount are required',
                 error: 'VALIDATION_ERROR'
             });
         }
@@ -28,7 +28,7 @@ const getDistributionPreview = async (req, res, next) => {
         if (parsedAmount <= 0) {
             return res.status(400).json({
                 success: false,
-                message: 'El monto debe ser mayor a cero',
+                message: 'Amount must be greater than zero',
                 error: 'VALIDATION_ERROR'
             });
         }
@@ -41,7 +41,7 @@ const getDistributionPreview = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: 'Preview de distribución obtenido successfully',
+            message: 'Distribution preview retrieved successfully',
             data: preview
         });
     } catch (error) {
@@ -63,7 +63,7 @@ const distributeSurplus = async (req, res, next) => {
         if (!fiscalYear || !totalDistributableAmount) {
             return res.status(400).json({
                 success: false,
-                message: 'Año fiscal y monto total are required',
+                message: 'Fiscal year and total amount are required',
                 error: 'VALIDATION_ERROR'
             });
         }
@@ -71,7 +71,7 @@ const distributeSurplus = async (req, res, next) => {
         if (totalDistributableAmount <= 0) {
             return res.status(400).json({
                 success: false,
-                message: 'El monto debe ser mayor a cero',
+                message: 'Amount must be greater than zero',
                 error: 'VALIDATION_ERROR'
             });
         }
@@ -88,7 +88,7 @@ const distributeSurplus = async (req, res, next) => {
 
         res.status(201).json({
             success: true,
-            message: `Excedentes distribuidos successfully a ${result.membersReceiving} miembros`,
+            message: `Surplus distributed successfully to ${result.membersReceiving} members`,
             data: result
         });
     } catch (error) {
@@ -114,7 +114,7 @@ const getDistributionHistory = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: 'Historial de distribuciones obtenido successfully',
+            message: 'Distribution history retrieved successfully',
             data: history
         });
     } catch (error) {

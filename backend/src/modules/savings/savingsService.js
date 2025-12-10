@@ -54,7 +54,7 @@ const getMemberSavings = async (memberId) => {
         const account = await savingsRepository.getSavingsAccount(memberId);
         if (!account) {
             throw new SavingsError(
-                'No se encontró cuenta de ahorros para este miembro',
+                'Savings account not found for this member',
                 ERROR_CODES.ACCOUNT_NOT_FOUND,
                 404
             );
@@ -112,7 +112,7 @@ const registerDeposit = async (depositData) => {
 
         if (!member.isActive) {
             throw new SavingsError(
-                `El miembro ${member.fullName} (${member.memberCode}) está marcado como inactivo en la base de datos`,
+                `Member ${member.fullName} (${member.memberCode}) is marked as inactive in the database`,
                 ERROR_CODES.MEMBER_INACTIVE,
                 403
             );
@@ -128,7 +128,7 @@ const registerDeposit = async (depositData) => {
 
         if (accountResult.rows.length === 0) {
             throw new SavingsError(
-                'No se encontró cuenta de ahorros para este miembro',
+                'Savings account not found for this member',
                 ERROR_CODES.ACCOUNT_NOT_FOUND,
                 404
             );
@@ -145,7 +145,7 @@ const registerDeposit = async (depositData) => {
             amount: depositData.amount,
             transactionDate: depositData.transactionDate || new Date(),
             fiscalYear: fiscalYear,
-            description: depositData.description || `Depósito de ahorros - ${member.fullName}`,
+            description: depositData.description || `Savings deposit - ${member.fullName}`,
             createdBy: depositData.createdBy
         }, client);
 
@@ -186,7 +186,7 @@ const registerDeposit = async (depositData) => {
 
         logger.error('Error registering deposit:', error);
         throw new SavingsError(
-            error.message || 'Error al registrar el depósito',
+            error.message || 'Error registering deposit',
             ERROR_CODES.INTERNAL_ERROR,
             500
         );
@@ -218,7 +218,7 @@ const getSavingsLedger = async (memberId, filters = {}) => {
         const account = await savingsRepository.getSavingsAccount(memberId);
         if (!account) {
             throw new SavingsError(
-                'No se encontró cuenta de ahorros para este miembro',
+                'Savings account not found for this member',
                 ERROR_CODES.ACCOUNT_NOT_FOUND,
                 404
             );
@@ -385,7 +385,7 @@ const getSavingsInventoryByMonth = async (cooperativeId, fiscalYear, month) => {
     try {
         if (month < 1 || month > 12) {
             throw new SavingsError(
-                'El mes debe estar entre 1 y 12',
+                'Month must be between 1 and 12',
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );
@@ -477,7 +477,7 @@ const registerWithdrawal = async (withdrawalData) => {
 
         if (accountResult.rows.length === 0) {
             throw new SavingsError(
-                'No se encontró cuenta de ahorros para este miembro',
+                'Savings account not found for this member',
                 ERROR_CODES.ACCOUNT_NOT_FOUND,
                 404
             );
@@ -488,7 +488,7 @@ const registerWithdrawal = async (withdrawalData) => {
         // 3. Verify sufficient balance
         if (parseFloat(account.current_balance) < withdrawalData.amount) {
             throw new SavingsError(
-                'Saldo insuficiente para realizar el retiro',
+                'Insufficient balance to complete the withdrawal',
                 ERROR_CODES.INSUFFICIENT_BALANCE,
                 400
             );
@@ -504,7 +504,7 @@ const registerWithdrawal = async (withdrawalData) => {
             receiptNumber: withdrawalData.receiptNumber,
             transactionDate: withdrawalData.transactionDate || new Date(),
             fiscalYear: fiscalYear,
-            description: withdrawalData.description || `Retiro de ahorros - ${member.fullName}`,
+            description: withdrawalData.description || `Savings withdrawal - ${member.fullName}`,
             createdBy: withdrawalData.createdBy
         }, client);
 
@@ -545,7 +545,7 @@ const registerWithdrawal = async (withdrawalData) => {
 
         logger.error('Error registering withdrawal:', error);
         throw new SavingsError(
-            error.message || 'Error al registrar el retiro',
+            error.message || 'Error registering withdrawal',
             ERROR_CODES.INTERNAL_ERROR,
             500
         );
@@ -576,7 +576,7 @@ const getMemberSavingsTransactions = async (memberId) => {
         const account = await savingsRepository.getSavingsAccount(memberId);
         if (!account) {
             throw new SavingsError(
-                'No se encontró cuenta de ahorros para este miembro',
+                'Savings account not found for this member',
                 ERROR_CODES.ACCOUNT_NOT_FOUND,
                 404
             );

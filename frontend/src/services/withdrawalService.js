@@ -51,3 +51,13 @@ export const approveWithdrawalRequest = async (requestId, approvalData = {}) => 
 export const rejectWithdrawalRequest = async (requestId, rejectionData) => {
     return api.patch(`/withdrawal-requests/${requestId}/reject`, rejectionData);
 };
+
+/**
+ * Check the status of a withdrawal request
+ * Used when admin clicks on a notification to see if it's already processed
+ * @param {number} requestId - Request ID
+ * @returns {Promise} Status info { requestId, status, isProcessed, reviewedBy, reviewedByName, reviewedAt }
+ */
+export const checkWithdrawalRequestStatus = async (requestId) => {
+    return api.get(`/notifications/withdrawal-status/${requestId}`);
+};

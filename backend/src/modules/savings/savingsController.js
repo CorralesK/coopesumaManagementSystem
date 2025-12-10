@@ -20,7 +20,7 @@ const getMemberSavings = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: 'Datos de ahorros obtenidos successfully',
+            message: 'Savings data retrieved successfully',
             data
         });
     } catch (error) {
@@ -42,7 +42,7 @@ const registerDeposit = async (req, res, next) => {
         if (!memberId || !amount) {
             return res.status(400).json({
                 success: false,
-                message: 'Member ID y monto are required',
+                message: 'Member ID and amount are required',
                 error: 'VALIDATION_ERROR'
             });
         }
@@ -50,7 +50,7 @@ const registerDeposit = async (req, res, next) => {
         if (amount <= 0) {
             return res.status(400).json({
                 success: false,
-                message: 'El monto debe ser mayor a cero',
+                message: 'Amount must be greater than zero',
                 error: 'VALIDATION_ERROR'
             });
         }
@@ -67,7 +67,7 @@ const registerDeposit = async (req, res, next) => {
 
         res.status(201).json({
             success: true,
-            message: 'Depósito registrado successfully',
+            message: 'Deposit registered successfully',
             data: result
         });
     } catch (error) {
@@ -98,7 +98,7 @@ const getSavingsLedger = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: 'Libro de ahorros obtenido successfully',
+            message: 'Savings ledger retrieved successfully',
             data
         });
     } catch (error) {
@@ -125,7 +125,7 @@ const getSavingsSummary = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: 'Resumen de ahorros obtenido successfully',
+            message: 'Savings summary retrieved successfully',
             ...result
         });
     } catch (error) {
@@ -150,7 +150,7 @@ const getSavingsInventoryByYear = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: 'Inventario de ahorros obtenido exitosamente',
+            message: 'Savings inventory retrieved successfully',
             data
         });
     } catch (error) {
@@ -176,7 +176,7 @@ const getSavingsInventoryByMonth = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: 'Inventario mensual obtenido exitosamente',
+            message: 'Monthly inventory retrieved successfully',
             data
         });
     } catch (error) {
@@ -198,7 +198,7 @@ const registerWithdrawal = async (req, res, next) => {
         if (!memberId || !amount) {
             return res.status(400).json({
                 success: false,
-                message: 'Member ID y monto son requeridos',
+                message: 'Member ID and amount are required',
                 error: 'VALIDATION_ERROR'
             });
         }
@@ -206,7 +206,7 @@ const registerWithdrawal = async (req, res, next) => {
         if (amount <= 0) {
             return res.status(400).json({
                 success: false,
-                message: 'El monto debe ser mayor a cero',
+                message: 'Amount must be greater than zero',
                 error: 'VALIDATION_ERROR'
             });
         }
@@ -223,7 +223,7 @@ const registerWithdrawal = async (req, res, next) => {
 
         res.status(201).json({
             success: true,
-            message: 'Retiro registrado exitosamente',
+            message: 'Withdrawal registered successfully',
             data: result
         });
     } catch (error) {
@@ -244,7 +244,7 @@ const getMemberSavingsTransactions = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: 'Transacciones de ahorros obtenidas exitosamente',
+            message: 'Savings transactions retrieved successfully',
             data: transactions
         });
     } catch (error) {

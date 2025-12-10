@@ -23,6 +23,7 @@ class WithdrawalRequestError extends Error {
 
 /**
  * Create a withdrawal request
+ * Note: Members can only request withdrawals from their savings account
  */
 const createWithdrawalRequest = async (requestData) => {
     const client = await db.pool.connect();
@@ -34,6 +35,15 @@ const createWithdrawalRequest = async (requestData) => {
         const member = await memberRepository.findById(requestData.memberId);
         if (!member || !member.is_active) {
             throw new WithdrawalRequestError(MESSAGES.MEMBER_NOT_FOUND, ERROR_CODES.MEMBER_NOT_FOUND, 404);
+        }
+
+        // Only allow withdrawal requests from savings account
+        if (requestData.accountType !== 'savings') {
+            throw new WithdrawalRequestError(
+                'Solo se permiten solicitudes de retiro de la cuenta de ahorros',
+                ERROR_CODES.VALIDATION_ERROR,
+                400
+            );
         }
 
         // Get account and verify balance
@@ -147,10 +157,18 @@ const approveWithdrawalRequest = async (requestId, approvalData) => {
 
         await client.query('COMMIT');
 
+        // Notify member about approval
         try {
             await notificationService.notifyWithdrawalResponse(updatedRequest, 'approved');
         } catch (notifError) {
             logger.error('Error sending approval notification (non-critical):', notifError);
+        }
+
+        // Mark all admin notifications for this request as processed
+        try {
+            await notificationService.markWithdrawalNotificationsAsProcessed(requestId);
+        } catch (notifError) {
+            logger.error('Error marking notifications as processed (non-critical):', notifError);
         }
 
         logger.info('Withdrawal request approved', { requestId, transactionId });
@@ -189,10 +207,18 @@ const rejectWithdrawalRequest = async (requestId, rejectionData) => {
             reviewedBy: rejectionData.reviewedBy
         });
 
+        // Notify member about rejection
         try {
             await notificationService.notifyWithdrawalResponse(updatedRequest, 'rejected');
         } catch (notifError) {
             logger.error('Error sending rejection notification (non-critical):', notifError);
+        }
+
+        // Mark all admin notifications for this request as processed
+        try {
+            await notificationService.markWithdrawalNotificationsAsProcessed(requestId);
+        } catch (notifError) {
+            logger.error('Error marking notifications as processed (non-critical):', notifError);
         }
 
         logger.info('Withdrawal request rejected', { requestId });

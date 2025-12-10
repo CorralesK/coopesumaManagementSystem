@@ -77,7 +77,7 @@ const createContributionPeriods = async (data) => {
         // Validate that we have 3 tracts
         if (!data.tracts || data.tracts.length !== 3) {
             throw new ContributionsError(
-                'Debe proporcionar exactamente 3 tractos',
+                'Exactly 3 tracts must be provided',
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );
@@ -91,7 +91,7 @@ const createContributionPeriods = async (data) => {
 
         if (existing.length > 0) {
             throw new ContributionsError(
-                'Ya existen períodos de aportación para este año fiscal',
+                'Contribution periods already exist for this fiscal year',
                 ERROR_CODES.DUPLICATE_ENTRY,
                 409
             );
@@ -133,7 +133,7 @@ const createContributionPeriods = async (data) => {
 
         logger.error('Error creating contribution periods:', error);
         throw new ContributionsError(
-            error.message || 'Error al crear períodos de aportación',
+            error.message || 'Error creating contribution periods',
             ERROR_CODES.INTERNAL_ERROR,
             500
         );
@@ -167,7 +167,7 @@ const getMemberContributions = async (memberId, fiscalYear = null) => {
         const account = await contributionsRepository.getContributionsAccount(memberId);
         if (!account) {
             throw new ContributionsError(
-                'No se encontró cuenta de aportaciones para este miembro',
+                'Contributions account not found for this member',
                 ERROR_CODES.ACCOUNT_NOT_FOUND,
                 404
             );
@@ -273,7 +273,7 @@ const registerContribution = async (contributionData) => {
 
         if (accountResult.rows.length === 0) {
             throw new ContributionsError(
-                'No se encontró cuenta de aportaciones para este miembro',
+                'Contributions account not found for this member',
                 ERROR_CODES.ACCOUNT_NOT_FOUND,
                 404
             );
@@ -284,16 +284,16 @@ const registerContribution = async (contributionData) => {
         // 3. Get fiscal year
         const fiscalYear = await getCurrentFiscalYear(client);
 
-        // NUEVO: Detectar si es pago completo (₡900 o más, sin tractNumber especificado)
+        // Detect if full payment (₡900 or more, without tractNumber specified)
         const requiredTotal = 900; // ₡300 × 3
 
         if (contributionData.amount >= requiredTotal && !contributionData.tractNumber) {
-            // PAGO COMPLETO - Dividir en 3 tractos automáticamente
+            // FULL PAYMENT - Automatically divide into 3 tracts
             const amountPerTract = contributionData.amount / 3;
             const results = [];
 
             for (let tractNum = 1; tractNum <= 3; tractNum++) {
-                // Validar que exista el período
+                // Validate that the period exists
                 const periodQuery = `
                     SELECT period_id, required_amount
                     FROM contribution_periods
@@ -307,14 +307,14 @@ const registerContribution = async (contributionData) => {
 
                 if (periodResult.rows.length === 0) {
                     throw new ContributionsError(
-                        `No se encontró período para tracto ${tractNum}`,
+                        `Period not found for tract ${tractNum}`,
                         ERROR_CODES.NOT_FOUND,
                         404
                     );
                 }
 
-                // Crear transacción para este tracto
-                const description = `Aportación Tracto ${tractNum} (pago completo) - ${member.fullName}`;
+                // Create transaction for this tract
+                const description = `Contribution Tract ${tractNum} (full payment) - ${member.fullName}`;
 
                 const transaction = await contributionsRepository.registerContribution({
                     accountId: account.account_id,
@@ -332,7 +332,7 @@ const registerContribution = async (contributionData) => {
                 });
             }
 
-            // Actualizar balance
+            // Update balance
             const updateBalanceQuery = `
                 UPDATE accounts
                 SET current_balance = current_balance + $1,
@@ -366,10 +366,10 @@ const registerContribution = async (contributionData) => {
             };
         }
 
-        // 4. Validate tract number (pago individual)
+        // 4. Validate tract number (individual payment)
         if (!contributionData.tractNumber || contributionData.tractNumber < 1 || contributionData.tractNumber > 3) {
             throw new ContributionsError(
-                'El número de tracto debe ser 1, 2 o 3, o pague el monto completo (₡900)',
+                'Tract number must be 1, 2, or 3, or pay the full amount (₡900)',
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );
@@ -391,7 +391,7 @@ const registerContribution = async (contributionData) => {
 
         if (periodResult.rows.length === 0) {
             throw new ContributionsError(
-                'No se encontró el período de aportación para este tracto',
+                'Contribution period not found for this tract',
                 ERROR_CODES.NOT_FOUND,
                 404
             );
@@ -401,7 +401,7 @@ const registerContribution = async (contributionData) => {
 
         // 6. Create contribution transaction
         const description = contributionData.description ||
-            `Aportación Tracto ${contributionData.tractNumber} - ${member.fullName}`;
+            `Contribution Tract ${contributionData.tractNumber} - ${member.fullName}`;
 
         const transaction = await contributionsRepository.registerContribution({
             accountId: account.account_id,
@@ -461,7 +461,7 @@ const registerContribution = async (contributionData) => {
 
         logger.error('Error registering contribution:', error);
         throw new ContributionsError(
-            error.message || 'Error al registrar la aportación',
+            error.message || 'Error registering contribution',
             ERROR_CODES.INTERNAL_ERROR,
             500
         );
