@@ -61,6 +61,7 @@ const notificationRoutes = require('./modules/notifications/notificationRoutes')
 const receiptRoutes = require('./modules/receipts/receiptRoutes');
 const liquidationRoutes = require('./modules/liquidations/liquidationRoutes');
 const surplusRoutes = require('./modules/surplus/surplusRoutes');
+const pushRoutes = require('./modules/push/pushRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/members', memberRoutes);
@@ -77,6 +78,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/receipts', receiptRoutes);
 app.use('/api/liquidations', liquidationRoutes);
 app.use('/api/surplus', surplusRoutes);
+app.use('/api/push', pushRoutes);
 
 // 404 handler
 app.use((req, res) => {

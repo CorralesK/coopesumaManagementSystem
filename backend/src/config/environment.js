@@ -51,7 +51,14 @@ const config = {
     },
 
     // Frontend
-    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173'
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+
+    // Web Push (VAPID keys for push notifications)
+    webPush: {
+        publicKey: process.env.VAPID_PUBLIC_KEY || 'BKRTMNTBZ7-zP-2oTFaa9UTxHygeR7D0i-Vvzmycq-GBWYkXm43Fk0Okz1H3fDadEWrCss2G6m50ZUGHsxAL5mM',
+        privateKey: process.env.VAPID_PRIVATE_KEY || 'f55VXPTgN52dkv0liKaO-NQ0pat2WCjKN3bEHua5LUI',
+        subject: process.env.VAPID_SUBJECT || 'mailto:admin@coopesuma.com'
+    }
 };
 
 // Validation

@@ -1,15 +1,25 @@
 /**
  * Notification Service
  * Simple notification system for withdrawal requests and alerts
+ * Now with Web Push notification support
  */
 
 const db = require('../../config/database');
 const logger = require('../../utils/logger');
 
+// Lazy load pushService to avoid circular dependencies
+let pushService = null;
+const getPushService = () => {
+    if (!pushService) {
+        pushService = require('../push/pushService');
+    }
+    return pushService;
+};
+
 /**
- * Create a notification
+ * Create a notification and optionally send push notification
  */
-const createNotification = async (notificationData) => {
+const createNotification = async (notificationData, sendPush = true) => {
     try {
         const query = `
             INSERT INTO notifications (user_id, notification_type, title, message, related_entity_type, related_entity_id)
@@ -27,10 +37,50 @@ const createNotification = async (notificationData) => {
         ];
 
         const result = await db.query(query, values);
-        return result.rows[0];
+        const notification = result.rows[0];
+
+        // Send push notification if enabled
+        if (sendPush) {
+            try {
+                const push = getPushService();
+                await push.sendToUser(notificationData.userId, {
+                    title: notificationData.title,
+                    body: notificationData.message,
+                    url: getNotificationUrl(notificationData.notificationType, notificationData.relatedEntityId),
+                    data: {
+                        notificationId: notification.notification_id,
+                        type: notificationData.notificationType
+                    }
+                });
+            } catch (pushError) {
+                // Don't fail the notification creation if push fails
+                logger.warn('Failed to send push notification', { error: pushError.message });
+            }
+        }
+
+        return notification;
     } catch (error) {
         logger.error('Error creating notification:', error);
         throw error;
+    }
+};
+
+/**
+ * Get URL for notification based on type
+ */
+const getNotificationUrl = (type, entityId) => {
+    switch (type) {
+        case 'withdrawal_request':
+            return '/withdrawals';
+        case 'withdrawal_approved':
+        case 'withdrawal_rejected':
+            return '/my-withdrawals';
+        case 'liquidation_due':
+            return '/liquidations';
+        case 'admin_message':
+            return '/notifications';
+        default:
+            return '/notifications';
     }
 };
 
