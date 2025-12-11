@@ -4,9 +4,9 @@
   "description": "Backend API for CoopeSuma Management System",
   "main": "src/server.js",
   "scripts": {
-    "start": "NODE_ENV=production node src/server.js",
+    "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "build": "npm ci --omit=dev",
+    "build": "echo 'Build complete'",
     "test": "jest --coverage",
     "lint": "eslint src/**/*.js"
   },
