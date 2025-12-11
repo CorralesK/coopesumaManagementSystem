@@ -241,12 +241,11 @@ const Layout = ({ children }) => {
                                         {user?.fullName}
                                     </p>
                                     <p className="text-xs text-gray-500 truncate mt-0.5">
-                                        {user?.role === USER_ROLES.ADMINISTRATOR && 'Administrador'}
-                                        {user?.role === USER_ROLES.REGISTRAR && 'Registrador'}
-                                        {user?.role === USER_ROLES.MANAGER && 'Gerente'}
-                                        {user?.role === USER_ROLES.MEMBER && 'Miembro'}
-                                        {user?.role === USER_ROLES.TREASURER && 'Gerente'}
-                                        {user?.role === USER_ROLES.STUDENT && 'Miembro'}
+                                        {user?.role === USER_ROLES.ADMINISTRATOR ? 'Administrador'
+                                            : user?.role === USER_ROLES.REGISTRAR ? 'Registrador'
+                                            : user?.role === USER_ROLES.MANAGER ? 'Tesorero'
+                                            : user?.role === USER_ROLES.MEMBER ? 'Miembro'
+                                            : user?.role}
                                     </p>
                                 </div>
                             </div>

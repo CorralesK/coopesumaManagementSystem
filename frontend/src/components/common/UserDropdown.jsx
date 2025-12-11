@@ -55,8 +55,8 @@ const UserDropdown = ({ user, onLogout }) => {
         const roleLabels = {
             [USER_ROLES.ADMINISTRATOR]: 'Administrador',
             [USER_ROLES.REGISTRAR]: 'Registrador',
-            [USER_ROLES.TREASURER]: 'Tesorero',
-            [USER_ROLES.STUDENT]: 'Estudiante'
+            [USER_ROLES.MANAGER]: 'Tesorero',
+            [USER_ROLES.MEMBER]: 'Miembro'
         };
         return roleLabels[role] || role;
     };
