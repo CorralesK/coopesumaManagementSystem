@@ -4,13 +4,14 @@
  * @module pages/users
  */
 
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useUser, useUserOperations } from '../../hooks/useUsers';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import Modal from '../../components/common/Modal';
 import ConfirmDeleteUserModal from '../../components/users/ConfirmDeleteUserModal';
 import { USER_ROLES } from '../../utils/constants';
 
@@ -21,12 +22,26 @@ import { USER_ROLES } from '../../utils/constants';
 const UserDetailPage = () => {
     const navigate = useNavigate();
     const { id } = useParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [successMessage, setSuccessMessage] = useState('');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     // Use custom hooks
     const { user, loading, error, refetch } = useUser(id);
     const { deactivate, loading: operating } = useUserOperations();
+
+    // Detect action=delete from URL and open delete modal automatically
+    useEffect(() => {
+        const action = searchParams.get('action');
+        if (action === 'delete' && user) {
+            // Remove the action parameter from URL
+            searchParams.delete('action');
+            setSearchParams(searchParams, { replace: true });
+
+            // Open delete modal
+            setShowDeleteModal(true);
+        }
+    }, [user, searchParams, setSearchParams]);
 
     // Get role label
     const getRoleLabel = (role) => {
@@ -55,9 +70,22 @@ const UserDetailPage = () => {
         setShowDeleteModal(true);
     };
 
-    const handleDeleteConfirm = async () => {
+    const handleDeleteCancel = () => {
+        setShowDeleteModal(false);
+    };
+
+    const handleContinueToLiquidation = () => {
+        setShowDeleteModal(false);
+        // Redirect to member detail page with delete action (same flow as deleting from members list)
+        if (user?.memberId) {
+            navigate(`/members/${user.memberId}?action=delete`);
+        }
+    };
+
+    const handleConfirmDeleteNonMember = async () => {
         try {
             await deactivate(id);
+
             setSuccessMessage('Usuario eliminado exitosamente');
             setShowDeleteModal(false);
             refetch();
@@ -65,10 +93,6 @@ const UserDetailPage = () => {
             // Error handled by hook
             setShowDeleteModal(false);
         }
-    };
-
-    const handleDeleteCancel = () => {
-        setShowDeleteModal(false);
     };
 
     const formatDate = (dateString) => {
@@ -100,11 +124,21 @@ const UserDetailPage = () => {
     const roleBadgeConfig = getRoleBadgeConfig(user.role);
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{user.fullName}</h1>
+                <div className="flex items-start gap-3">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="mt-1 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        aria-label="Volver"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{user.fullName}</h1>
                     <div className="mt-2">
                         <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full border ${
                             user.isActive
@@ -114,6 +148,7 @@ const UserDetailPage = () => {
                             <span className={`w-2 h-2 rounded-full ${user.isActive ? 'bg-green-600' : 'bg-gray-500'}`} style={{ marginRight: '0.5rem' }}></span>
                             {user.isActive ? 'Activo' : 'Inactivo'}
                         </span>
+                    </div>
                     </div>
                 </div>
                 <Button onClick={() => navigate(`/users/${id}/edit`)} variant="primary" className="w-full sm:w-auto">
@@ -208,12 +243,14 @@ const UserDetailPage = () => {
                                     Eliminar Usuario
                                 </Button>
                             ) : (
-                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                                    <svg className="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                    </svg>
-                                    <p className="text-sm text-gray-600 font-medium">Usuario Eliminado</p>
-                                    <p className="text-xs text-gray-500 mt-1">Este usuario ha sido eliminado y no puede ser reactivado</p>
+                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                    <div className="flex flex-col items-center justify-center text-center">
+                                        <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                        </svg>
+                                        <p className="text-sm text-gray-600 font-medium">Usuario Eliminado</p>
+                                        <p className="text-xs text-gray-500 mt-1">Este usuario ha sido eliminado y no puede ser reactivado</p>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -225,9 +262,11 @@ const UserDetailPage = () => {
             <ConfirmDeleteUserModal
                 isOpen={showDeleteModal}
                 onClose={handleDeleteCancel}
-                onConfirm={handleDeleteConfirm}
+                onConfirm={handleConfirmDeleteNonMember}
+                onContinueToLiquidation={handleContinueToLiquidation}
                 userName={user?.fullName || ''}
                 isLoading={operating}
+                isMember={user?.role === USER_ROLES.MEMBER && !!user?.memberId}
             />
         </div>
     );

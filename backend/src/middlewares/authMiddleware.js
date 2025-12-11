@@ -12,10 +12,18 @@ const logger = require('../utils/logger');
 
 const authMiddleware = async (req, res, next) => {
     try {
-        // Get token from Authorization header
+        let token;
+
+        // Get token from Authorization header or query parameter
         const authHeader = req.headers.authorization;
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            // Extract token from header
+            token = authHeader.substring(7);
+        } else if (req.query.token) {
+            // Extract token from query parameter (for PDF downloads)
+            token = req.query.token;
+        } else {
             return errorResponse(
                 res,
                 MESSAGES.UNAUTHORIZED,
@@ -23,9 +31,6 @@ const authMiddleware = async (req, res, next) => {
                 401
             );
         }
-
-        // Extract token
-        const token = authHeader.substring(7);
 
         // Verify token
         const decoded = verifyToken(token);

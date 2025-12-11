@@ -16,6 +16,7 @@ import Table from '../../components/common/Table';
 import Pagination from '../../components/common/Pagination';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import { USER_ROLES } from '../../utils/constants';
 
 /**
  * UsersListPage Component
@@ -55,27 +56,14 @@ const UsersListPage = () => {
         });
     };
 
-    const handleToggleUserStatus = async (userId, isActive, userName) => {
+    const handleToggleUserStatus = async (userId, isActive, userName, userRole, memberId) => {
         // Solo permitir desactivar (eliminar), no reactivar
         if (!isActive) {
             return; // Los usuarios inactivos no se pueden reactivar
         }
 
-        const confirmed = window.confirm(
-            `⚠️ ADVERTENCIA: ¿Está seguro que desea ELIMINAR al usuario ${userName}?\n\nEsta acción no se puede deshacer. El usuario será desactivado permanentemente y no podrá acceder al sistema.`
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            await deactivate(userId);
-            setSuccessMessage('Usuario eliminado exitosamente');
-            refetch();
-        } catch (err) {
-            // Error already handled by hook
-        }
+        // Navigate to detail page with delete action
+        navigate(`/users/${userId}?action=delete`);
     };
 
     // Table columns configuration
@@ -142,7 +130,7 @@ const UsersListPage = () => {
                 <div className="flex items-center justify-center gap-2">
                     {user.isActive && (
                         <Button
-                            onClick={() => handleToggleUserStatus(user.userId, user.isActive, user.fullName)}
+                            onClick={() => handleToggleUserStatus(user.userId, user.isActive, user.fullName, user.role, user.memberId)}
                             variant="danger"
                             size="sm"
                             disabled={operationLoading}

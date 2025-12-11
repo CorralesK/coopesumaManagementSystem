@@ -4,7 +4,6 @@
  */
 
 const receiptRepository = require('./receiptRepository');
-const receiptGenerator = require('./receiptGenerator');
 const db = require('../../config/database');
 const logger = require('../../utils/logger');
 const ERROR_CODES = require('../../constants/errorCodes');
@@ -132,18 +131,14 @@ const generateReceiptForTransaction = async (transactionData) => {
             pdfData.savingsNewBalance = transactionData.savingsNewBalance || 0;
         }
 
-        // 5. Generate PDF
-        const pdfPath = await receiptGenerator.generateReceipt(receiptType, pdfData);
-
-        // 6. Create receipt record
+        // 5. Create receipt record (PDF will be generated on-demand when downloaded)
         const receipt = await receiptRepository.createReceipt({
             cooperativeId: transaction.cooperative_id,
             transactionId: transaction.transaction_id,
             receiptNumber,
             receiptType,
             memberId: transaction.member_id,
-            amount: transaction.amount,
-            pdfUrl: pdfPath
+            amount: transaction.amount
         }, client);
 
         // 7. Update transaction with receipt number
@@ -233,18 +228,14 @@ const generateReceiptForLiquidation = async (liquidationData) => {
             totalAmount: parseFloat(liquidation.total_amount)
         };
 
-        // 4. Generate PDF
-        const pdfPath = await receiptGenerator.generateReceipt('liquidation', pdfData);
-
-        // 5. Create receipt record
+        // 4. Create receipt record (PDF will be generated on-demand when downloaded)
         const receipt = await receiptRepository.createReceipt({
             cooperativeId: liquidation.cooperative_id,
             liquidationId: liquidation.liquidation_id,
             receiptNumber,
             receiptType: 'liquidation',
             memberId: liquidation.member_id,
-            amount: liquidation.total_amount,
-            pdfUrl: pdfPath
+            amount: liquidation.total_amount
         }, client);
 
         await client.query('COMMIT');

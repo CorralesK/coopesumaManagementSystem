@@ -13,6 +13,7 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import Modal from '../../components/common/Modal';
 
 /**
  * AssemblyDetailPage Component
@@ -22,6 +23,7 @@ const AssemblyDetailPage = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const [successMessage, setSuccessMessage] = useState('');
+    const [showConcludeModal, setShowConcludeModal] = useState(false);
 
     // Use custom hooks
     const { assembly, loading, error, refetch } = useAssembly(id);
@@ -42,19 +44,25 @@ const AssemblyDetailPage = () => {
         }
     };
 
-    const handleConcludeAssembly = async () => {
-        if (!window.confirm('¿Concluir esta asamblea? Esta acción no se puede deshacer.')) {
-            return;
-        }
+    const handleConcludeClick = () => {
+        setShowConcludeModal(true);
+    };
 
+    const handleConcludeConfirm = async () => {
         try {
             await deactivate(id);
             // Refetch to get updated data with concluded_at
             await refetch();
             setSuccessMessage('Asamblea concluida exitosamente');
+            setShowConcludeModal(false);
         } catch (err) {
             // Error handled by hook
+            setShowConcludeModal(false);
         }
+    };
+
+    const handleConcludeCancel = () => {
+        setShowConcludeModal(false);
     };
 
     const handlePrintAttendanceList = async () => {
@@ -115,12 +123,22 @@ const AssemblyDetailPage = () => {
     const concluded = isAssemblyConcluded();
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{assembly.title}</h1>
-                    <div className="mt-2 flex gap-2">
+                <div className="flex items-start gap-3">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="mt-1 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        aria-label="Volver"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{assembly.title}</h1>
+                        <div className="mt-2 flex gap-2">
                         {assembly.isActive && (
                             <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 border border-green-200">
                                 <span className="w-2 h-2 rounded-full bg-green-600" style={{ marginRight: '0.5rem' }}></span>
@@ -139,6 +157,7 @@ const AssemblyDetailPage = () => {
                                 <span className="text-gray-700">Pendiente</span>
                             </span>
                         )}
+                        </div>
                     </div>
                 </div>
                 {!concluded && (
@@ -294,7 +313,7 @@ const AssemblyDetailPage = () => {
                                     </Button>
 
                                     <Button
-                                        onClick={handleConcludeAssembly}
+                                        onClick={handleConcludeClick}
                                         variant="secondary"
                                         fullWidth
                                         disabled={operating}
@@ -321,8 +340,8 @@ const AssemblyDetailPage = () => {
                             {concluded && (
                                 <>
                                     <div className="w-full mt-2 bg-gray-50 border-l-4 border-gray-400 p-4 rounded-r-lg">
-                                        <div className="flex items-start gap-3">
-                                            <svg className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="flex items-center gap-3">
+                                            <svg className="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                             <p className="text-xs text-gray-600">
@@ -348,6 +367,76 @@ const AssemblyDetailPage = () => {
                     </Card>
                 </div>
             </div>
+
+            {/* Conclude Assembly Confirmation Modal */}
+            <Modal isOpen={showConcludeModal} onClose={handleConcludeCancel} title="Concluir Asamblea" size="lg">
+                <div className="space-y-6">
+                    {/* Assembly Info */}
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-700">
+                            <strong>Asamblea:</strong> {assembly?.title}
+                        </p>
+                        <p className="text-sm text-gray-700 mt-1">
+                            <strong>Fecha programada:</strong> {formatDate(assembly?.scheduledDate)}
+                        </p>
+                        <p className="text-sm text-gray-700 mt-1">
+                            <strong>Asistentes registrados:</strong> {assembly?.attendanceCount || assembly?.attendance_count || 0}
+                        </p>
+                    </div>
+
+                    {/* Warning Message */}
+                    <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                        <div className="flex">
+                            <svg className="w-5 h-5 text-yellow-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <div className="text-sm text-yellow-700">
+                                <p className="font-semibold mb-2">¿Está seguro que desea concluir esta asamblea?</p>
+                                <p>Esta acción marcará la asamblea como finalizada y no se podrá deshacer.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Info about the process */}
+                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                        <div className="flex">
+                            <svg className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                            <div className="text-sm text-blue-700">
+                                <p className="font-semibold mb-1">Al concluir la asamblea:</p>
+                                <ul className="list-disc list-inside space-y-1">
+                                    <li>Se registrará la fecha y hora de conclusión</li>
+                                    <li>No se podrán registrar más asistencias</li>
+                                    <li>La asamblea pasará a estado "Concluida"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-col-reverse sm:flex-row justify-center gap-3 pt-4">
+                        <Button
+                            type="button"
+                            onClick={handleConcludeCancel}
+                            variant="outline"
+                            className="w-full sm:w-auto"
+                            disabled={operating}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={handleConcludeConfirm}
+                            variant="primary"
+                            className="w-full sm:w-auto"
+                            disabled={operating}
+                        >
+                            Sí, Concluir Asamblea
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

@@ -157,7 +157,7 @@ function App() {
                     <Route
                         path="/members/:id"
                         element={
-                            <ProtectedRoute requiredRole={USER_ROLES.ADMINISTRATOR}>
+                            <ProtectedRoute requiredRole={[USER_ROLES.ADMINISTRATOR, USER_ROLES.MANAGER]}>
                                 <Layout>
                                     <MemberDetailPage />
                                 </Layout>
@@ -361,11 +361,11 @@ function App() {
                         }
                     /> */}
 
-                    {/* Notifications (Administrator only) */}
+                    {/* Notifications (Administrator and Manager) */}
                     <Route
                         path="/notifications"
                         element={
-                            <ProtectedRoute requiredRole={USER_ROLES.ADMINISTRATOR}>
+                            <ProtectedRoute requiredRole={[USER_ROLES.ADMINISTRATOR, USER_ROLES.MANAGER]}>
                                 <Layout>
                                     <NotificationsPage />
                                 </Layout>

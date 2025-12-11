@@ -227,7 +227,10 @@ const updateMember = async (req, res) => {
         const updates = {
             fullName: req.body.fullName,
             identification: req.body.identification,
-            grade: req.body.grade,
+            qualityId: req.body.qualityId,
+            levelId: req.body.levelId,
+            gender: req.body.gender,
+            institutionalEmail: req.body.institutionalEmail,
             photoUrl: req.body.photoUrl,
             isActive: req.body.isActive
         };
@@ -271,7 +274,8 @@ const updateMember = async (req, res) => {
 };
 
 /**
- * Delete member (soft delete)
+ * Delete member (soft delete) with liquidation by exit
+ * Executes liquidation of savings account before deactivating member
  *
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -279,12 +283,14 @@ const updateMember = async (req, res) => {
 const deleteMember = async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedMember = await memberService.deleteMember(parseInt(id, 10));
+        const processedBy = req.user?.userId || 1;
+
+        const result = await memberService.deleteMember(parseInt(id, 10), processedBy);
 
         return successResponse(
             res,
-            MESSAGES.MEMBER_DELETED,
-            deletedMember
+            result.message,
+            result
         );
     } catch (error) {
         if (error.isOperational) {

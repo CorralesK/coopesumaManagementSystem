@@ -19,6 +19,11 @@ const MESSAGES = {
     USER_NOT_FOUND: 'User not found',
     USER_ALREADY_EXISTS: 'User already exists',
     USER_INACTIVE: 'User is inactive',
+    USER_ALREADY_INACTIVE: 'User is already inactive',
+    USER_ALREADY_ACTIVE: 'User is already active',
+    CANNOT_DEACTIVATE_LAST_ADMIN: 'Cannot deactivate the last active administrator',
+    MEMBER_LIQUIDATION_ERROR: 'Error liquidating associated member',
+    NO_FIELDS_TO_UPDATE: 'No fields to update',
 
     // Members
     MEMBER_CREATED: 'Member created successfully',
@@ -58,6 +63,13 @@ const MESSAGES = {
     INVALID_EMAIL: 'Invalid institutional email',
     EMAIL_ALREADY_EXISTS: 'Email already registered',
     STUDENT_REQUIRES_LEVEL: 'Students require an educational level',
+
+    // Liquidations
+    LIQUIDATION_SUCCESS: 'Liquidation completed successfully',
+    LIQUIDATION_ERROR: 'Error executing liquidation',
+    LIQUIDATION_NOT_FOUND: 'Liquidation not found',
+    LIQUIDATION_ZERO_BALANCE: 'Member has zero savings balance',
+    LIQUIDATION_MEMBER_DEACTIVATED: 'Member and user account deactivated successfully',
 
     // General
     SUCCESS: 'Operation successful',

@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useApi } from "./useApi";
 import * as userService from "../services/userService";
 import { normalizeText } from "../utils/formatters";
+import { printLiquidationReceipt } from "../utils/printUtils";
 
 /* ============================================================================
    HOOK: useUsers
@@ -32,8 +33,8 @@ export const useUsers = (params = {}) => {
       setError(null);
 
       // Only send backend filters (not search, that's done in frontend)
-      // Backend has a max limit of 100, so we use that
-      const cleanParams = { limit: 100 };
+      // Use a high limit to ensure all users are fetched
+      const cleanParams = { limit: 1000 };
 
       if (params.role && params.role !== "") {
         cleanParams.role = params.role;
@@ -192,7 +193,36 @@ export const useUserOperations = () => {
     try {
       setLoading(true);
       setError(null);
-      return await userService.deactivateUser(userId);
+      const response = await userService.deactivateUser(userId);
+
+      // If user was a member and liquidation occurred, print the receipt
+      if (response.data?.liquidation?.liquidation) {
+        const liquidationData = response.data.liquidation;
+        const liquidationDetails = liquidationData.liquidation;
+
+        try {
+          // Use receiptId if available, otherwise fall back to liquidationId
+          await printLiquidationReceipt({
+            receiptId: liquidationDetails.receiptId || liquidationData.receiptId,
+            liquidationId: liquidationDetails.liquidationId,
+            member: {
+              fullName: liquidationData.memberName,
+              memberCode: liquidationDetails.memberCode || 'N/A',
+              identification: liquidationDetails.identification || 'N/A'
+            },
+            liquidationType: liquidationDetails.liquidationType || 'exit',
+            savingsAmount: liquidationDetails.savingsLiquidated || 0,
+            totalAmount: liquidationDetails.totalLiquidated || 0,
+            notes: liquidationDetails.notes || '',
+            liquidationDate: liquidationDetails.liquidationDate || new Date()
+          });
+        } catch (printError) {
+          console.error('Error printing liquidation receipt:', printError);
+          // Don't throw error if print fails, just log it
+        }
+      }
+
+      return response;
     } catch (err) {
       const msg = err.message || "Error al desactivar el usuario";
       setError(msg);

@@ -271,9 +271,9 @@ export const useMemberOperations = () => {
     }, []);
 
     /**
-     * Deactivate a member
+     * Deactivate a member (executes liquidation by exit if balance > 0)
      * @param {string} memberId - Member ID
-     * @returns {Promise<Object>} Response
+     * @returns {Promise<Object>} Response with liquidation info
      */
     const deactivate = useCallback(async (memberId) => {
         try {
@@ -284,7 +284,8 @@ export const useMemberOperations = () => {
             const response = await deactivateMember(memberId);
             setSuccess(true);
 
-            return response;
+            // Return the data directly for easier access to liquidation info
+            return response.data || response;
         } catch (err) {
             setError(err.message || 'Error deactivating member');
             throw err;

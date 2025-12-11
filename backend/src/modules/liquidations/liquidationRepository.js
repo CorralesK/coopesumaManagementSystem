@@ -81,6 +81,7 @@ const getAccountBalances = async (memberId, client = db) => {
         `;
 
         const result = await client.query(query, [memberId]);
+        const rows = toCamelCase(result.rows);
 
         const balances = {
             savings: { accountId: null, balance: 0 },
@@ -88,10 +89,10 @@ const getAccountBalances = async (memberId, client = db) => {
             surplus: { accountId: null, balance: 0 }
         };
 
-        result.rows.forEach(row => {
-            balances[row.account_type] = {
-                accountId: row.account_id,
-                balance: parseFloat(row.current_balance)
+        rows.forEach(row => {
+            balances[row.accountType] = {
+                accountId: row.accountId,
+                balance: parseFloat(row.currentBalance)
             };
         });
 

@@ -18,17 +18,19 @@ const findById = async (userId) => {
     try {
         const query = `
             SELECT
-                user_id,
-                full_name,
-                role,
-                is_active,
-                microsoft_id,
-                email,
-                cooperative_id,
-                created_at,
-                updated_at
-            FROM users
-            WHERE user_id = $1
+                u.user_id,
+                u.full_name,
+                u.role,
+                u.is_active,
+                u.microsoft_id,
+                u.email,
+                u.cooperative_id,
+                u.created_at,
+                u.updated_at,
+                m.member_id
+            FROM users u
+            LEFT JOIN members m ON u.user_id = m.user_id
+            WHERE u.user_id = $1
         `;
 
         const result = await db.query(query, [userId]);
@@ -259,11 +261,7 @@ const linkMicrosoftAccount = async (userId, microsoftId, email) => {
  */
 const findAll = async (filters = {}, limit = 20, offset = 0) => {
     try {
-        let baseQuery = `
-            FROM users
-            WHERE 1=1
-        `;
-
+        let whereConditions = [];
         const params = [];
         let paramIndex = 1;
 
@@ -278,54 +276,66 @@ const findAll = async (filters = {}, limit = 20, offset = 0) => {
                 .replace(/u/gi, '[uúùüû]')
                 .replace(/n/gi, '[nñ]');
 
-            baseQuery += ` AND (
-                full_name ~* $${paramIndex}
-                OR email ~* $${paramIndex}
-            )`;
+            whereConditions.push(`(
+                u.full_name ~* $${paramIndex}
+                OR u.email ~* $${paramIndex}
+            )`);
             params.push(searchTerm);
             paramIndex++;
         }
 
         if (filters.role && filters.role.trim() !== '') {
-            baseQuery += ` AND role = $${paramIndex}`;
+            whereConditions.push(`u.role = $${paramIndex}`);
             params.push(filters.role);
             paramIndex++;
         }
 
         if (filters.isActive !== undefined && filters.isActive !== '') {
-            baseQuery += ` AND is_active = $${paramIndex}`;
+            whereConditions.push(`u.is_active = $${paramIndex}`);
             params.push(filters.isActive);
             paramIndex++;
         }
 
+        const whereClause = whereConditions.length > 0
+            ? 'WHERE ' + whereConditions.join(' AND ')
+            : '';
+
         // Get total count
-        const countQuery = `SELECT COUNT(*) as total ${baseQuery}`;
+        const countQuery = `
+            SELECT COUNT(*) as total
+            FROM users u
+            LEFT JOIN members m ON u.user_id = m.user_id
+            ${whereClause}
+        `;
         const countResult = await db.query(countQuery, params);
         const total = parseInt(countResult.rows[0].total, 10);
 
         // Get paginated results - ordered by role, status, and name
         const dataQuery = `
             SELECT
-                user_id,
-                full_name,
-                role,
-                is_active,
-                microsoft_id,
-                email,
-                cooperative_id,
-                created_at,
-                updated_at
-            ${baseQuery}
+                u.user_id,
+                u.full_name,
+                u.role,
+                u.is_active,
+                u.microsoft_id,
+                u.email,
+                u.cooperative_id,
+                u.created_at,
+                u.updated_at,
+                m.member_id
+            FROM users u
+            LEFT JOIN members m ON u.user_id = m.user_id
+            ${whereClause}
             ORDER BY
-                CASE role
+                CASE u.role
                     WHEN 'administrator' THEN 1
                     WHEN 'registrar' THEN 2
                     WHEN 'manager' THEN 3
                     WHEN 'member' THEN 4
                     ELSE 5
                 END,
-                is_active DESC,
-                full_name ASC
+                u.is_active DESC,
+                u.full_name ASC
             LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
         `;
 

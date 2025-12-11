@@ -13,72 +13,75 @@ import Button from '../common/Button';
  * ConfirmDeleteUserModal Component
  * Modal de confirmación con advertencia para eliminar usuarios
  */
-const ConfirmDeleteUserModal = ({ isOpen, onClose, onConfirm, userName, isLoading }) => {
+const ConfirmDeleteUserModal = ({ isOpen, onClose, onConfirm, userName, isLoading, isMember = false, onContinueToLiquidation }) => {
+    const handleConfirmClick = () => {
+        if (isMember && onContinueToLiquidation) {
+            onContinueToLiquidation();
+        } else {
+            onConfirm();
+        }
+    };
+
     return (
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Confirmar Eliminación"
-            size="md"
+            title="Eliminar Usuario"
+            size="lg"
             closeOnOverlayClick={!isLoading}
         >
-            <div className="space-y-4">
-                {/* Icono de advertencia */}
-                <div className="flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-                        <svg
-                            className="w-10 h-10 text-red-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                            />
-                        </svg>
-                    </div>
-                </div>
-
-                {/* Mensaje de advertencia */}
-                <div className="text-center">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                        ¿Está seguro que desea eliminar este usuario?
-                    </h4>
-                    <p className="text-gray-600 mb-4">
-                        <strong className="text-gray-900">{userName}</strong>
+            <div className="space-y-6">
+                {/* User Info */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-700">
+                        <strong>Usuario:</strong> {userName}
                     </p>
                 </div>
 
-                {/* Advertencia importante */}
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                {/* Warning Message */}
+                <div className="bg-red-50 border-l-4 border-red-500 p-4">
                     <div className="flex">
-                        <div className="flex-shrink-0">
-                            <svg
-                                className="h-5 w-5 text-red-500"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                            >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-sm text-red-800">
-                                <strong>Advertencia:</strong> Esta acción no se puede deshacer.
-                                El usuario será desactivado permanentemente y no podrá acceder al sistema.
-                            </p>
+                        <svg className="w-5 h-5 text-red-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <div className="text-sm text-red-700">
+                            <p className="font-semibold mb-2">¿Estás seguro de que deseas ELIMINAR a {userName}?</p>
+                            {isMember ? (
+                                <p>Esta acción iniciará el proceso de liquidación por retiro del miembro.</p>
+                            ) : (
+                                <p>El usuario será desactivado permanentemente y no podrá acceder al sistema.</p>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                {/* Botones de acción */}
-                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-6">
+                {/* Info about the process */}
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                    <div className="flex">
+                        <svg className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        <div className="text-sm text-blue-700">
+                            <p className="font-semibold mb-1">El proceso incluye:</p>
+                            {isMember ? (
+                                <ul className="list-disc list-inside space-y-1">
+                                    <li>Liquidación de la cuenta de ahorros</li>
+                                    <li>Desactivación del miembro y su usuario</li>
+                                    <li>Generación de recibo de liquidación</li>
+                                </ul>
+                            ) : (
+                                <ul className="list-disc list-inside space-y-1">
+                                    <li>Desactivación del usuario</li>
+                                    <li>No podrá acceder al sistema</li>
+                                </ul>
+                            )}
+                            <p className="mt-2 font-semibold text-red-700">Esta acción NO se puede deshacer.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col-reverse sm:flex-row justify-center gap-3 pt-4">
                     <Button
                         type="button"
                         onClick={onClose}
@@ -90,8 +93,8 @@ const ConfirmDeleteUserModal = ({ isOpen, onClose, onConfirm, userName, isLoadin
                     </Button>
                     <Button
                         type="button"
-                        onClick={onConfirm}
-                        variant="danger"
+                        onClick={handleConfirmClick}
+                        variant="primary"
                         disabled={isLoading}
                         className="w-full sm:w-auto"
                     >
@@ -120,7 +123,7 @@ const ConfirmDeleteUserModal = ({ isOpen, onClose, onConfirm, userName, isLoadin
                                 Eliminando...
                             </>
                         ) : (
-                            'Sí, Eliminar Usuario'
+                            'Continuar'
                         )}
                     </Button>
                 </div>
@@ -134,11 +137,15 @@ ConfirmDeleteUserModal.propTypes = {
     onClose: PropTypes.func.isRequired,
     onConfirm: PropTypes.func.isRequired,
     userName: PropTypes.string.isRequired,
-    isLoading: PropTypes.bool
+    isLoading: PropTypes.bool,
+    isMember: PropTypes.bool,
+    onContinueToLiquidation: PropTypes.func
 };
 
 ConfirmDeleteUserModal.defaultProps = {
-    isLoading: false
+    isLoading: false,
+    isMember: false,
+    onContinueToLiquidation: null
 };
 
 export default ConfirmDeleteUserModal;

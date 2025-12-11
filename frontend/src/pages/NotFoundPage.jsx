@@ -3,7 +3,6 @@
  * 404 error page for routes that don't exist
  */
 
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/common/Button';
 
@@ -11,21 +10,21 @@ const NotFoundPage = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
-            <div className="max-w-md w-full text-center p-8 md:p-12 bg-white rounded-2xl shadow-md">
-                <div className="mb-8">
-                    <h1 className="text-9xl font-bold text-primary-600">404</h1>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50" style={{ padding: '2rem 1rem' }}>
+            <div className="max-w-lg w-full text-center bg-white rounded-2xl shadow-lg" style={{ padding: '3rem 2.5rem' }}>
+                <div style={{ marginBottom: '3rem' }}>
+                    <h1 className="text-9xl font-bold text-primary-600" style={{ marginBottom: '1rem' }}>404</h1>
                 </div>
 
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                <h2 className="text-3xl font-bold text-gray-900" style={{ marginBottom: '1.5rem' }}>
                     Página No Encontrada
                 </h2>
 
-                <p className="text-lg text-gray-600 mb-8">
+                <p className="text-lg text-gray-600 leading-relaxed" style={{ marginBottom: '2.5rem' }}>
                     Lo sentimos, la página que buscas no existe o ha sido movida.
                 </p>
 
-                <div className="flex flex-col gap-4 w-full">
+                <div className="flex flex-col w-full" style={{ gap: '1rem' }}>
                     <Button
                         onClick={() => navigate('/dashboard')}
                         variant="primary"

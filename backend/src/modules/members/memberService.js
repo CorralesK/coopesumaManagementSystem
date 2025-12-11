@@ -9,6 +9,8 @@
 const memberRepository = require('./memberRepository');
 const userRepository = require('../users/userRepository');
 const receiptService = require('../receipts/receiptService');
+const liquidationService = require('../liquidations/liquidationService');
+const liquidationRepository = require('../liquidations/liquidationRepository');
 const { generateQrHash, generateQrCodeDataUrl, generateVerificationUrl } = require('../../utils/qrUtils');
 const { verifyInstitutionalEmail } = require('../../utils/emailVerification');
 const { USER_ROLES } = require('../../constants/roles');
@@ -229,10 +231,10 @@ const createMember = async (memberData) => {
             memberData.cooperativeId || 1, // Default to cooperative 1
             memberData.fullName,
             memberData.identification,
-            memberData.qualityId || 1,  // Default: Estudiante
+            memberData.qualityId || 1,  // Default: Student
             memberData.levelId || null, // Can be NULL
             memberData.gender || null,  // M/F or NULL
-            memberData.memberCode || null,  // Código único
+            memberData.memberCode || null,  // Unique code
             null,  // user_id - will be linked later if needed
             memberData.institutionalEmail || null,
             memberData.photoUrl || null,
@@ -372,11 +374,65 @@ const updateMember = async (memberId, updates) => {
             }
         }
 
+        // If institutional email is being updated, verify it
+        if (updates.institutionalEmail && updates.institutionalEmail !== member.institutionalEmail) {
+            const emailVerification = await verifyInstitutionalEmail(updates.institutionalEmail);
+
+            if (!emailVerification.isValid) {
+                throw new MemberError(
+                    emailVerification.error || 'El correo institucional no es válido',
+                    ERROR_CODES.VALIDATION_ERROR,
+                    400
+                );
+            }
+
+            // Update to the verified email
+            updates.institutionalEmail = emailVerification.email;
+
+            // Check if email is already in use by another user
+            const existingUser = await userRepository.findByEmail(emailVerification.email);
+            if (existingUser && existingUser.userId !== member.userId) {
+                throw new MemberError(
+                    'El correo institucional ya está registrado en el sistema',
+                    ERROR_CODES.USER_ALREADY_EXISTS,
+                    409
+                );
+            }
+
+            // Update user email if member has a linked user account
+            if (member.userId) {
+                try {
+                    await userRepository.update(member.userId, {
+                        email: emailVerification.email,
+                        full_name: updates.fullName || member.fullName
+                    });
+                    logger.info('User email updated along with member', {
+                        userId: member.userId,
+                        newEmail: emailVerification.email
+                    });
+                } catch (userUpdateError) {
+                    logger.error('Error updating user email:', userUpdateError);
+                    // Don't fail the member update if user update fails
+                }
+            }
+        }
+
+        // Convert camelCase to snake_case for database
+        const dbUpdates = {};
+        if (updates.fullName !== undefined) dbUpdates.full_name = updates.fullName;
+        if (updates.identification !== undefined) dbUpdates.identification = updates.identification;
+        if (updates.qualityId !== undefined) dbUpdates.quality_id = updates.qualityId;
+        if (updates.levelId !== undefined) dbUpdates.level_id = updates.levelId;
+        if (updates.gender !== undefined) dbUpdates.gender = updates.gender;
+        if (updates.institutionalEmail !== undefined) dbUpdates.institutional_email = updates.institutionalEmail;
+        if (updates.photoUrl !== undefined) dbUpdates.photo_url = updates.photoUrl;
+        if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
+
         // Update member
-        const updatedMember = await memberRepository.update(memberId, updates);
+        const updatedMember = await memberRepository.update(memberId, dbUpdates);
 
         logger.info('Member updated successfully', {
-            memberId: updatedMember.member_id
+            memberId: updatedMember.memberId
         });
 
         return updatedMember;
@@ -395,13 +451,15 @@ const updateMember = async (memberId, updates) => {
 };
 
 /**
- * Delete member (soft delete)
+ * Delete member (soft delete) with liquidation by exit
+ * Executes liquidation of savings account before deactivating member and user
  *
  * @param {number} memberId - Member ID
- * @returns {Promise<Object>} Deactivated member object
- * @throws {MemberError} If member not found
+ * @param {number} processedBy - User ID processing the deletion
+ * @returns {Promise<Object>} Result with liquidation info
+ * @throws {MemberError} If member not found or liquidation fails
  */
-const deleteMember = async (memberId) => {
+const deleteMember = async (memberId, processedBy = 1) => {
     try {
         // Check if member exists
         const member = await memberRepository.findById(memberId);
@@ -414,14 +472,58 @@ const deleteMember = async (memberId) => {
             );
         }
 
-        // Deactivate member (soft delete)
-        const deactivatedMember = await memberRepository.deactivate(memberId);
+        // Check if member is already inactive
+        if (!member.isActive) {
+            throw new MemberError(
+                MESSAGES.MEMBER_INACTIVE,
+                ERROR_CODES.MEMBER_INACTIVE,
+                400
+            );
+        }
 
-        logger.info('Member deleted (deactivated) successfully', {
-            memberId: deactivatedMember.member_id
-        });
+        // Get savings balance
+        const balances = await liquidationRepository.getAccountBalances(memberId);
+        const savingsBalance = balances.savings.balance;
 
-        return deactivatedMember;
+        let liquidationResult = null;
+
+        // Always execute liquidation (even with zero balance) to generate receipt as proof
+        try {
+            const results = await liquidationService.executeLiquidation({
+                memberIds: [memberId],
+                liquidationType: 'exit',
+                memberContinues: false,
+                notes: savingsBalance > 0
+                    ? 'Liquidación automática por eliminación de miembro'
+                    : 'Liquidación automática por eliminación de miembro (saldo ₡0.00)',
+                processedBy
+            });
+
+            liquidationResult = results[0];
+
+            logger.info('Member deleted with liquidation', {
+                memberId,
+                liquidationId: liquidationResult?.liquidationId,
+                totalLiquidated: liquidationResult?.totalLiquidated,
+                hadBalance: savingsBalance > 0
+            });
+        } catch (liquidationError) {
+            logger.error('Error executing liquidation during member deletion:', liquidationError);
+            throw new MemberError(
+                MESSAGES.LIQUIDATION_ERROR,
+                ERROR_CODES.INTERNAL_ERROR,
+                500
+            );
+        }
+
+        return {
+            success: true,
+            memberId,
+            memberName: member.fullName,
+            hadBalance: savingsBalance > 0,
+            liquidation: liquidationResult,
+            message: MESSAGES.LIQUIDATION_MEMBER_DEACTIVATED
+        };
     } catch (error) {
         if (error.isOperational) {
             throw error;

@@ -1,12 +1,13 @@
 /**
  * @file MemberLiquidationSection.jsx
- * @description Component for member liquidation operations
+ * @description Component for member liquidation operations (savings only)
  * @module components/members
  */
 
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import { useState, forwardRef, useImperativeHandle } from 'react';
 import PropTypes from 'prop-types';
 import { useLiquidationOperations } from '../../hooks/useLiquidations';
+import { printLiquidationReceipt } from '../../utils/printUtils';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
 import Alert from '../common/Alert';
@@ -15,8 +16,9 @@ import Loading from '../common/Loading';
 /**
  * MemberLiquidationSection Component
  * Handles member liquidation with preview and confirmation
+ * Currently only liquidates savings account
  */
-const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete }, ref) => {
+const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, onError }, ref) => {
     const [showModal, setShowModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [liquidationData, setLiquidationData] = useState({
@@ -45,13 +47,35 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete }, 
     const isPending = yearsSinceLastLiquidation >= 6;
 
     // Handle opening liquidation modal
-    const handleOpenModal = async () => {
+    const handleOpenModal = async (forcedType = null) => {
         try {
             const response = await getPreview(member.memberId);
             setPreview(response.data);
-            setShowModal(true);
+
+            // If forced type is provided, set it and skip to confirmation
+            if (forcedType) {
+                setLiquidationData({
+                    liquidationType: forcedType,
+                    memberContinues: forcedType === 'periodic',
+                    notes: ''
+                });
+                // For exit type (delete action), go directly to confirmation modal
+                if (forcedType === 'exit') {
+                    setShowConfirmModal(true);
+                } else {
+                    setShowModal(true);
+                }
+            } else {
+                setShowModal(true);
+            }
         } catch (err) {
-            // Error handled by hook
+            // Error will be available in the error state from the hook
+            // Pass to parent if callback provided
+            if (onError) {
+                setTimeout(() => {
+                    if (error) onError(error);
+                }, 100);
+            }
         }
     };
 
@@ -73,11 +97,24 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete }, 
     // Handle execute liquidation
     const handleExecute = async () => {
         try {
-            await execute({
+            const response = await execute({
                 memberIds: [member.memberId],
                 liquidationType: liquidationData.liquidationType,
                 memberContinues: liquidationData.memberContinues,
                 notes: liquidationData.notes || null
+            });
+
+            // Print receipt after successful liquidation
+            const liquidationResult = response?.data?.[0];
+            printLiquidationReceipt({
+                member: member,
+                liquidationType: liquidationData.liquidationType,
+                savingsAmount: preview?.savingsBalance || 0,
+                totalAmount: preview?.savingsBalance || 0,
+                notes: liquidationData.notes,
+                liquidationDate: new Date(),
+                liquidationId: liquidationResult?.liquidationId || '',
+                receiptNumber: liquidationResult?.receiptNumber || ''
             });
 
             setShowConfirmModal(false);
@@ -101,8 +138,6 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete }, 
     const formatCurrency = (amount) => {
         return `₡${Number(amount || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
-
-    const totalBalance = (member.savingsBalance || 0) + (member.contributionsBalance || 0) + (member.surplusBalance || 0);
 
     // Expose handleOpenModal to parent component via ref
     useImperativeHandle(ref, () => ({
@@ -142,8 +177,8 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete }, 
                 aria-hidden="true"
             />
 
-            {/* Error Alert */}
-            {error && (
+            {/* Error Alert - Only show if no onError callback provided */}
+            {error && !onError && (
                 <div className="mt-4">
                     <Alert type="error" message={error} onClose={clearState} />
                 </div>
@@ -156,137 +191,101 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete }, 
                     setShowModal(false);
                     clearState();
                 }}
-                title="Vista Previa de Liquidación"
-                size="md"
+                title="Liquidación de Ahorros"
+                size="lg"
             >
                 {loading ? (
-                    <Loading message="Cargando preview..." />
+                    <Loading message="Cargando..." />
                 ) : preview ? (
                     <div className="space-y-6">
                         {/* Member Info */}
-                        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                            <div className="text-center space-y-1">
-                                <h3 className="text-lg font-bold text-gray-900">{member.fullName}</h3>
-                                <p className="text-sm text-gray-600">{member.memberCode}</p>
-                            </div>
-                            <div className="mt-3 pt-3 border-t border-gray-300">
-                                <p className="text-xs text-gray-600 text-center">
-                                    {member.lastLiquidationDate
-                                        ? `Última liquidación: ${new Date(member.lastLiquidationDate).toLocaleDateString('es-CR')}`
-                                        : `Fecha de afiliación: ${new Date(member.affiliationDate).toLocaleDateString('es-CR')}`
-                                    }
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Balances */}
-                        <div>
-                            <h4 className="font-medium text-gray-900 mb-3">Saldos a Liquidar</h4>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="p-3 bg-green-50 rounded-lg border border-green-200 text-center">
-                                    <p className="text-xs text-green-700 mb-1">Ahorros</p>
-                                    <p className="text-base font-bold text-green-900">
-                                        {formatCurrency(preview.savingsBalance)}
-                                    </p>
-                                </div>
-                                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 text-center">
-                                    <p className="text-xs text-blue-700 mb-1">Aportaciones</p>
-                                    <p className="text-base font-bold text-blue-900">
-                                        {formatCurrency(preview.contributionsBalance)}
-                                    </p>
-                                </div>
-                                <div className="p-3 bg-purple-50 rounded-lg border border-purple-200 text-center">
-                                    <p className="text-xs text-purple-700 mb-1">Excedentes</p>
-                                    <p className="text-base font-bold text-purple-900">
-                                        {formatCurrency(preview.surplusBalance)}
-                                    </p>
-                                </div>
-                                <div className="p-3 bg-primary-50 rounded-lg border-2 border-primary-300 text-center">
-                                    <p className="text-xs text-primary-700 mb-1">Total</p>
-                                    <p className="text-lg font-bold text-primary-900">
-                                        {formatCurrency(preview.totalAmount)}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Liquidation Type */}
-                        <div>
-                            <h4 className="font-medium text-gray-900 mb-3">Tipo de Liquidación</h4>
-                            <div className="space-y-3">
-                                <label className="flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors" style={{
-                                    borderColor: liquidationData.liquidationType === 'periodic' ? 'rgb(var(--color-primary))' : '#d1d5db'
-                                }}>
-                                    <input
-                                        type="radio"
-                                        name="liquidationType"
-                                        value="periodic"
-                                        checked={liquidationData.liquidationType === 'periodic'}
-                                        onChange={() => handleTypeChange('periodic')}
-                                        className="mt-0.5 flex-shrink-0"
-                                    />
-                                    <div className="flex-1">
-                                        <span className="block text-sm font-medium text-gray-900">Liquidación Periódica</span>
-                                        <span className="block text-xs text-gray-600 mt-1">El miembro continúa activo (cada 6 años)</span>
-                                    </div>
-                                </label>
-                                <label className="flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors" style={{
-                                    borderColor: liquidationData.liquidationType === 'exit' ? 'rgb(var(--color-primary))' : '#d1d5db'
-                                }}>
-                                    <input
-                                        type="radio"
-                                        name="liquidationType"
-                                        value="exit"
-                                        checked={liquidationData.liquidationType === 'exit'}
-                                        onChange={() => handleTypeChange('exit')}
-                                        className="mt-0.5 flex-shrink-0"
-                                    />
-                                    <div className="flex-1">
-                                        <span className="block text-sm font-medium text-gray-900">Liquidación por Retiro</span>
-                                        <span className="block text-xs text-gray-600 mt-1">El miembro sale y se marca como inactivo</span>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* Notes */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Notas (Opcional)
-                            </label>
-                            <textarea
-                                value={liquidationData.notes}
-                                onChange={(e) => setLiquidationData({ ...liquidationData, notes: e.target.value })}
-                                rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                placeholder="Agregar notas sobre esta liquidación..."
-                            />
-                        </div>
-
-                        {/* Warning */}
-                        <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
-                            <p className="text-sm text-yellow-800">
-                                {liquidationData.liquidationType === 'exit'
-                                    ? 'Al ejecutar esta liquidación, el miembro será marcado como INACTIVO y todas sus cuentas se resetearán a ₡0.00'
-                                    : 'Al ejecutar esta liquidación, todas las cuentas del miembro se resetearán a ₡0.00. Se generará un recibo automáticamente.'
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                            <p className="text-sm text-gray-700">
+                                <strong>Miembro:</strong> {member.fullName} ({member.memberCode})
+                            </p>
+                            <p className="text-sm text-gray-700 mt-1">
+                                <strong>{member.lastLiquidationDate ? 'Última liquidación:' : 'Fecha afiliación:'}</strong>{' '}
+                                {member.lastLiquidationDate
+                                    ? new Date(member.lastLiquidationDate).toLocaleDateString('es-CR')
+                                    : new Date(member.affiliationDate).toLocaleDateString('es-CR')
                                 }
                             </p>
                         </div>
 
+                        {/* Savings Balance */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Saldo a Liquidar
+                            </label>
+                            <div className="text-2xl font-bold text-green-600">
+                                {formatCurrency(preview.savingsBalance)}
+                            </div>
+                            {preview.savingsBalance === 0 && (
+                                <p className="mt-2 text-sm text-yellow-600">
+                                    El miembro no tiene saldo. Se generará un recibo con monto ₡0.00 como comprobante.
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Liquidation Type */}
+                        <div>
+                            <label htmlFor="liquidationType" className="block text-sm font-medium text-gray-700 mb-2">
+                                Tipo de Liquidación <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                id="liquidationType"
+                                name="liquidationType"
+                                value={liquidationData.liquidationType}
+                                onChange={(e) => handleTypeChange(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            >
+                                <option value="periodic">Liquidación Periódica</option>
+                                <option value="exit">Liquidación por Retiro</option>
+                            </select>
+                            {liquidationData.liquidationType && (
+                                <p className="mt-1 text-sm text-gray-500">
+                                    {liquidationData.liquidationType === 'periodic'
+                                        ? 'El miembro continúa activo. Esta liquidación se realiza cada 6 años.'
+                                        : 'El miembro deja la cooperativa. Se desactivará el miembro y su usuario.'
+                                    }
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Notes */}
+                        <div>
+                            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+                                Nota (Opcional)
+                            </label>
+                            <textarea
+                                id="notes"
+                                name="notes"
+                                value={liquidationData.notes}
+                                onChange={(e) => setLiquidationData({ ...liquidationData, notes: e.target.value })}
+                                rows={3}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                placeholder="Descripción de la liquidación..."
+                            />
+                        </div>
+
                         {/* Actions */}
-                        <div className="flex justify-center space-x-3">
+                        <div className="flex flex-col-reverse sm:flex-row justify-center gap-3 pt-4">
                             <Button
+                                type="button"
                                 onClick={() => {
                                     setShowModal(false);
                                     clearState();
                                 }}
                                 variant="outline"
+                                className="w-full sm:w-auto"
                             >
                                 Cancelar
                             </Button>
                             <Button
+                                type="button"
                                 onClick={handleContinueToConfirm}
                                 variant="primary"
+                                className="w-full sm:w-auto"
                             >
                                 Continuar
                             </Button>
@@ -302,62 +301,87 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete }, 
                 title="Confirmar Liquidación"
                 size="lg"
             >
-                <div className="space-y-4">
-                    <div className="p-4 bg-red-50 border-l-4 border-red-400">
-                        <p className="text-sm text-red-800 font-medium">
-                            Esta acción liquidará las cuentas del miembro <span className="font-bold">{member.fullName}</span>.
-                            {liquidationData.liquidationType === 'exit' && (
-                                <span className="block mt-2">El miembro será marcado como INACTIVO.</span>
-                            )}
-                        </p>
-                        <p className="text-sm text-red-800 mt-2">
-                            Esta operación NO se puede deshacer.
-                        </p>
-                    </div>
+                <div className="space-y-6">
+                    {/* Error Alert in Confirmation Modal */}
+                    {error && (
+                        <Alert type="error" message={error} onClose={clearState} />
+                    )}
 
-                    <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Tipo:</span>
-                            <span className="font-semibold text-gray-900">
+                    {/* Member Info */}
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-700">
+                            <strong>Miembro:</strong> {member.fullName} ({member.memberCode})
+                        </p>
+                        <p className="text-sm text-gray-700 mt-1">
+                            <strong>Tipo de liquidación:</strong>{' '}
+                            <span className={`font-medium px-2 py-1 rounded text-xs ${
+                                liquidationData.liquidationType === 'periodic'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-red-100 text-red-800'
+                            }`}>
                                 {liquidationData.liquidationType === 'periodic' ? 'Periódica' : 'Por Retiro'}
                             </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Total a liquidar:</span>
-                            <span className="font-bold text-primary-600 text-lg">
-                                {formatCurrency(preview?.totalAmount || 0)}
-                            </span>
-                        </div>
+                        </p>
                         {liquidationData.notes && (
-                            <div className="pt-2 border-t">
-                                <span className="text-sm text-gray-600">Notas:</span>
-                                <p className="text-sm text-gray-900 mt-1">{liquidationData.notes}</p>
-                            </div>
+                            <p className="text-sm text-gray-700 mt-1">
+                                <strong>Notas:</strong> {liquidationData.notes}
+                            </p>
                         )}
                     </div>
 
-                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-sm text-blue-800">
-                            Se generará un recibo automáticamente al completar la liquidación.
-                        </p>
+                    {/* Amount to Liquidate */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Total a Liquidar (Ahorros)
+                        </label>
+                        <div className="text-2xl font-bold text-green-600">
+                            {formatCurrency(preview?.savingsBalance || 0)}
+                        </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
+                    {/* Warning Message */}
+                    <div className="bg-orange-50 border-l-4 border-orange-500 p-4">
+                        <div className="flex">
+                            <svg className="w-5 h-5 text-orange-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <p className="text-sm text-orange-700">
+                                Esta acción liquidará la cuenta de ahorros de <span className="font-bold">{member.fullName}</span>.
+                                {liquidationData.liquidationType === 'exit' && ' El miembro y su cuenta de usuario serán marcados como INACTIVOS.'}
+                                {' '}<span className="font-semibold">Esta operación NO se puede deshacer.</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Receipt Info */}
+                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                        <div className="flex">
+                            <svg className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                            <p className="text-sm text-blue-700">
+                                Se generará un recibo automáticamente al completar la liquidación.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-col-reverse sm:flex-row justify-center gap-3 pt-4">
                         <Button
+                            type="button"
                             onClick={() => setShowConfirmModal(false)}
                             variant="outline"
                             disabled={loading}
-                            fullWidth
-                            className="sm:w-auto"
+                            className="w-full sm:w-auto"
                         >
                             Cancelar
                         </Button>
                         <Button
+                            type="button"
                             onClick={handleExecute}
-                            variant="danger"
+                            variant="primary"
                             disabled={loading}
-                            fullWidth
-                            className="sm:w-auto"
+                            className="w-full sm:w-auto"
                         >
                             {loading ? 'Ejecutando...' : 'Confirmar Liquidación'}
                         </Button>
@@ -380,7 +404,8 @@ MemberLiquidationSection.propTypes = {
         contributionsBalance: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         surplusBalance: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
     }).isRequired,
-    onLiquidationComplete: PropTypes.func
+    onLiquidationComplete: PropTypes.func,
+    onError: PropTypes.func
 };
 
 export default MemberLiquidationSection;

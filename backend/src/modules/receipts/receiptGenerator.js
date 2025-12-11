@@ -1,23 +1,12 @@
 /**
  * Receipt Generator
  * Generates PDF receipts using PDFKit
+ * Receipts are generated in memory and streamed directly without saving to disk
+ * All receipts use standardized format optimized for black and white printing
  */
 
 const PDFDocument = require('pdfkit');
-const fs = require('fs');
-const path = require('path');
 const logger = require('../../utils/logger');
-
-/**
- * Ensure receipts directory exists
- */
-const ensureReceiptsDirectory = () => {
-    const receiptsDir = path.join(__dirname, '../../../receipts');
-    if (!fs.existsSync(receiptsDir)) {
-        fs.mkdirSync(receiptsDir, { recursive: true });
-    }
-    return receiptsDir;
-};
 
 /**
  * Format currency
@@ -75,403 +64,350 @@ const generateFooter = (doc) => {
 };
 
 /**
- * Generate affiliation receipt
+ * Draw a table row with label and value
  */
-const generateAffiliationReceipt = async (receiptData) => {
-    const doc = new PDFDocument({ margin: 50 });
-    const receiptsDir = ensureReceiptsDirectory();
-    const filename = `receipt-${receiptData.receiptNumber}.pdf`;
-    const filepath = path.join(receiptsDir, filename);
+const drawTableRow = (doc, y, label, value, options = {}) => {
+    const leftX = options.leftX || 70;
+    const rightX = options.rightX || 400;
+    const fontSize = options.fontSize || 11;
+    const bold = options.bold || false;
+    const lineAfter = options.lineAfter || false;
 
-    const stream = fs.createWriteStream(filepath);
-    doc.pipe(stream);
+    doc.fontSize(fontSize);
+
+    // Label
+    if (bold) {
+        doc.font('Helvetica-Bold').text(label, leftX, y);
+    } else {
+        doc.font('Helvetica').text(label, leftX, y);
+    }
+
+    // Value (aligned to the right)
+    if (bold) {
+        doc.font('Helvetica-Bold').text(value, rightX, y, { align: 'right', width: 150 });
+    } else {
+        doc.font('Helvetica').text(value, rightX, y, { align: 'right', width: 150 });
+    }
+
+    // Optional line after row
+    if (lineAfter) {
+        doc.moveTo(leftX, y + 18).lineTo(550, y + 18).stroke();
+    }
+
+    return y + 25;
+};
+
+/**
+ * Generate standardized receipt with table format
+ */
+const generateStandardizedReceipt = (receiptData, title) => {
+    const doc = new PDFDocument({ margin: 50 });
 
     // Header
     generateHeader(doc);
 
-    // Title
+    // Title and Receipt Number
     doc
         .fontSize(16)
         .font('Helvetica-Bold')
-        .text('RECIBO DE AFILIACIÓN', { align: 'center' })
-        .moveDown()
+        .text(title, { align: 'center' })
+        .moveDown(0.5)
         .fontSize(12)
-        .text(`No. ${receiptData.receiptNumber}`, { align: 'center' })
+        .text(`Recibo No. ${receiptData.receiptNumber}`, { align: 'center' })
         .moveDown(2);
 
-    // Body
-    doc
-        .fontSize(11)
-        .font('Helvetica')
-        .text(`Recibimos de: ${receiptData.memberName}`, 50)
-        .moveDown(0.5)
-        .text(`Cédula: ${receiptData.identification}`)
-        .moveDown(0.5)
-        .text(`Código de Asociado: ${receiptData.memberCode}`)
-        .moveDown(0.5)
-        .text(`Concepto: Cuota de Afiliación`)
-        .moveDown(0.5)
-        .fontSize(14)
-        .font('Helvetica-Bold')
-        .text(`Monto: ${formatCurrency(receiptData.amount)}`)
-        .moveDown(0.5)
-        .fontSize(11)
-        .font('Helvetica')
-        .text(`Fecha: ${formatDate(receiptData.date)}`)
-        .moveDown(0.5)
-        .text(`Año Fiscal: ${receiptData.fiscalYear}`);
+    // Draw border box
+    const boxTop = doc.y;
+    doc.rect(50, boxTop, 512, 0).stroke(); // Top line
+
+    let currentY = boxTop + 15;
+
+    // Member Information Section
+    doc.fontSize(10).font('Helvetica-Bold').text('DATOS DEL ASOCIADO', 70, currentY);
+    currentY += 20;
+
+    currentY = drawTableRow(doc, currentY, 'Nombre:', receiptData.memberName);
+    currentY = drawTableRow(doc, currentY, 'Cédula:', receiptData.identification);
+    currentY = drawTableRow(doc, currentY, 'Código de Asociado:', receiptData.memberCode, { lineAfter: true });
+
+    currentY += 5;
+
+    // Transaction Details Section
+    doc.fontSize(10).font('Helvetica-Bold').text('DETALLES DE LA TRANSACCIÓN', 70, currentY);
+    currentY += 20;
+
+    currentY = drawTableRow(doc, currentY, 'Concepto:', receiptData.concept);
+    currentY = drawTableRow(doc, currentY, 'Fecha:', formatDate(receiptData.date));
+
+    // Add specific fields based on receipt type
+    if (receiptData.previousBalance !== undefined && receiptData.newBalance !== undefined) {
+        currentY = drawTableRow(doc, currentY, 'Saldo Anterior:', formatCurrency(receiptData.previousBalance));
+        currentY = drawTableRow(doc, currentY, 'Saldo Nuevo:', formatCurrency(receiptData.newBalance));
+    }
+
+    if (receiptData.fiscalYear) {
+        currentY = drawTableRow(doc, currentY, 'Año Fiscal:', receiptData.fiscalYear.toString());
+    }
+
+    currentY = drawTableRow(doc, currentY, '', '', { lineAfter: true });
+    currentY += 5;
+
+    // Amount Section (highlighted)
+    currentY = drawTableRow(doc, currentY, 'MONTO TOTAL:', formatCurrency(receiptData.amount), {
+        fontSize: 14,
+        bold: true
+    });
+
+    // Close border box
+    const boxBottom = currentY + 10;
+    doc.rect(50, boxTop, 512, boxBottom - boxTop).stroke();
 
     // Footer
     generateFooter(doc);
 
     doc.end();
+    return doc;
+};
 
-    return new Promise((resolve, reject) => {
-        stream.on('finish', () => resolve(filepath));
-        stream.on('error', reject);
-    });
+/**
+ * Generate affiliation receipt
+ */
+const generateAffiliationReceipt = (receiptData) => {
+    return generateStandardizedReceipt({
+        ...receiptData,
+        concept: 'Cuota de Afiliación'
+    }, 'RECIBO DE AFILIACIÓN');
 };
 
 /**
  * Generate savings deposit receipt
  */
-const generateSavingsDepositReceipt = async (receiptData) => {
-    const doc = new PDFDocument({ margin: 50 });
-    const receiptsDir = ensureReceiptsDirectory();
-    const filename = `receipt-${receiptData.receiptNumber}.pdf`;
-    const filepath = path.join(receiptsDir, filename);
-
-    const stream = fs.createWriteStream(filepath);
-    doc.pipe(stream);
-
-    generateHeader(doc);
-
-    doc
-        .fontSize(16)
-        .font('Helvetica-Bold')
-        .text('RECIBO DE DEPÓSITO - AHORROS', { align: 'center' })
-        .moveDown()
-        .fontSize(12)
-        .text(`No. ${receiptData.receiptNumber}`, { align: 'center' })
-        .moveDown(2);
-
-    doc
-        .fontSize(11)
-        .font('Helvetica')
-        .text(`Recibimos de: ${receiptData.memberName}`, 50)
-        .moveDown(0.5)
-        .text(`Cédula: ${receiptData.identification}`)
-        .moveDown(0.5)
-        .text(`Código de Asociado: ${receiptData.memberCode}`)
-        .moveDown(0.5)
-        .text(`Concepto: Depósito de Ahorros`)
-        .moveDown(0.5)
-        .fontSize(14)
-        .font('Helvetica-Bold')
-        .text(`Monto: ${formatCurrency(receiptData.amount)}`)
-        .moveDown(0.5)
-        .fontSize(11)
-        .font('Helvetica')
-        .text(`Fecha: ${formatDate(receiptData.date)}`)
-        .moveDown(0.5)
-        .text(`Saldo Anterior: ${formatCurrency(receiptData.previousBalance)}`)
-        .moveDown(0.5)
-        .text(`Nuevo Saldo: ${formatCurrency(receiptData.newBalance)}`);
-
-    generateFooter(doc);
-    doc.end();
-
-    return new Promise((resolve, reject) => {
-        stream.on('finish', () => resolve(filepath));
-        stream.on('error', reject);
-    });
+const generateSavingsDepositReceipt = (receiptData) => {
+    return generateStandardizedReceipt({
+        ...receiptData,
+        concept: 'Depósito de Ahorros'
+    }, 'RECIBO DE DEPÓSITO - AHORROS');
 };
 
 /**
  * Generate contribution receipt
  */
-const generateContributionReceipt = async (receiptData) => {
-    const doc = new PDFDocument({ margin: 50 });
-    const receiptsDir = ensureReceiptsDirectory();
-    const filename = `receipt-${receiptData.receiptNumber}.pdf`;
-    const filepath = path.join(receiptsDir, filename);
-
-    const stream = fs.createWriteStream(filepath);
-    doc.pipe(stream);
-
-    generateHeader(doc);
-
-    doc
-        .fontSize(16)
-        .font('Helvetica-Bold')
-        .text('RECIBO DE APORTACIÓN', { align: 'center' })
-        .moveDown()
-        .fontSize(12)
-        .text(`No. ${receiptData.receiptNumber}`, { align: 'center' })
-        .moveDown(2);
-
-    doc
-        .fontSize(11)
-        .font('Helvetica')
-        .text(`Recibimos de: ${receiptData.memberName}`, 50)
-        .moveDown(0.5)
-        .text(`Cédula: ${receiptData.identification}`)
-        .moveDown(0.5)
-        .text(`Código de Asociado: ${receiptData.memberCode}`)
-        .moveDown(0.5)
-        .text(`Concepto: Aportación ${receiptData.tractInfo || ''}`)
-        .moveDown(0.5)
-        .fontSize(14)
-        .font('Helvetica-Bold')
-        .text(`Monto: ${formatCurrency(receiptData.amount)}`)
-        .moveDown(0.5)
-        .fontSize(11)
-        .font('Helvetica')
-        .text(`Fecha: ${formatDate(receiptData.date)}`)
-        .moveDown(0.5)
-        .text(`Año Fiscal: ${receiptData.fiscalYear}`);
-
-    generateFooter(doc);
-    doc.end();
-
-    return new Promise((resolve, reject) => {
-        stream.on('finish', () => resolve(filepath));
-        stream.on('error', reject);
-    });
+const generateContributionReceipt = (receiptData) => {
+    const tractInfo = receiptData.tractInfo ? ` - ${receiptData.tractInfo}` : '';
+    return generateStandardizedReceipt({
+        ...receiptData,
+        concept: `Aportación${tractInfo}`
+    }, 'RECIBO DE APORTACIÓN');
 };
 
 /**
  * Generate withdrawal receipt
  */
-const generateWithdrawalReceipt = async (receiptData) => {
-    const doc = new PDFDocument({ margin: 50 });
-    const receiptsDir = ensureReceiptsDirectory();
-    const filename = `receipt-${receiptData.receiptNumber}.pdf`;
-    const filepath = path.join(receiptsDir, filename);
-
-    const stream = fs.createWriteStream(filepath);
-    doc.pipe(stream);
-
-    generateHeader(doc);
-
+const generateWithdrawalReceipt = (receiptData) => {
     const accountTypeLabel = receiptData.accountType === 'savings' ? 'AHORROS' : 'EXCEDENTES';
-
-    doc
-        .fontSize(16)
-        .font('Helvetica-Bold')
-        .text(`RECIBO DE RETIRO - ${accountTypeLabel}`, { align: 'center' })
-        .moveDown()
-        .fontSize(12)
-        .text(`No. ${receiptData.receiptNumber}`, { align: 'center' })
-        .moveDown(2);
-
-    doc
-        .fontSize(11)
-        .font('Helvetica')
-        .text(`Entregamos a: ${receiptData.memberName}`, 50)
-        .moveDown(0.5)
-        .text(`Cédula: ${receiptData.identification}`)
-        .moveDown(0.5)
-        .text(`Código de Asociado: ${receiptData.memberCode}`)
-        .moveDown(0.5)
-        .text(`Concepto: Retiro de ${accountTypeLabel}`)
-        .moveDown(0.5)
-        .fontSize(14)
-        .font('Helvetica-Bold')
-        .text(`Monto: ${formatCurrency(receiptData.amount)}`)
-        .moveDown(0.5)
-        .fontSize(11)
-        .font('Helvetica')
-        .text(`Fecha: ${formatDate(receiptData.date)}`)
-        .moveDown(0.5)
-        .text(`Saldo Anterior: ${formatCurrency(receiptData.previousBalance)}`)
-        .moveDown(0.5)
-        .text(`Nuevo Saldo: ${formatCurrency(receiptData.newBalance)}`);
-
-    generateFooter(doc);
-    doc.end();
-
-    return new Promise((resolve, reject) => {
-        stream.on('finish', () => resolve(filepath));
-        stream.on('error', reject);
-    });
+    return generateStandardizedReceipt({
+        ...receiptData,
+        concept: `Retiro de ${accountTypeLabel}`
+    }, `RECIBO DE RETIRO - ${accountTypeLabel}`);
 };
 
 /**
  * Generate transfer receipt (surplus to savings)
  */
-const generateTransferReceipt = async (receiptData) => {
+const generateTransferReceipt = (receiptData) => {
     const doc = new PDFDocument({ margin: 50 });
-    const receiptsDir = ensureReceiptsDirectory();
-    const filename = `receipt-${receiptData.receiptNumber}.pdf`;
-    const filepath = path.join(receiptsDir, filename);
 
-    const stream = fs.createWriteStream(filepath);
-    doc.pipe(stream);
-
+    // Header
     generateHeader(doc);
 
+    // Title and Receipt Number
     doc
         .fontSize(16)
         .font('Helvetica-Bold')
         .text('COMPROBANTE DE TRANSFERENCIA', { align: 'center' })
-        .moveDown()
+        .moveDown(0.5)
         .fontSize(12)
-        .text(`No. ${receiptData.receiptNumber}`, { align: 'center' })
+        .text(`Recibo No. ${receiptData.receiptNumber}`, { align: 'center' })
         .moveDown(2);
 
-    doc
-        .fontSize(11)
-        .font('Helvetica')
-        .text(`Miembro: ${receiptData.memberName}`, 50)
-        .moveDown(0.5)
-        .text(`Cédula: ${receiptData.identification}`)
-        .moveDown(0.5)
-        .text(`Código de Asociado: ${receiptData.memberCode}`)
-        .moveDown(0.5)
-        .text(`Concepto: Transferencia de Excedentes a Ahorros`)
-        .moveDown(0.5)
-        .fontSize(14)
-        .font('Helvetica-Bold')
-        .text(`Monto Transferido: ${formatCurrency(receiptData.amount)}`)
-        .moveDown(0.5)
-        .fontSize(11)
-        .font('Helvetica')
-        .text(`Fecha: ${formatDate(receiptData.date)}`)
-        .moveDown(1)
-        .fontSize(10)
-        .text('Cuenta Origen: Excedentes')
-        .text(`Saldo Anterior: ${formatCurrency(receiptData.surplusPrevBalance)}`)
-        .text(`Nuevo Saldo: ${formatCurrency(receiptData.surplusNewBalance)}`)
-        .moveDown(0.5)
-        .text('Cuenta Destino: Ahorros')
-        .text(`Saldo Anterior: ${formatCurrency(receiptData.savingsPrevBalance)}`)
-        .text(`Nuevo Saldo: ${formatCurrency(receiptData.savingsNewBalance)}`);
+    // Draw border box
+    const boxTop = doc.y;
+    doc.rect(50, boxTop, 512, 0).stroke();
 
-    generateFooter(doc);
-    doc.end();
+    let currentY = boxTop + 15;
 
-    return new Promise((resolve, reject) => {
-        stream.on('finish', () => resolve(filepath));
-        stream.on('error', reject);
+    // Member Information
+    doc.fontSize(10).font('Helvetica-Bold').text('DATOS DEL ASOCIADO', 70, currentY);
+    currentY += 20;
+
+    currentY = drawTableRow(doc, currentY, 'Nombre:', receiptData.memberName);
+    currentY = drawTableRow(doc, currentY, 'Cédula:', receiptData.identification);
+    currentY = drawTableRow(doc, currentY, 'Código de Asociado:', receiptData.memberCode, { lineAfter: true });
+
+    currentY += 5;
+
+    // Transaction Details
+    doc.fontSize(10).font('Helvetica-Bold').text('DETALLES DE LA TRANSFERENCIA', 70, currentY);
+    currentY += 20;
+
+    currentY = drawTableRow(doc, currentY, 'Concepto:', 'Transferencia de Excedentes a Ahorros');
+    currentY = drawTableRow(doc, currentY, 'Fecha:', formatDate(receiptData.date));
+    currentY = drawTableRow(doc, currentY, '', '', { lineAfter: true });
+
+    currentY += 5;
+
+    // Account Origin
+    doc.fontSize(10).font('Helvetica-Bold').text('CUENTA ORIGEN: Excedentes', 70, currentY);
+    currentY += 20;
+
+    currentY = drawTableRow(doc, currentY, 'Saldo Anterior:', formatCurrency(receiptData.surplusPrevBalance));
+    currentY = drawTableRow(doc, currentY, 'Saldo Nuevo:', formatCurrency(receiptData.surplusNewBalance), { lineAfter: true });
+
+    currentY += 5;
+
+    // Account Destination
+    doc.fontSize(10).font('Helvetica-Bold').text('CUENTA DESTINO: Ahorros', 70, currentY);
+    currentY += 20;
+
+    currentY = drawTableRow(doc, currentY, 'Saldo Anterior:', formatCurrency(receiptData.savingsPrevBalance));
+    currentY = drawTableRow(doc, currentY, 'Saldo Nuevo:', formatCurrency(receiptData.savingsNewBalance), { lineAfter: true });
+
+    currentY += 5;
+
+    // Total Amount
+    currentY = drawTableRow(doc, currentY, 'MONTO TRANSFERIDO:', formatCurrency(receiptData.amount), {
+        fontSize: 14,
+        bold: true
     });
+
+    // Close border box
+    const boxBottom = currentY + 10;
+    doc.rect(50, boxTop, 512, boxBottom - boxTop).stroke();
+
+    // Footer
+    generateFooter(doc);
+
+    doc.end();
+    return doc;
 };
 
 /**
  * Generate liquidation receipt
  */
-const generateLiquidationReceipt = async (receiptData) => {
+const generateLiquidationReceipt = (receiptData) => {
     const doc = new PDFDocument({ margin: 50 });
-    const receiptsDir = ensureReceiptsDirectory();
-    const filename = `receipt-${receiptData.receiptNumber}.pdf`;
-    const filepath = path.join(receiptsDir, filename);
 
-    const stream = fs.createWriteStream(filepath);
-    doc.pipe(stream);
-
+    // Header
     generateHeader(doc);
 
-    const reasonLabel = receiptData.reason === 'time' ?
-        'Liquidación por Tiempo Cumplido (6 años)' :
+    const reasonLabel = receiptData.reason === 'periodic' ?
+        'Liquidación Periódica (6 años)' :
         'Liquidación por Retiro de Cooperativa';
 
+    // Title and Receipt Number
     doc
         .fontSize(16)
         .font('Helvetica-Bold')
         .text('RECIBO DE LIQUIDACIÓN', { align: 'center' })
-        .moveDown()
+        .moveDown(0.5)
         .fontSize(12)
-        .text(`No. ${receiptData.receiptNumber}`, { align: 'center' })
+        .text(`Recibo No. ${receiptData.receiptNumber}`, { align: 'center' })
         .moveDown(2);
 
-    doc
-        .fontSize(11)
-        .font('Helvetica')
-        .text(`Entregamos a: ${receiptData.memberName}`, 50)
-        .moveDown(0.5)
-        .text(`Cédula: ${receiptData.identification}`)
-        .moveDown(0.5)
-        .text(`Código de Asociado: ${receiptData.memberCode}`)
-        .moveDown(0.5)
-        .text(`Concepto: ${reasonLabel}`)
-        .moveDown(0.5)
-        .text(`Fecha: ${formatDate(receiptData.date)}`)
-        .moveDown(1.5);
+    // Draw border box
+    const boxTop = doc.y;
+    doc.rect(50, boxTop, 512, 0).stroke();
 
-    // Desglose
-    doc
-        .fontSize(12)
-        .font('Helvetica-Bold')
-        .text('DESGLOSE DE LIQUIDACIÓN:', 50)
-        .moveDown(0.5)
-        .fontSize(11)
-        .font('Helvetica');
+    let currentY = boxTop + 15;
 
-    const tableTop = doc.y;
-    const itemLeft = 70;
-    const amountLeft = 400;
+    // Member Information
+    doc.fontSize(10).font('Helvetica-Bold').text('DATOS DEL ASOCIADO', 70, currentY);
+    currentY += 20;
 
-    doc.text('Cuenta de Ahorros:', itemLeft, tableTop);
-    doc.text(formatCurrency(receiptData.savingsAmount), amountLeft, tableTop, { align: 'right', width: 150 });
+    currentY = drawTableRow(doc, currentY, 'Nombre:', receiptData.memberName);
+    currentY = drawTableRow(doc, currentY, 'Cédula:', receiptData.identification);
+    currentY = drawTableRow(doc, currentY, 'Código de Asociado:', receiptData.memberCode, { lineAfter: true });
 
-    doc.text('Cuenta de Aportaciones:', itemLeft, tableTop + 20);
-    doc.text(formatCurrency(receiptData.contributionsAmount), amountLeft, tableTop + 20, { align: 'right', width: 150 });
+    currentY += 5;
 
-    doc.text('Cuenta de Excedentes:', itemLeft, tableTop + 40);
-    doc.text(formatCurrency(receiptData.surplusAmount), amountLeft, tableTop + 40, { align: 'right', width: 150 });
+    // Liquidation Details
+    doc.fontSize(10).font('Helvetica-Bold').text('DETALLES DE LA LIQUIDACIÓN', 70, currentY);
+    currentY += 20;
 
-    // Line
-    doc.moveTo(itemLeft, tableTop + 60).lineTo(550, tableTop + 60).stroke();
+    currentY = drawTableRow(doc, currentY, 'Concepto:', reasonLabel);
+    currentY = drawTableRow(doc, currentY, 'Fecha:', formatDate(receiptData.date));
+    currentY = drawTableRow(doc, currentY, '', '', { lineAfter: true });
 
-    // Total
-    doc
-        .fontSize(14)
-        .font('Helvetica-Bold')
-        .text('TOTAL LIQUIDADO:', itemLeft, tableTop + 70);
-    doc.text(formatCurrency(receiptData.totalAmount), amountLeft, tableTop + 70, { align: 'right', width: 150 });
+    currentY += 5;
 
-    generateFooter(doc);
-    doc.end();
+    // Breakdown
+    doc.fontSize(10).font('Helvetica-Bold').text('DESGLOSE DE CUENTAS', 70, currentY);
+    currentY += 20;
 
-    return new Promise((resolve, reject) => {
-        stream.on('finish', () => resolve(filepath));
-        stream.on('error', reject);
+    currentY = drawTableRow(doc, currentY, 'Cuenta de Ahorros:', formatCurrency(receiptData.savingsAmount));
+
+    // Future accounts (commented for now)
+    // currentY = drawTableRow(doc, currentY, 'Cuenta de Aportaciones:', formatCurrency(receiptData.contributionsAmount || 0));
+    // currentY = drawTableRow(doc, currentY, 'Cuenta de Excedentes:', formatCurrency(receiptData.surplusAmount || 0));
+
+    currentY = drawTableRow(doc, currentY, '', '', { lineAfter: true });
+    currentY += 5;
+
+    // Total Amount
+    currentY = drawTableRow(doc, currentY, 'TOTAL LIQUIDADO:', formatCurrency(receiptData.totalAmount), {
+        fontSize: 14,
+        bold: true
     });
+
+    // Close border box
+    const boxBottom = currentY + 10;
+    doc.rect(50, boxTop, 512, boxBottom - boxTop).stroke();
+
+    // Footer
+    generateFooter(doc);
+
+    doc.end();
+    return doc;
 };
 
 /**
- * Main function to generate receipt based on type
+ * Generate receipt PDF document based on type
+ * Returns a PDFDocument stream ready to be piped to response
+ *
+ * @param {string} type - Receipt type (affiliation, savings_deposit, etc.)
+ * @param {Object} data - Receipt data
+ * @returns {PDFDocument} PDF document stream
  */
-const generateReceipt = async (type, data) => {
+const generateReceiptPDF = (type, data) => {
     try {
-        let filepath;
+        let doc;
 
         switch (type) {
             case 'affiliation':
-                filepath = await generateAffiliationReceipt(data);
+                doc = generateAffiliationReceipt(data);
                 break;
             case 'savings_deposit':
-                filepath = await generateSavingsDepositReceipt(data);
+                doc = generateSavingsDepositReceipt(data);
                 break;
             case 'savings_withdrawal':
             case 'surplus_withdrawal':
-                filepath = await generateWithdrawalReceipt(data);
+                doc = generateWithdrawalReceipt(data);
                 break;
             case 'contribution':
-                filepath = await generateContributionReceipt(data);
+                doc = generateContributionReceipt(data);
                 break;
             case 'surplus_to_savings':
-                filepath = await generateTransferReceipt(data);
+                doc = generateTransferReceipt(data);
                 break;
             case 'liquidation':
-                filepath = await generateLiquidationReceipt(data);
+                doc = generateLiquidationReceipt(data);
                 break;
             default:
                 throw new Error(`Unknown receipt type: ${type}`);
         }
 
-        logger.info('Receipt PDF generated', { type, filepath });
-        return filepath;
+        logger.info('Receipt PDF generated in memory', { type });
+        return doc;
 
     } catch (error) {
         logger.error('Error generating receipt PDF:', error);
@@ -480,5 +416,5 @@ const generateReceipt = async (type, data) => {
 };
 
 module.exports = {
-    generateReceipt
+    generateReceiptPDF
 };

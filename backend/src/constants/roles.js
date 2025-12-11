@@ -43,7 +43,8 @@ const ROLE_PERMISSIONS = {
         'view_savings_reports',
         'view_member_balances',
         'generate_receipts',
-        'manage_surplus'
+        'manage_surplus',
+        'execute_liquidations'
     ],
     [USER_ROLES.MEMBER]: [  // Changed from STUDENT
         'view_own_dashboard',

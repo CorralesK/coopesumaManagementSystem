@@ -1323,3 +1323,351 @@ export const printMemberCards = ({ members = [], cooperativeName = 'Coopesuma' }
     printWindow.document.write(htmlContent);
     printWindow.document.close();
 };
+
+/**
+ * Print liquidation receipt
+ * Generates HTML receipt and opens print dialog
+ * @param {Object} options - Print options
+ * @param {Object} options.member - Member information (fullName, memberCode, identification)
+ * @param {string} options.liquidationType - Type: 'periodic' or 'exit'
+ * @param {number} options.savingsAmount - Savings amount liquidated
+ * @param {number} options.totalAmount - Total amount liquidated
+ * @param {string} options.notes - Optional notes
+ * @param {Date} options.liquidationDate - Liquidation date
+ * @param {number} options.liquidationId - Liquidation ID
+ * @param {string} options.receiptNumber - Receipt number (optional)
+ */
+export const printLiquidationReceipt = ({
+    member = {},
+    liquidationType = 'periodic',
+    savingsAmount = 0,
+    totalAmount = 0,
+    notes = '',
+    liquidationDate = new Date(),
+    liquidationId = '',
+    receiptNumber = ''
+}) => {
+    try {
+        const printWindow = window.open('', '_blank');
+
+        if (!printWindow) {
+            alert('Por favor, permite las ventanas emergentes para imprimir.');
+            return;
+        }
+
+        const formatCurrency = (value) => {
+            return new Intl.NumberFormat('es-CR', {
+                style: 'currency',
+                currency: 'CRC',
+                minimumFractionDigits: 2
+            }).format(value || 0);
+        };
+
+        const formatDate = (date) => {
+            return new Date(date).toLocaleDateString('es-CR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        };
+
+        const formatTime = (date) => {
+            return new Date(date).toLocaleTimeString('es-CR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+
+        const printDate = new Date().toLocaleString('es-CR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        const typeLabel = liquidationType === 'periodic' ? 'PERIÓDICA' : 'POR RETIRO';
+        const typeColor = liquidationType === 'periodic' ? '#2563eb' : '#dc2626';
+
+        const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Recibo de Liquidación - COOPESUMA</title>
+            <style>
+                @media print {
+                    @page {
+                        size: 80mm 200mm;
+                        margin: 5mm;
+                    }
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                }
+
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    font-family: 'Courier New', monospace;
+                    padding: 10px;
+                    background: white;
+                    color: #000;
+                    max-width: 300px;
+                    margin: 0 auto;
+                }
+
+                .receipt {
+                    border: 2px dashed #000;
+                    padding: 15px;
+                }
+
+                .receipt-header {
+                    text-align: center;
+                    border-bottom: 1px dashed #000;
+                    padding-bottom: 10px;
+                    margin-bottom: 10px;
+                }
+
+                .receipt-header h1 {
+                    font-size: 16px;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+
+                .receipt-header .subtitle {
+                    font-size: 11px;
+                    color: #666;
+                }
+
+                .transaction-type {
+                    text-align: center;
+                    padding: 8px;
+                    margin: 10px 0;
+                    background: ${typeColor};
+                    color: white;
+                    font-weight: bold;
+                    font-size: 14px;
+                    border-radius: 4px;
+                }
+
+                .receipt-body {
+                    font-size: 11px;
+                    line-height: 1.6;
+                }
+
+                .receipt-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 3px 0;
+                    border-bottom: 1px dotted #ccc;
+                }
+
+                .receipt-row:last-child {
+                    border-bottom: none;
+                }
+
+                .receipt-row .label {
+                    font-weight: bold;
+                    color: #333;
+                }
+
+                .receipt-row .value {
+                    text-align: right;
+                    max-width: 60%;
+                    word-break: break-word;
+                }
+
+                .amount-section {
+                    background: #f5f5f5;
+                    padding: 10px;
+                    margin: 10px 0;
+                    border-radius: 4px;
+                }
+
+                .amount-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 4px 0;
+                    font-size: 11px;
+                }
+
+                .amount-row.total {
+                    border-top: 2px solid #000;
+                    margin-top: 5px;
+                    padding-top: 8px;
+                    font-weight: bold;
+                    font-size: 13px;
+                }
+
+                .amount-row .amount {
+                    font-family: 'Courier New', monospace;
+                    color: #16a34a;
+                    font-weight: bold;
+                }
+
+                .description-section {
+                    margin: 10px 0;
+                    padding: 8px;
+                    background: #fafafa;
+                    border-left: 3px solid #666;
+                    font-size: 10px;
+                }
+
+                .description-section .label {
+                    font-weight: bold;
+                    margin-bottom: 3px;
+                }
+
+                .receipt-footer {
+                    text-align: center;
+                    border-top: 1px dashed #000;
+                    padding-top: 10px;
+                    margin-top: 15px;
+                    font-size: 9px;
+                    color: #666;
+                }
+
+                .receipt-footer .thank-you {
+                    font-size: 11px;
+                    font-weight: bold;
+                    color: #000;
+                    margin-bottom: 5px;
+                }
+
+                .signature-section {
+                    margin-top: 20px;
+                    padding-top: 10px;
+                }
+
+                .signature-line {
+                    border-top: 1px solid #000;
+                    width: 80%;
+                    margin: 30px auto 5px;
+                }
+
+                .signature-label {
+                    text-align: center;
+                    font-size: 9px;
+                    color: #666;
+                }
+
+                @media print {
+                    .no-print {
+                        display: none;
+                    }
+                    body {
+                        padding: 0;
+                    }
+                    .receipt {
+                        border: none;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="receipt">
+                <div class="receipt-header">
+                    <h1>COOPESUMA R.L.</h1>
+                    <div class="subtitle">Cooperativa de Ahorro</div>
+                    <div class="subtitle">Sistema de Gestión</div>
+                </div>
+
+                <div class="transaction-type">
+                    RECIBO DE LIQUIDACIÓN ${typeLabel}
+                </div>
+
+                <div class="receipt-body">
+                    <div class="receipt-row">
+                        <span class="label">Fecha:</span>
+                        <span class="value">${formatDate(liquidationDate)}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Hora:</span>
+                        <span class="value">${formatTime(liquidationDate)}</span>
+                    </div>
+                    ${receiptNumber ? `
+                    <div class="receipt-row">
+                        <span class="label">Recibo No:</span>
+                        <span class="value">${receiptNumber}</span>
+                    </div>
+                    ` : ''}
+                    ${liquidationId ? `
+                    <div class="receipt-row">
+                        <span class="label">Liquidación:</span>
+                        <span class="value">#${liquidationId}</span>
+                    </div>
+                    ` : ''}
+                    <div class="receipt-row">
+                        <span class="label">Asociado:</span>
+                        <span class="value">${member.memberCode || 'N/A'}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="label">Nombre:</span>
+                        <span class="value">${member.fullName || 'N/A'}</span>
+                    </div>
+                </div>
+
+                <div class="amount-section">
+                    <div class="amount-row total">
+                        <span>Total Liquidado:</span>
+                        <span class="amount">${formatCurrency(totalAmount)}</span>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 10px; text-align: center; color: #666;">
+                        (Cuenta de Ahorros)
+                    </div>
+                </div>
+
+                ${notes ? `
+                <div class="description-section">
+                    <div class="label">Notas:</div>
+                    <div>${notes}</div>
+                </div>
+                ` : ''}
+
+                <div style="margin: 15px 0; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; font-size: 10px; text-align: center;">
+                    <strong>${liquidationType === 'periodic' ? 'Liquidación Periódica' : 'Liquidación por Retiro'}</strong><br>
+                    ${liquidationType === 'periodic'
+                        ? 'El asociado continúa activo en la cooperativa'
+                        : 'El asociado se retira de la cooperativa'}
+                </div>
+
+                <div class="signature-section">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Firma del Asociado</div>
+                </div>
+
+                <div class="receipt-footer">
+                    <div class="thank-you">¡Gracias por su confianza!</div>
+                    <div>Documento generado el ${printDate}</div>
+                    <div>COOPESUMA R.L.</div>
+                </div>
+            </div>
+
+            <script>
+                window.onload = function() {
+                    window.print();
+                    window.onafterprint = function() {
+                        window.close();
+                    };
+                };
+            </script>
+        </body>
+        </html>
+    `;
+
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+    } catch (error) {
+        console.error('Error printing liquidation receipt:', error);
+        alert('Error al imprimir el recibo de liquidación: ' + error.message);
+    }
+};

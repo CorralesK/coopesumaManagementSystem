@@ -222,6 +222,7 @@ const getSavingsInventoryByYear = async (cooperativeId, fiscalYear) => {
                     COALESCE(SUM(CASE
                         WHEN t.transaction_type = 'deposit' THEN t.amount
                         WHEN t.transaction_type = 'withdrawal' THEN -t.amount
+                        WHEN t.transaction_type = 'liquidation' THEN -t.amount
                         ELSE 0
                     END), 0) as prev_balance
                 FROM members m
@@ -247,6 +248,7 @@ const getSavingsInventoryByYear = async (cooperativeId, fiscalYear) => {
                     SUM(CASE
                         WHEN t.transaction_type = 'deposit' THEN t.amount
                         WHEN t.transaction_type = 'withdrawal' THEN -t.amount
+                        WHEN t.transaction_type = 'liquidation' THEN -t.amount
                         ELSE 0
                     END) as net_amount
                 FROM members m
@@ -264,6 +266,7 @@ const getSavingsInventoryByYear = async (cooperativeId, fiscalYear) => {
                 m.member_code,
                 m.full_name,
                 COALESCE(pyb.prev_balance, 0) as previous_year_balance,
+                -- Monthly net amounts (deposits - withdrawals for each month)
                 COALESCE(SUM(CASE WHEN mt.month = 1 THEN mt.net_amount END), 0) as january,
                 COALESCE(SUM(CASE WHEN mt.month = 2 THEN mt.net_amount END), 0) as february,
                 COALESCE(SUM(CASE WHEN mt.month = 3 THEN mt.net_amount END), 0) as march,
@@ -277,6 +280,7 @@ const getSavingsInventoryByYear = async (cooperativeId, fiscalYear) => {
                 COALESCE(SUM(CASE WHEN mt.month = 11 THEN mt.net_amount END), 0) as november,
                 COALESCE(SUM(CASE WHEN mt.month = 12 THEN mt.net_amount END), 0) as december,
                 0 as interests,
+                -- Total saved is the current balance (actual balance in the account)
                 a.current_balance as total_saved
             FROM members m
             JOIN accounts a ON m.member_id = a.member_id AND a.account_type = 'savings'

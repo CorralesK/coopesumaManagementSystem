@@ -524,7 +524,11 @@ const SavingsManagementPage = () => {
 
             {/* Deposit Modal */}
             <Modal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} title="Registrar Depósito" size="lg">
-                <div className="space-y-6">
+                <form onSubmit={handleSubmitDeposit} className="space-y-6">
+                    {error && (
+                        <Alert type="error" message={error} onClose={() => setError(null)} />
+                    )}
+
                     {/* Member Selection */}
                     {!selectedMember ? (
                         <div>
@@ -569,91 +573,73 @@ const SavingsManagementPage = () => {
                         </div>
                     ) : (
                         <>
-                            <div className={`p-4 rounded-lg flex justify-between items-center ${
-                                selectedMember.is_active === false ? 'bg-gray-100 border border-gray-300' : 'bg-blue-50'
-                            }`}>
+                            <div className="p-4 bg-blue-50 rounded-lg flex justify-between items-center">
                                 <div>
                                     <p className="text-sm text-gray-700"><strong>Miembro:</strong> {selectedMember.full_name} ({selectedMember.member_code})</p>
                                     <p className="text-sm text-gray-700 mt-1"><strong>Saldo actual:</strong> {formatCurrency(selectedMember.current_balance || 0)}</p>
-                                    {selectedMember.is_active === false && (
-                                        <span className="inline-flex items-center px-2 py-0.5 mt-2 rounded text-xs font-medium bg-gray-200 text-gray-700">
-                                            Miembro Inactivo
-                                        </span>
-                                    )}
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setSelectedMember(null)}
                                     className="text-gray-400 hover:text-gray-600 p-1"
+                                    title="Cambiar miembro"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
                             </div>
-                            {selectedMember.is_active === false && (
-                                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                    <div className="flex items-start gap-2">
-                                        <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                        </svg>
-                                        <p className="text-sm text-yellow-800">
-                                            Este miembro está <strong>inactivo</strong>. No se pueden realizar transacciones para miembros inactivos. Por favor, seleccione otro miembro.
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
                         </>
                     )}
 
-                    <form onSubmit={handleSubmitDeposit}>
-                        <div className="space-y-5">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Monto del Depósito *</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span className="text-gray-500">₡</span>
-                                    </div>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0.01"
-                                        value={depositData.amount}
-                                        onChange={(e) => setDepositData({ ...depositData, amount: e.target.value })}
-                                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                        placeholder="0.00"
-                                        required
-                                        disabled={!selectedMember}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Nota (Opcional)</label>
-                                <textarea
-                                    value={depositData.description}
-                                    onChange={(e) => setDepositData({ ...depositData, description: e.target.value })}
-                                    rows={3}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                    placeholder="Descripción del depósito..."
-                                    disabled={!selectedMember}
-                                />
-                            </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Monto del Depósito *</label>
+                        <div className={`flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-primary-500 ${!selectedMember ? 'bg-gray-100' : 'bg-white'}`}>
+                            <span className="pl-3 text-gray-500">₡</span>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                value={depositData.amount}
+                                onChange={(e) => setDepositData({ ...depositData, amount: e.target.value })}
+                                className="flex-1 py-2 pl-1 pr-3 border-0 bg-transparent focus:outline-none focus:ring-0"
+                                placeholder="0.00"
+                                required
+                                disabled={!selectedMember}
+                            />
                         </div>
-                        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 mt-6 border-t border-gray-200">
-                            <Button type="button" onClick={() => setShowDepositModal(false)} variant="outline" className="w-full sm:w-auto">
-                                Cancelar
-                            </Button>
-                            <Button type="submit" variant="primary" disabled={submitting || !selectedMember} className="w-full sm:w-auto">
-                                {submitting ? 'Procesando...' : 'Registrar Depósito'}
-                            </Button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Nota (Opcional)</label>
+                        <textarea
+                            value={depositData.description}
+                            onChange={(e) => setDepositData({ ...depositData, description: e.target.value })}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="Descripción del depósito..."
+                            disabled={!selectedMember}
+                        />
+                    </div>
+
+                    <div className="flex justify-center space-x-3">
+                        <Button type="button" onClick={() => setShowDepositModal(false)} variant="outline">
+                            Cancelar
+                        </Button>
+                        <Button type="submit" variant="primary" disabled={submitting || !selectedMember}>
+                            {submitting ? 'Procesando...' : 'Registrar Depósito'}
+                        </Button>
+                    </div>
+                </form>
             </Modal>
 
             {/* Withdrawal Modal */}
             <Modal isOpen={showWithdrawalModal} onClose={() => setShowWithdrawalModal(false)} title="Registrar Retiro" size="lg">
-                <div className="space-y-6">
+                <form onSubmit={handleSubmitWithdrawal} className="space-y-6">
+                    {error && (
+                        <Alert type="error" message={error} onClose={() => setError(null)} />
+                    )}
+
                     {/* Member Selection */}
                     {!selectedMember ? (
                         <div>
@@ -698,57 +684,31 @@ const SavingsManagementPage = () => {
                         </div>
                     ) : (
                         <>
-                            <div className={`p-4 rounded-lg flex justify-between items-center ${
-                                selectedMember.is_active === false
-                                    ? 'bg-gray-100 border border-gray-300'
-                                    : parseFloat(selectedMember.current_balance) <= 0
-                                    ? 'bg-orange-50 border border-orange-200'
-                                    : 'bg-red-50'
-                            }`}>
+                            <div className="p-4 bg-blue-50 rounded-lg flex justify-between items-center">
                                 <div>
                                     <p className="text-sm text-gray-700"><strong>Miembro:</strong> {selectedMember.full_name} ({selectedMember.member_code})</p>
                                     <p className="text-sm text-gray-700 mt-1"><strong>Saldo disponible:</strong> {formatCurrency(selectedMember.current_balance || 0)}</p>
-                                    {selectedMember.is_active === false && (
-                                        <span className="inline-flex items-center px-2 py-0.5 mt-2 rounded text-xs font-medium bg-gray-200 text-gray-700">
-                                            Miembro Inactivo
-                                        </span>
-                                    )}
-                                    {selectedMember.is_active !== false && parseFloat(selectedMember.current_balance) <= 0 && (
-                                        <span className="inline-flex items-center px-2 py-0.5 mt-2 rounded text-xs font-medium bg-orange-200 text-orange-800">
-                                            Sin saldo disponible
-                                        </span>
-                                    )}
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setSelectedMember(null)}
                                     className="text-gray-400 hover:text-gray-600 p-1"
+                                    title="Cambiar miembro"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
                             </div>
-                            {selectedMember.is_active === false && (
-                                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                    <div className="flex items-start gap-2">
-                                        <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+
+                            {parseFloat(selectedMember.current_balance) <= 0 && (
+                                <div className="bg-orange-50 border-l-4 border-orange-500 p-4">
+                                    <div className="flex">
+                                        <svg className="w-5 h-5 text-orange-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                         </svg>
-                                        <p className="text-sm text-yellow-800">
-                                            Este miembro está <strong>inactivo</strong>. No se pueden realizar transacciones para miembros inactivos. Por favor, seleccione otro miembro.
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-                            {selectedMember.is_active !== false && parseFloat(selectedMember.current_balance) <= 0 && (
-                                <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                                    <div className="flex items-start gap-2">
-                                        <svg className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                        </svg>
-                                        <p className="text-sm text-orange-800">
-                                            Este miembro <strong>no tiene saldo disponible</strong> para realizar retiros. Por favor, seleccione otro miembro o realice un depósito primero.
+                                        <p className="text-sm text-orange-700">
+                                            Este miembro no tiene saldo disponible para realizar retiros. Por favor, seleccione otro miembro o realice un depósito primero.
                                         </p>
                                     </div>
                                 </div>
@@ -756,50 +716,46 @@ const SavingsManagementPage = () => {
                         </>
                     )}
 
-                    <form onSubmit={handleSubmitWithdrawal}>
-                        <div className="space-y-5">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Monto del Retiro *</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span className="text-gray-500">₡</span>
-                                    </div>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0.01"
-                                        max={selectedMember?.current_balance}
-                                        value={withdrawalData.amount}
-                                        onChange={(e) => setWithdrawalData({ ...withdrawalData, amount: e.target.value })}
-                                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                        placeholder="0.00"
-                                        required
-                                        disabled={!selectedMember}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Nota (Opcional)</label>
-                                <textarea
-                                    value={withdrawalData.description}
-                                    onChange={(e) => setWithdrawalData({ ...withdrawalData, description: e.target.value })}
-                                    rows={3}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                    placeholder="Motivo del retiro..."
-                                    disabled={!selectedMember}
-                                />
-                            </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Monto del Retiro *</label>
+                        <div className={`flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-primary-500 ${!selectedMember ? 'bg-gray-100' : 'bg-white'}`}>
+                            <span className="pl-3 text-gray-500">₡</span>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                max={selectedMember?.current_balance}
+                                value={withdrawalData.amount}
+                                onChange={(e) => setWithdrawalData({ ...withdrawalData, amount: e.target.value })}
+                                className="flex-1 py-2 pl-1 pr-3 border-0 bg-transparent focus:outline-none focus:ring-0"
+                                placeholder="0.00"
+                                required
+                                disabled={!selectedMember}
+                            />
                         </div>
-                        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 mt-6 border-t border-gray-200">
-                            <Button type="button" onClick={() => setShowWithdrawalModal(false)} variant="outline" className="w-full sm:w-auto">
-                                Cancelar
-                            </Button>
-                            <Button type="submit" variant="danger" disabled={submitting || !selectedMember} className="w-full sm:w-auto">
-                                {submitting ? 'Procesando...' : 'Registrar Retiro'}
-                            </Button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Nota (Opcional)</label>
+                        <textarea
+                            value={withdrawalData.description}
+                            onChange={(e) => setWithdrawalData({ ...withdrawalData, description: e.target.value })}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="Motivo del retiro..."
+                            disabled={!selectedMember}
+                        />
+                    </div>
+
+                    <div className="flex justify-center space-x-3">
+                        <Button type="button" onClick={() => setShowWithdrawalModal(false)} variant="outline">
+                            Cancelar
+                        </Button>
+                        <Button type="submit" variant="primary" disabled={submitting || !selectedMember || parseFloat(selectedMember?.current_balance) <= 0}>
+                            {submitting ? 'Procesando...' : 'Registrar Retiro'}
+                        </Button>
+                    </div>
+                </form>
             </Modal>
         </div>
     );

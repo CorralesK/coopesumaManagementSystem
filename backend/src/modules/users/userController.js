@@ -27,7 +27,7 @@ const getAllUsers = async (req, res) => {
         const filters = {
             search: req.query.search || '',
             role: req.query.role || '',
-            isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : ''
+            isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : undefined
         };
 
         // Normalize pagination
@@ -208,6 +208,7 @@ const updateUser = async (req, res) => {
 
 /**
  * Deactivate user
+ * If user is a member, this will also liquidate and deactivate the associated member
  *
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -215,12 +216,19 @@ const updateUser = async (req, res) => {
 const deactivateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const deactivatedUser = await userService.deactivateUser(parseInt(id, 10));
+        const processedBy = req.user?.userId || 1; // Get user ID from auth or default to 1
+
+        const result = await userService.deactivateUser(parseInt(id, 10), processedBy);
+
+        // If there was a liquidation, include it in the response
+        const message = result.liquidation
+            ? 'Usuario y miembro eliminados exitosamente. Se generó recibo de liquidación.'
+            : 'Usuario desactivado exitosamente';
 
         return successResponse(
             res,
-            'Usuario desactivado exitosamente',
-            deactivatedUser
+            message,
+            result
         );
     } catch (error) {
         if (error.isOperational) {

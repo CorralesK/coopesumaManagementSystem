@@ -323,11 +323,11 @@ const create = async (memberData) => {
             memberData.cooperativeId || 1, // Default to cooperative 1
             memberData.fullName,
             memberData.identification,
-            memberData.qualityId || 1, // Default: Estudiante
+            memberData.qualityId || 1, // Default: Student
             memberData.levelId || null, // Can be NULL
             memberData.gender || null, // M/F or NULL
-            memberData.memberCode || null, // Código único (ej: 152-2022)
-            memberData.userId || null, // FK a users (vincular después)
+            memberData.memberCode || null, // Unique code (eg: 152-2022)
+            memberData.userId || null, // FK to users (link later)
             memberData.institutionalEmail || null,
             memberData.photoUrl || null,
             memberData.qrHash,
@@ -338,7 +338,7 @@ const create = async (memberData) => {
         const result = await db.query(query, values);
 
         // Fetch complete member with quality and level info
-        return findById(result.rows[0].member_id);
+        return findById(result.rows[0].memberId);
     } catch (error) {
         logger.error('Error creating member:', error);
         throw error;
@@ -385,7 +385,7 @@ const update = async (memberId, updates) => {
         const result = await db.query(query, values);
 
         // Fetch complete member with quality and level info
-        return findById(result.rows[0].member_id);
+        return findById(result.rows[0].memberId);
     } catch (error) {
         logger.error('Error updating member:', error);
         throw error;
@@ -411,7 +411,7 @@ const updateQrHash = async (memberId, qrHash) => {
         const result = await db.query(query, [memberId, qrHash]);
 
         // Fetch complete member with quality and level info
-        return findById(result.rows[0].member_id);
+        return findById(result.rows[0].memberId);
     } catch (error) {
         logger.error('Error updating member QR hash:', error);
         throw error;
@@ -586,6 +586,6 @@ module.exports = {
     activate,
     findByQuality,
     findByLevel,
-    findByGrade, // Deprecated - mantener para compatibilidad
+    findByGrade, // Deprecated - keep for backwards compatibility
     getNextMemberCodeConsecutive
 };

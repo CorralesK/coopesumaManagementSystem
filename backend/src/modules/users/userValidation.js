@@ -29,12 +29,12 @@ const userFiltersSchema = Joi.object({
     limit: Joi.number()
         .integer()
         .min(1)
-        .max(100)
+        .max(1000)
         .default(20)
         .messages({
             'number.base': 'Limit must be a number',
             'number.min': 'Limit must be at least 1',
-            'number.max': 'Limit cannot exceed 100',
+            'number.max': 'Limit cannot exceed 1000',
         }),
 
     search: Joi.string()

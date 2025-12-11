@@ -14,6 +14,7 @@ import Table from '../../components/common/Table';
 import Pagination from '../../components/common/Pagination';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import Modal from '../../components/common/Modal';
 
 /**
  * AssembliesListPage Component
@@ -24,6 +25,8 @@ const AssembliesListPage = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [showConcludeModal, setShowConcludeModal] = useState(false);
+    const [assemblyToComplete, setAssemblyToComplete] = useState(null);
     const itemsPerPage = 10;
 
     // Use custom hooks - fetch all assemblies for client-side filtering
@@ -67,19 +70,31 @@ const AssembliesListPage = () => {
         }
     };
 
-    const handleConcludeAssembly = async (assemblyId) => {
-        if (!window.confirm('¿Concluir esta asamblea? Esta acción no se puede deshacer.')) {
-            return;
-        }
+    const handleConcludeClick = (assembly) => {
+        setAssemblyToComplete(assembly);
+        setShowConcludeModal(true);
+    };
+
+    const handleConcludeConfirm = async () => {
+        if (!assemblyToComplete) return;
 
         try {
-            await deactivate(assemblyId);
+            await deactivate(assemblyToComplete.assemblyId);
             // Refetch to get updated data with attendance_count
             await refetch();
             setSuccessMessage('Asamblea concluida exitosamente');
+            setShowConcludeModal(false);
+            setAssemblyToComplete(null);
         } catch (err) {
             // Error handled by hook
+            setShowConcludeModal(false);
+            setAssemblyToComplete(null);
         }
+    };
+
+    const handleConcludeCancel = () => {
+        setShowConcludeModal(false);
+        setAssemblyToComplete(null);
     };
 
     // Check if assembly is concluded
@@ -156,7 +171,7 @@ const AssembliesListPage = () => {
 
                         {assembly.isActive && (
                             <Button
-                                onClick={() => handleConcludeAssembly(assembly.assemblyId)}
+                                onClick={() => handleConcludeClick(assembly)}
                                 variant="secondary"
                                 size="sm"
                                 disabled={operating}
@@ -242,6 +257,78 @@ const AssembliesListPage = () => {
                     </>
                 )}
             </Card>
+
+            {/* Conclude Assembly Confirmation Modal */}
+            {assemblyToComplete && (
+                <Modal isOpen={showConcludeModal} onClose={handleConcludeCancel} title="Concluir Asamblea" size="lg">
+                    <div className="space-y-6">
+                        {/* Assembly Info */}
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                            <p className="text-sm text-gray-700">
+                                <strong>Asamblea:</strong> {assemblyToComplete.title}
+                            </p>
+                            <p className="text-sm text-gray-700 mt-1">
+                                <strong>Fecha programada:</strong> {formatDate(assemblyToComplete.scheduledDate)}
+                            </p>
+                            <p className="text-sm text-gray-700 mt-1">
+                                <strong>Asistentes registrados:</strong> {assemblyToComplete.attendanceCount || assemblyToComplete.attendance_count || 0}
+                            </p>
+                        </div>
+
+                        {/* Warning Message */}
+                        <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                            <div className="flex">
+                                <svg className="w-5 h-5 text-yellow-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                <div className="text-sm text-yellow-700">
+                                    <p className="font-semibold mb-2">¿Está seguro que desea concluir esta asamblea?</p>
+                                    <p>Esta acción marcará la asamblea como finalizada y no se podrá deshacer.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Info about the process */}
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                            <div className="flex">
+                                <svg className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                                <div className="text-sm text-blue-700">
+                                    <p className="font-semibold mb-1">Al concluir la asamblea:</p>
+                                    <ul className="list-disc list-inside space-y-1">
+                                        <li>Se registrará la fecha y hora de conclusión</li>
+                                        <li>No se podrán registrar más asistencias</li>
+                                        <li>La asamblea pasará a estado "Concluida"</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-col-reverse sm:flex-row justify-center gap-3 pt-4">
+                            <Button
+                                type="button"
+                                onClick={handleConcludeCancel}
+                                variant="outline"
+                                className="w-full sm:w-auto"
+                                disabled={operating}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleConcludeConfirm}
+                                variant="primary"
+                                className="w-full sm:w-auto"
+                                disabled={operating}
+                            >
+                                Sí, Concluir Asamblea
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 };

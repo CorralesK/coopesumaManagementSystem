@@ -16,6 +16,7 @@ import Table from '../../components/common/Table';
 import Pagination from '../../components/common/Pagination';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import Modal from '../../components/common/Modal';
 import BatchQrPrintModal from '../../components/members/BatchQrPrintModal';
 import { getAllQualities, getAllLevels } from '../../services/catalogService';
 
@@ -27,6 +28,10 @@ const MembersListPage = () => {
     const navigate = useNavigate();
     const [successMessage, setSuccessMessage] = useState('');
     const [showBatchQrModal, setShowBatchQrModal] = useState(false);
+
+    // Delete confirmation modal state
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [memberToDelete, setMemberToDelete] = useState(null);
 
     // Catalog state
     const [qualities, setQualities] = useState([]);
@@ -72,24 +77,15 @@ const MembersListPage = () => {
         updateFilters({ [field]: value });
     };
 
-    const handleDeleteMember = async (memberId, memberName) => {
-        const confirmed = window.confirm(
-            `¿Estás seguro de que deseas ELIMINAR a ${memberName}?\n\n` +
-            `Esta acción iniciará el proceso de liquidación por retiro del miembro.\n` +
-            `Esta acción no se puede deshacer.`
-        );
+    const handleDeleteMember = (memberId, memberName, memberCode, savingsBalance) => {
+        setMemberToDelete({ memberId, memberName, memberCode, savingsBalance });
+        setShowDeleteModal(true);
+    };
 
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            await deactivate(memberId);
-            setSuccessMessage('Miembro eliminado. Proceso de liquidación iniciado.');
-            refetch();
-        } catch (err) {
-            // Error already handled by hook
-        }
+    const handleContinueToDetail = () => {
+        if (!memberToDelete) return;
+        // Navigate to member detail page where the full liquidation process will occur
+        navigate(`/members/${memberToDelete.memberId}?action=delete`);
     };
 
     // Table columns configuration
@@ -167,10 +163,9 @@ const MembersListPage = () => {
                 <div className="flex items-center justify-center gap-2">
                     {member.isActive && (
                         <Button
-                            onClick={() => handleDeleteMember(member.memberId, member.fullName)}
+                            onClick={() => handleDeleteMember(member.memberId, member.fullName, member.memberCode, member.savingsBalance)}
                             variant="danger"
                             size="sm"
-                            disabled={deactivating}
                             className="!px-2 sm:!px-3"
                         >
                             <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,6 +310,77 @@ const MembersListPage = () => {
                 filterQualityId={filters.qualityId}
                 filterLevelId={filters.levelId}
             />
+
+            {/* Delete Confirmation Modal */}
+            {memberToDelete && (
+                <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Eliminar Miembro" size="lg">
+                    <div className="space-y-6">
+                        {/* Member Info with Balance */}
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                            <p className="text-sm text-gray-700">
+                                <strong>Miembro:</strong> {memberToDelete.memberName} ({memberToDelete.memberCode})
+                            </p>
+                            <p className="text-sm text-gray-700 mt-1">
+                                <strong>Saldo actual:</strong> ₡{parseFloat(memberToDelete.savingsBalance || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </p>
+                        </div>
+
+                        {/* Warning Message */}
+                        <div className="bg-red-50 border-l-4 border-red-500 p-4">
+                            <div className="flex">
+                                <svg className="w-5 h-5 text-red-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                <div className="text-sm text-red-700">
+                                    <p className="font-semibold mb-2">¿Estás seguro de que deseas ELIMINAR a {memberToDelete.memberName}?</p>
+                                    <p>Esta acción ejecutará la liquidación por retiro del miembro.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Info about the process */}
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4">
+                            <div className="flex">
+                                <svg className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                                <div className="text-sm text-blue-700">
+                                    <p className="font-semibold mb-1">El proceso incluye:</p>
+                                    <ul className="list-disc list-inside space-y-1">
+                                        <li>Liquidación de la cuenta de ahorros</li>
+                                        <li>Desactivación del miembro y su usuario</li>
+                                        <li>Generación de recibo de liquidación</li>
+                                    </ul>
+                                    <p className="mt-2 font-semibold text-red-700">Esta acción NO se puede deshacer.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-col-reverse sm:flex-row justify-center gap-3 pt-4">
+                            <Button
+                                type="button"
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setMemberToDelete(null);
+                                }}
+                                variant="outline"
+                                className="w-full sm:w-auto"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleContinueToDetail}
+                                variant="primary"
+                                className="w-full sm:w-auto"
+                            >
+                                Continuar
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 };

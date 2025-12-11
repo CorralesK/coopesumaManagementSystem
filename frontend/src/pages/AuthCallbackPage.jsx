@@ -60,7 +60,7 @@ const AuthCallbackPage = () => {
                             navigate('/dashboard', { replace: true });
                             break;
                         case USER_ROLES.MANAGER:
-                            navigate('/dashboard', { replace: true });
+                            navigate('/savings', { replace: true });
                             break;
                         default:
                             // Fallback to home page which will handle role-based redirect

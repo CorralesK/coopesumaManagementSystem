@@ -7,6 +7,7 @@
  */
 
 const userRepository = require('./userRepository');
+const memberService = require('../members/memberService');
 const ERROR_CODES = require('../../constants/errorCodes');
 const MESSAGES = require('../../constants/messages');
 const logger = require('../../utils/logger');
@@ -48,7 +49,8 @@ const getAllUsers = async (filters = {}, page = 1, limit = 20) => {
             hasMicrosoftAccount: !!user.microsoftId,
             lastLogin: user.lastLogin || null,
             createdAt: user.createdAt,
-            updatedAt: user.updatedAt
+            updatedAt: user.updatedAt,
+            memberId: user.memberId || null
         }));
 
         // ⬇️ IMPORTANT: Unified response format identical to the Members module
@@ -99,7 +101,8 @@ const getUserById = async (userId) => {
             isActive: user.isActive,
             hasMicrosoftAccount: !!user.microsoftId,
             createdAt: user.createdAt,
-            updatedAt: user.updatedAt
+            updatedAt: user.updatedAt,
+            memberId: user.memberId || null
         };
 
     } catch (error) {
@@ -216,7 +219,7 @@ const updateUser = async (userId, updates) => {
 
         if (Object.keys(updateData).length === 0) {
             throw new UserError(
-                'No hay campos para actualizar',
+                MESSAGES.NO_FIELDS_TO_UPDATE,
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );
@@ -254,11 +257,13 @@ const updateUser = async (userId, updates) => {
 /**
  * Deactivate a user (soft delete).
  * Prevents deactivating the last active administrator.
+ * If user has role 'member' and is linked to a member, it liquidates and deactivates the member.
  *
  * @param {number} userId - User ID
- * @returns {Promise<Object>} Updated user data
+ * @param {number} processedBy - User ID processing the deletion (default: 1)
+ * @returns {Promise<Object>} Updated user data and optional liquidation info
  */
-const deactivateUser = async (userId) => {
+const deactivateUser = async (userId, processedBy = 1) => {
     try {
         const user = await userRepository.findById(userId);
 
@@ -272,7 +277,7 @@ const deactivateUser = async (userId) => {
 
         if (!user.isActive) {
             throw new UserError(
-                'El usuario ya está inactivo',
+                MESSAGES.USER_ALREADY_INACTIVE,
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );
@@ -282,13 +287,42 @@ const deactivateUser = async (userId) => {
             const activeAdminCount = await userRepository.countActiveAdministrators();
             if (activeAdminCount <= 1) {
                 throw new UserError(
-                    'No se puede desactivar el último administrador activo',
+                    MESSAGES.CANNOT_DEACTIVATE_LAST_ADMIN,
                     ERROR_CODES.LAST_ADMIN,
                     403
                 );
             }
         }
 
+        let liquidationResult = null;
+
+        // If user is a member and has a linked member record, liquidate and deactivate the member
+        if (user.role === 'member' && user.memberId) {
+            try {
+                logger.info('User is a member, liquidating member before deactivation', {
+                    userId,
+                    memberId: user.memberId
+                });
+
+                liquidationResult = await memberService.deleteMember(user.memberId, processedBy);
+
+                logger.info('Member liquidated successfully during user deactivation', {
+                    userId,
+                    memberId: user.memberId,
+                    liquidationId: liquidationResult?.liquidation?.liquidationId
+                });
+            } catch (memberError) {
+                logger.error('Error liquidating member during user deactivation:', memberError);
+                // If member liquidation fails, throw the error
+                throw new UserError(
+                    memberError.message || MESSAGES.MEMBER_LIQUIDATION_ERROR,
+                    memberError.errorCode || ERROR_CODES.INTERNAL_ERROR,
+                    memberError.statusCode || 500
+                );
+            }
+        }
+
+        // Deactivate the user
         const deactivatedUser = await userRepository.deactivate(userId);
 
         logger.info('User deactivated successfully', { userId });
@@ -299,7 +333,8 @@ const deactivateUser = async (userId) => {
             email: deactivatedUser.email,
             role: deactivatedUser.role,
             isActive: deactivatedUser.isActive,
-            updatedAt: deactivatedUser.updatedAt
+            updatedAt: deactivatedUser.updatedAt,
+            liquidation: liquidationResult // Include liquidation info if member was liquidated
         };
 
     } catch (error) {
@@ -334,7 +369,7 @@ const activateUser = async (userId) => {
 
         if (user.isActive) {
             throw new UserError(
-                'El usuario ya está activo',
+                MESSAGES.USER_ALREADY_ACTIVE,
                 ERROR_CODES.VALIDATION_ERROR,
                 400
             );

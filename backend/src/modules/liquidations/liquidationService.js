@@ -43,6 +43,7 @@ const getMembersPendingLiquidation = async (cooperativeId) => {
 
 /**
  * Get liquidation preview for a member
+ * Only returns savings balance (other accounts commented for future use)
  */
 const getLiquidationPreview = async (memberId) => {
     try {
@@ -55,9 +56,13 @@ const getLiquidationPreview = async (memberId) => {
         // Get account balances
         const balances = await liquidationRepository.getAccountBalances(memberId);
 
-        const totalAmount = balances.savings.balance +
-            balances.contributions.balance +
-            balances.surplus.balance;
+        // Only liquidate savings account
+        const totalAmount = balances.savings.balance;
+
+        // Commented: Include other accounts in liquidation
+        // const totalAmount = balances.savings.balance +
+        //     balances.contributions.balance +
+        //     balances.surplus.balance;
 
         return {
             member: {
@@ -69,8 +74,9 @@ const getLiquidationPreview = async (memberId) => {
                 lastLiquidationDate: member.lastLiquidationDate
             },
             savingsBalance: balances.savings.balance,
-            contributionsBalance: balances.contributions.balance,
-            surplusBalance: balances.surplus.balance,
+            // Commented: Other account balances for future use
+            // contributionsBalance: balances.contributions.balance,
+            // surplusBalance: balances.surplus.balance,
             totalAmount: totalAmount
         };
     } catch (error) {
@@ -85,6 +91,7 @@ const getLiquidationPreview = async (memberId) => {
 
 /**
  * Execute liquidation for one or multiple members
+ * Only processes savings account (other accounts commented for future use)
  */
 const executeLiquidation = async (liquidationData) => {
     const client = await db.pool.connect();
@@ -108,7 +115,7 @@ const executeLiquidation = async (liquidationData) => {
             const member = await memberRepository.findById(memberId);
             if (!member) {
                 throw new LiquidationError(
-                    `Miembro con ID ${memberId} no encontrado`,
+                    MESSAGES.MEMBER_NOT_FOUND,
                     ERROR_CODES.MEMBER_NOT_FOUND,
                     404
                 );
@@ -117,56 +124,118 @@ const executeLiquidation = async (liquidationData) => {
             // 2. Get account balances
             const balances = await liquidationRepository.getAccountBalances(memberId, client);
 
-            const totalAmount = balances.savings.balance +
-                balances.contributions.balance +
-                balances.surplus.balance;
+            // Only liquidate savings account
+            const totalAmount = balances.savings.balance;
 
-            if (totalAmount === 0) {
-                logger.warn(`Member ${memberId} has zero balance, skipping liquidation`);
-                continue;
-            }
+            // Commented: Include other accounts in liquidation
+            // const totalAmount = balances.savings.balance +
+            //     balances.contributions.balance +
+            //     balances.surplus.balance;
 
-            // 3. Create liquidation transactions for each account
+            // Allow zero balance liquidation - generates receipt as proof of liquidation process
+            // This is important for periodic liquidations and exit liquidations to have proper documentation
+
+            // 3. Create liquidation transaction for savings account only (if balance > 0)
             const liquidationTransactions = [];
+            const savingsData = balances.savings;
 
-            for (const accountType of ['savings', 'contributions', 'surplus']) {
-                const accountData = balances[accountType];
+            if (savingsData.balance > 0 && savingsData.accountId) {
+                // Create liquidation transaction for savings
+                const txQuery = `
+                    INSERT INTO transactions (
+                        account_id,
+                        transaction_type,
+                        amount,
+                        transaction_date,
+                        fiscal_year,
+                        description,
+                        status,
+                        created_by
+                    )
+                    VALUES ($1, 'liquidation', $2, CURRENT_DATE, $3, $4, 'completed', $5)
+                    RETURNING transaction_id
+                `;
 
-                if (accountData.balance > 0 && accountData.accountId) {
-                    // Create liquidation transaction
-                    const txQuery = `
-                        INSERT INTO transactions (
-                            account_id,
-                            transaction_type,
-                            amount,
-                            transaction_date,
-                            fiscal_year,
-                            description,
-                            status,
-                            created_by
-                        )
-                        VALUES ($1, 'liquidation', $2, CURRENT_DATE, $3, $4, 'completed', $5)
-                        RETURNING transaction_id
-                    `;
+                const txValues = [
+                    savingsData.accountId,
+                    savingsData.balance,
+                    fiscalYear,
+                    `Liquidación ${liquidationType === 'periodic' ? 'periódica' : 'por retiro'} - ${member.fullName}`,
+                    processedBy
+                ];
 
-                    const txValues = [
-                        accountData.accountId,
-                        accountData.balance,
-                        fiscalYear,
-                        `Liquidación ${liquidationType === 'periodic' ? 'periódica' : 'por retiro'} - ${member.fullName}`,
-                        processedBy
-                    ];
+                const txResult = await client.query(txQuery, txValues);
+                liquidationTransactions.push(txResult.rows[0].transaction_id);
 
-                    const txResult = await client.query(txQuery, txValues);
-                    liquidationTransactions.push(txResult.rows[0].transaction_id);
+                // Reset savings account balance to zero
+                await client.query(
+                    'UPDATE accounts SET current_balance = 0.00, updated_at = CURRENT_TIMESTAMP WHERE account_id = $1',
+                    [savingsData.accountId]
+                );
+            } else if (savingsData.accountId) {
+                // Create a zero-amount liquidation transaction as documentation
+                const txQuery = `
+                    INSERT INTO transactions (
+                        account_id,
+                        transaction_type,
+                        amount,
+                        transaction_date,
+                        fiscal_year,
+                        description,
+                        status,
+                        created_by
+                    )
+                    VALUES ($1, 'liquidation', $2, CURRENT_DATE, $3, $4, 'completed', $5)
+                    RETURNING transaction_id
+                `;
 
-                    // Reset account balance to zero
-                    await client.query(
-                        'UPDATE accounts SET current_balance = 0.00, updated_at = CURRENT_TIMESTAMP WHERE account_id = $1',
-                        [accountData.accountId]
-                    );
-                }
+                const txValues = [
+                    savingsData.accountId,
+                    0,
+                    fiscalYear,
+                    `Liquidación ${liquidationType === 'periodic' ? 'periódica' : 'por retiro'} (saldo ₡0.00) - ${member.fullName}`,
+                    processedBy
+                ];
+
+                const txResult = await client.query(txQuery, txValues);
+                liquidationTransactions.push(txResult.rows[0].transaction_id);
+
+                logger.info(`Zero balance liquidation created for member ${memberId}`);
             }
+
+            // Commented: Process other accounts (contributions, surplus)
+            // for (const accountType of ['contributions', 'surplus']) {
+            //     const accountData = balances[accountType];
+            //     if (accountData.balance > 0 && accountData.accountId) {
+            //         const txQuery = `
+            //             INSERT INTO transactions (
+            //                 account_id,
+            //                 transaction_type,
+            //                 amount,
+            //                 transaction_date,
+            //                 fiscal_year,
+            //                 description,
+            //                 status,
+            //                 created_by
+            //             )
+            //             VALUES ($1, 'liquidation', $2, CURRENT_DATE, $3, $4, 'completed', $5)
+            //             RETURNING transaction_id
+            //         `;
+            //         const txValues = [
+            //             accountData.accountId,
+            //             accountData.balance,
+            //             fiscalYear,
+            //             `Liquidación ${liquidationType === 'periodic' ? 'periódica' : 'por retiro'} - ${member.fullName}`,
+            //             processedBy
+            //         ];
+            //         const txResult = await client.query(txQuery, txValues);
+            //         liquidationTransactions.push(txResult.rows[0].transaction_id);
+            //         await client.query(
+            //             'UPDATE accounts SET current_balance = 0.00, updated_at = CURRENT_TIMESTAMP WHERE account_id = $1',
+            //             [accountData.accountId]
+            //         );
+            //     }
+            // }
 
             // 4. Update member's last_liquidation_date
             await client.query(
@@ -174,23 +243,35 @@ const executeLiquidation = async (liquidationData) => {
                 [memberId]
             );
 
-            // 5. If member is leaving, set is_active = false
+            // 5. If member is leaving, set is_active = false and deactivate user
             if (!memberContinues) {
                 await client.query(
                     'UPDATE members SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE member_id = $1',
                     [memberId]
                 );
+
+                // Also deactivate the associated user account if exists
+                if (member.userId) {
+                    await client.query(
+                        'UPDATE users SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1',
+                        [member.userId]
+                    );
+                    logger.info('User account deactivated during liquidation', {
+                        userId: member.userId,
+                        memberId: memberId
+                    });
+                }
             }
 
-            // 6. Create liquidation record
+            // 6. Create liquidation record (only savings amount)
             const liquidation = await liquidationRepository.createLiquidation({
                 memberId,
-                cooperativeId: member.cooperative_id,
+                cooperativeId: member.cooperativeId,
                 liquidationType,
                 liquidationDate: new Date(),
                 totalSavings: balances.savings.balance,
-                totalContributions: balances.contributions.balance,
-                totalSurplus: balances.surplus.balance,
+                totalContributions: 0, // Not liquidating contributions
+                totalSurplus: 0, // Not liquidating surplus
                 totalAmount,
                 memberContinues,
                 notes,
@@ -242,7 +323,7 @@ const executeLiquidation = async (liquidationData) => {
 
         logger.error('Error executing liquidation:', error);
         throw new LiquidationError(
-            error.message || 'Error al ejecutar la liquidación',
+            MESSAGES.LIQUIDATION_ERROR,
             ERROR_CODES.INTERNAL_ERROR,
             500
         );
@@ -259,7 +340,7 @@ const getLiquidationById = async (liquidationId) => {
         const liquidation = await liquidationRepository.findById(liquidationId);
 
         if (!liquidation) {
-            throw new LiquidationError('Liquidación no encontrada', ERROR_CODES.NOT_FOUND, 404);
+            throw new LiquidationError(MESSAGES.LIQUIDATION_NOT_FOUND, ERROR_CODES.NOT_FOUND, 404);
         }
 
         return liquidation;

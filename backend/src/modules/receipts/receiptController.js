@@ -4,9 +4,8 @@
  */
 
 const receiptService = require('./receiptService');
+const { generateReceiptPDF } = require('./receiptGenerator');
 const logger = require('../../utils/logger');
-const path = require('path');
-const fs = require('fs');
 
 /**
  * Get receipt by ID
@@ -57,55 +56,60 @@ const getMemberReceipts = async (req, res, next) => {
 /**
  * Download receipt PDF
  * GET /api/receipts/:receiptId/download
+ * Generates PDF dynamically in memory and streams it to the client
  */
 const downloadReceipt = async (req, res, next) => {
     try {
         const { receiptId } = req.params;
 
+        // Get receipt data from database
         const receipt = await receiptService.getReceiptById(parseInt(receiptId));
 
-        if (!receipt.pdf_url) {
+        if (!receipt) {
             return res.status(404).json({
                 success: false,
-                message: 'Receipt PDF not found',
-                error: 'PDF_NOT_FOUND'
+                message: 'Receipt not found',
+                error: 'RECEIPT_NOT_FOUND'
             });
         }
 
-        const filename = path.basename(receipt.pdf_url);
-        const receiptsDir = path.join(__dirname, '../../../receipts');
-        const filepath = path.join(receiptsDir, filename);
+        // Prepare data for PDF generation
+        const pdfData = {
+            receiptNumber: receipt.receipt_number,
+            memberName: receipt.member_name || receipt.memberName || 'N/A',
+            identification: receipt.identification || 'N/A',
+            memberCode: receipt.member_code || receipt.memberCode || 'N/A',
+            amount: parseFloat(receipt.amount) || 0,
+            date: receipt.created_at || new Date(),
+            fiscalYear: new Date(receipt.created_at || new Date()).getFullYear(),
+            previousBalance: parseFloat(receipt.previous_balance) || 0,
+            newBalance: parseFloat(receipt.new_balance) || 0,
+            accountType: receipt.account_type || 'savings',
+            reason: receipt.liquidation_type || 'exit',
+            savingsAmount: parseFloat(receipt.savings_liquidated) || parseFloat(receipt.amount) || 0,
+            totalAmount: parseFloat(receipt.total_liquidated) || parseFloat(receipt.amount) || 0,
+            tractInfo: receipt.tract_info || '',
+            surplusPrevBalance: parseFloat(receipt.surplus_prev_balance) || 0,
+            surplusNewBalance: parseFloat(receipt.surplus_new_balance) || 0,
+            savingsPrevBalance: parseFloat(receipt.savings_prev_balance) || 0,
+            savingsNewBalance: parseFloat(receipt.savings_new_balance) || 0
+        };
 
-        const normalizedPath = path.normalize(filepath);
-        const normalizedDir = path.normalize(receiptsDir);
+        // Generate PDF in memory
+        const pdfDoc = generateReceiptPDF(receipt.receipt_type, pdfData);
 
-        if (!normalizedPath.startsWith(normalizedDir)) {
-            logger.warn('Path traversal attempt detected', {
-                receiptId,
-                requestedPath: receipt.pdf_url,
-                userId: req.user?.userId
-            });
-
-            return res.status(403).json({
-                success: false,
-                message: 'Invalid file path',
-                error: 'FORBIDDEN'
-            });
-        }
-
-        if (!fs.existsSync(filepath)) {
-            return res.status(404).json({
-                success: false,
-                message: 'PDF file not found on server',
-                error: 'FILE_NOT_FOUND'
-            });
-        }
-
+        // Set response headers for PDF download
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="receipt-${receipt.receipt_number}.pdf"`);
 
-        const fileStream = fs.createReadStream(filepath);
-        fileStream.pipe(res);
+        // Pipe PDF to response
+        pdfDoc.pipe(res);
+
+        logger.info('Receipt PDF generated and sent', {
+            receiptId: receipt.receipt_id,
+            receiptNumber: receipt.receipt_number,
+            receiptType: receipt.receipt_type
+        });
 
     } catch (error) {
         logger.error('Controller error - downloadReceipt:', error);

@@ -39,9 +39,8 @@ const HomePage = () => {
             return <Navigate to="/attendance/scan" replace />;
 
         case USER_ROLES.MANAGER:
-            // For now, redirect managers to dashboard
-            // Later we can create a specific manager dashboard
-            return <Navigate to="/dashboard" replace />;
+            // Redirect managers to savings management
+            return <Navigate to="/savings" replace />;
 
         default:
             // Unknown role, redirect to unauthorized
