@@ -30,14 +30,23 @@ const AuthCallbackPage = () => {
             // Use queueMicrotask to defer processing and avoid React 19 warnings
             queueMicrotask(() => {
                 try {
-                    // Decode JWT to get user info (simple base64 decode)
+                    // Decode JWT to get user info
                     const parts = token.split('.');
 
                     if (parts.length !== 3) {
                         throw new Error('Invalid token format');
                     }
 
-                    const payload = JSON.parse(atob(parts[1]));
+                    // Decode Base64URL to UTF-8 string properly
+                    // atob() doesn't handle UTF-8 characters correctly, so we need to decode manually
+                    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(
+                        atob(base64)
+                            .split('')
+                            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                            .join('')
+                    );
+                    const payload = JSON.parse(jsonPayload);
 
                     const userData = {
                         userId: payload.userId,
