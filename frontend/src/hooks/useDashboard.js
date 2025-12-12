@@ -32,12 +32,14 @@ export const useDashboard = () => {
             ]);
 
             // Process savings summary
-            if (savingsResponse.data) {
-                setSavingsSummary(savingsResponse.data);
+            // Note: axios interceptor already extracts response.data, so savingsResponse contains the data directly
+            if (savingsResponse && savingsResponse.success) {
+                setSavingsSummary(savingsResponse);
             }
 
             // Process withdrawals
-            const withdrawals = withdrawalsResponse.data || [];
+            // Note: axios interceptor already extracts response.data, so we access the array directly
+            const withdrawals = withdrawalsResponse?.data || withdrawalsResponse || [];
 
             // Filter pending withdrawals
             const pending = withdrawals.filter(w => w.status === 'pending');
