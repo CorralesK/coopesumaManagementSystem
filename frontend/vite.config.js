@@ -12,7 +12,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo.png', 'vite.svg'],
+      includeAssets: ['logo.png', 'vite.svg', 'sw-push.js'],
       manifest: {
         name: 'COOPLINKCR - Sistema de Gestión Cooperativa',
         short_name: 'COOPLINKCR',
@@ -41,7 +41,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         // Import push notification handler into service worker
-        importScripts: ['/sw-push.js'],
+        // Using self.location.origin to ensure correct URL in production
+        importScripts: ['sw-push.js'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

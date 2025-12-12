@@ -12,7 +12,19 @@ const PUSH_API = '/push';
  * Check if push notifications are supported
  */
 export const isPushSupported = () => {
-    return 'serviceWorker' in navigator && 'PushManager' in window;
+    const hasServiceWorker = 'serviceWorker' in navigator;
+    const hasPushManager = 'PushManager' in window;
+    const hasNotification = 'Notification' in window;
+    const supported = hasServiceWorker && hasPushManager && hasNotification;
+
+    console.log('[PushService] Support check:', {
+        serviceWorker: hasServiceWorker,
+        pushManager: hasPushManager,
+        notification: hasNotification,
+        supported
+    });
+
+    return supported;
 };
 
 /**
@@ -21,7 +33,9 @@ export const isPushSupported = () => {
  */
 export const getPermissionStatus = () => {
     if (!isPushSupported()) return 'denied';
-    return Notification.permission;
+    const permission = Notification.permission;
+    console.log('[PushService] Permission status:', permission);
+    return permission;
 };
 
 /**
@@ -29,11 +43,14 @@ export const getPermissionStatus = () => {
  * @returns {Promise<'granted' | 'denied' | 'default'>}
  */
 export const requestPermission = async () => {
+    console.log('[PushService] Requesting permission...');
+
     if (!isPushSupported()) {
         throw new Error('Push notifications not supported');
     }
 
     const permission = await Notification.requestPermission();
+    console.log('[PushService] Permission result:', permission);
     return permission;
 };
 
@@ -42,8 +59,11 @@ export const requestPermission = async () => {
  * @returns {Promise<string>}
  */
 export const getVapidPublicKey = async () => {
+    console.log('[PushService] Fetching VAPID public key...');
     const response = await api.get(`${PUSH_API}/vapid-public-key`);
-    return response.data.data.publicKey;
+    const publicKey = response.data.data.publicKey;
+    console.log('[PushService] VAPID key received:', publicKey?.substring(0, 20) + '...');
+    return publicKey;
 };
 
 /**
@@ -70,6 +90,8 @@ const urlBase64ToUint8Array = (base64String) => {
  * @returns {Promise<PushSubscription>}
  */
 export const subscribe = async () => {
+    console.log('[PushService] Starting subscription process...');
+
     if (!isPushSupported()) {
         throw new Error('Push notifications not supported');
     }
@@ -81,22 +103,33 @@ export const subscribe = async () => {
     }
 
     // Get service worker registration
+    console.log('[PushService] Waiting for service worker...');
     const registration = await navigator.serviceWorker.ready;
+    console.log('[PushService] Service worker ready:', registration.scope);
 
-    // Get VAPID public key
-    const vapidPublicKey = await getVapidPublicKey();
-    const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+    // Check if already subscribed
+    let subscription = await registration.pushManager.getSubscription();
+    if (subscription) {
+        console.log('[PushService] Already subscribed, reusing existing subscription');
+    } else {
+        // Get VAPID public key
+        const vapidPublicKey = await getVapidPublicKey();
+        const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
 
-    // Subscribe to push
-    const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: convertedVapidKey
-    });
+        console.log('[PushService] Subscribing to push manager...');
+        // Subscribe to push
+        subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: convertedVapidKey
+        });
+        console.log('[PushService] Push subscription created:', subscription.endpoint?.substring(0, 50) + '...');
+    }
 
     // Send subscription to server
-    await api.post(`${PUSH_API}/subscribe`, { subscription });
+    console.log('[PushService] Sending subscription to server...');
+    await api.post(`${PUSH_API}/subscribe`, { subscription: subscription.toJSON() });
 
-    console.log('Push subscription successful');
+    console.log('[PushService] Subscription successful!');
     return subscription;
 };
 
@@ -104,6 +137,8 @@ export const subscribe = async () => {
  * Unsubscribe from push notifications
  */
 export const unsubscribe = async () => {
+    console.log('[PushService] Starting unsubscription process...');
+
     if (!isPushSupported()) return;
 
     const registration = await navigator.serviceWorker.ready;
@@ -111,13 +146,20 @@ export const unsubscribe = async () => {
 
     if (subscription) {
         // Notify server
-        await api.post(`${PUSH_API}/unsubscribe`, {
-            endpoint: subscription.endpoint
-        });
+        console.log('[PushService] Notifying server of unsubscription...');
+        try {
+            await api.post(`${PUSH_API}/unsubscribe`, {
+                endpoint: subscription.endpoint
+            });
+        } catch (error) {
+            console.warn('[PushService] Server unsubscribe failed, continuing local unsubscribe:', error);
+        }
 
         // Unsubscribe locally
         await subscription.unsubscribe();
-        console.log('Push unsubscription successful');
+        console.log('[PushService] Unsubscription successful');
+    } else {
+        console.log('[PushService] No subscription to unsubscribe');
     }
 };
 
@@ -131,8 +173,11 @@ export const isSubscribed = async () => {
     try {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
-        return !!subscription;
-    } catch {
+        const subscribed = !!subscription;
+        console.log('[PushService] Is subscribed:', subscribed);
+        return subscribed;
+    } catch (error) {
+        console.error('[PushService] Error checking subscription:', error);
         return false;
     }
 };
@@ -147,9 +192,36 @@ export const getSubscription = async () => {
     try {
         const registration = await navigator.serviceWorker.ready;
         return await registration.pushManager.getSubscription();
-    } catch {
+    } catch (error) {
+        console.error('[PushService] Error getting subscription:', error);
         return null;
     }
+};
+
+/**
+ * Test notification locally (for debugging)
+ */
+export const testLocalNotification = async () => {
+    console.log('[PushService] Testing local notification...');
+
+    if (!isPushSupported()) {
+        throw new Error('Notifications not supported');
+    }
+
+    const permission = getPermissionStatus();
+    if (permission !== 'granted') {
+        throw new Error('Notification permission not granted');
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+    await registration.showNotification('Test Notification', {
+        body: 'This is a test notification from COOPLINKCR',
+        icon: '/logo.png',
+        badge: '/logo.png',
+        tag: 'test-notification'
+    });
+
+    console.log('[PushService] Test notification sent');
 };
 
 export default {
@@ -159,5 +231,6 @@ export default {
     subscribe,
     unsubscribe,
     isSubscribed,
-    getSubscription
+    getSubscription,
+    testLocalNotification
 };
