@@ -62,46 +62,62 @@ const PrintModal = ({
         style.id = styleId;
         style.innerHTML = `
             @media print {
-                /* Reset body */
-                html, body {
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    height: auto !important;
-                    overflow: visible !important;
-                    background: white !important;
+                /* Hide everything except printable area */
+                body * {
+                    visibility: hidden !important;
                 }
 
-                /* Hide all body children except our modal */
-                body > *:not(.print-modal-backdrop) {
-                    display: none !important;
+                /* The printable container needs to be visible and positioned correctly */
+                [data-printable="${printableId}"],
+                [data-printable="${printableId}"] * {
+                    visibility: visible !important;
                 }
 
-                /* Reset modal containers to not add extra space */
-                .print-modal-backdrop,
-                .print-modal-wrapper,
-                .print-modal-content {
-                    all: unset !important;
-                    display: block !important;
-                    position: static !important;
-                    width: 100% !important;
-                    height: auto !important;
-                    overflow: visible !important;
-                    background: white !important;
-                }
-
-                /* Hide modal UI elements */
-                .print-modal-header,
-                .print-modal-actions {
-                    display: none !important;
-                }
-
-                /* The printable content */
+                /* Position the printable content at the top of the page */
                 [data-printable="${printableId}"] {
-                    display: block !important;
+                    position: absolute !important;
+                    left: 0 !important;
+                    top: 0 !important;
                     width: 100% !important;
                     margin: 0 !important;
                     padding: 0 !important;
                     background: white !important;
+                }
+
+                /* Make parent containers not take up space */
+                .print-modal-backdrop {
+                    position: absolute !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    overflow: visible !important;
+                }
+
+                .print-modal-wrapper {
+                    position: absolute !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                    max-width: none !important;
+                    max-height: none !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    overflow: visible !important;
+                }
+
+                .print-modal-content {
+                    position: absolute !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    overflow: visible !important;
                 }
 
                 /* Page settings */
@@ -115,6 +131,13 @@ const PrintModal = ({
                     -webkit-print-color-adjust: exact !important;
                     print-color-adjust: exact !important;
                     color-adjust: exact !important;
+                }
+
+                /* Hide modal UI elements completely */
+                .print-modal-header,
+                .print-modal-actions {
+                    display: none !important;
+                    visibility: hidden !important;
                 }
 
                 /* Prevent page breaks inside cards */
