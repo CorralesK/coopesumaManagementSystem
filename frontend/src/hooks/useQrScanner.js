@@ -34,12 +34,31 @@ export const useQrScanner = (options = {}) => {
     const [selectedCamera, setSelectedCamera] = useState(null);
 
     const scannerRef = useRef(null);
+    const initAttempts = useRef(0);
+    const maxInitAttempts = 3;
 
     /**
      * Initialize the scanner
      */
     const initScanner = useCallback(async () => {
         try {
+            // Check if the DOM element exists
+            const element = document.getElementById(elementId);
+            if (!element) {
+                // Element not ready yet, retry after a short delay
+                if (initAttempts.current < maxInitAttempts) {
+                    initAttempts.current += 1;
+                    setTimeout(() => initScanner(), 100);
+                    return;
+                }
+                // Max attempts reached, fail silently - user can click "Iniciar Escaneo" manually
+                console.warn('QR scanner element not found after max attempts, waiting for user action');
+                return;
+            }
+
+            // Reset attempts on success
+            initAttempts.current = 0;
+
             // Check if browser supports camera access
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 throw new Error('Tu navegador no soporta acceso a la cámara');
@@ -74,8 +93,20 @@ export const useQrScanner = (options = {}) => {
             scannerRef.current = new Html5Qrcode(elementId);
         } catch (err) {
             console.error('Error initializing QR scanner:', err);
-            const errorMessage = err.message || err.toString() || 'Error desconocido';
-            setError('Error initializing scanner: ' + errorMessage);
+            // Provide user-friendly error messages
+            let userMessage = 'Error al inicializar el escáner. ';
+            if (err.message?.includes('cámara')) {
+                userMessage += err.message;
+            } else if (err.message?.includes('HTTPS')) {
+                userMessage += err.message;
+            } else if (err.message?.includes('NotAllowedError') || err.message?.includes('Permission')) {
+                userMessage += 'Por favor, permite el acceso a la cámara.';
+            } else if (err.message?.includes('NotFoundError')) {
+                userMessage += 'No se encontró una cámara disponible.';
+            } else {
+                userMessage += 'Por favor, recarga la página e intenta de nuevo.';
+            }
+            setError(userMessage);
         }
     }, [elementId]);
 
@@ -83,10 +114,41 @@ export const useQrScanner = (options = {}) => {
      * Start scanning
      */
     const startScanning = useCallback(async () => {
-        if (!scannerRef.current || isScanning) return;
+        if (isScanning) return;
 
         try {
             setError(null);
+
+            // If scanner is not initialized, try to initialize it first
+            if (!scannerRef.current) {
+                const element = document.getElementById(elementId);
+                if (!element) {
+                    setError('El escáner no está listo. Por favor, espera un momento e intenta de nuevo.');
+                    return;
+                }
+
+                // Try to initialize
+                const { Html5Qrcode } = await import('html5-qrcode');
+
+                // Get cameras if not already fetched
+                if (cameras.length === 0) {
+                    const devices = await Html5Qrcode.getCameras();
+                    if (!devices || devices.length === 0) {
+                        setError('No se encontraron cámaras disponibles.');
+                        return;
+                    }
+                    setCameras(devices);
+                    const rearCamera = devices.find(device =>
+                        device.label.toLowerCase().includes('back') ||
+                        device.label.toLowerCase().includes('rear') ||
+                        device.label.toLowerCase().includes('trasera')
+                    );
+                    setSelectedCamera(rearCamera || devices[0]);
+                }
+
+                scannerRef.current = new Html5Qrcode(elementId);
+            }
+
             setIsScanning(true);
 
             // Request camera permissions explicitly
@@ -128,11 +190,23 @@ export const useQrScanner = (options = {}) => {
             );
         } catch (err) {
             console.error('Error starting QR scanner:', err);
-            const errorMessage = err.message || err.toString() || 'Error desconocido';
-            setError('Error starting scan: ' + errorMessage);
+            // Provide user-friendly error messages
+            let userMessage = 'Error al iniciar el escaneo. ';
+            if (err.message?.includes('Permisos') || err.message?.includes('Permission')) {
+                userMessage = err.message;
+            } else if (err.message?.includes('NotAllowedError')) {
+                userMessage += 'Por favor, permite el acceso a la cámara.';
+            } else if (err.message?.includes('NotFoundError') || err.message?.includes('not found')) {
+                userMessage += 'No se encontró una cámara disponible.';
+            } else if (err.message?.includes('NotReadableError')) {
+                userMessage += 'La cámara está siendo usada por otra aplicación.';
+            } else {
+                userMessage += 'Por favor, recarga la página e intenta de nuevo.';
+            }
+            setError(userMessage);
             setIsScanning(false);
         }
-    }, [selectedCamera, fps, qrbox, onScanSuccess, onScanError, isScanning]);
+    }, [selectedCamera, cameras, elementId, fps, qrbox, onScanSuccess, onScanError, isScanning]);
 
     /**
      * Stop scanning
@@ -144,7 +218,9 @@ export const useQrScanner = (options = {}) => {
             await scannerRef.current.stop();
             setIsScanning(false);
         } catch (err) {
-            setError('Error al detener el escaneo: ' + err.message);
+            console.error('Error stopping scanner:', err);
+            // Don't show error to user for stop failures, just update state
+            setIsScanning(false);
         }
     }, [isScanning]);
 
