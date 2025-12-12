@@ -224,7 +224,7 @@ const DashboardPage = () => {
     const totalMembers = totalMembersPagination?.total || 0;
     const activeMembers = activeMembersPagination?.total || 0;
     const inactiveMembers = totalMembers - activeMembers;
-    const totalSavings = savingsSummary?.summary?.totalBalance || 0;
+    const totalSavings = savingsSummary?.summary?.totalSavings || 0;
     const pendingCount = pendingWithdrawals?.length || 0;
     const attendanceRate = attendanceStats?.attendancePercentage || 0;
 
@@ -306,32 +306,31 @@ const DashboardPage = () => {
 
             {/* Financial Summary - Admin Only */}
             {isAdministrator && savingsSummary?.summary && (
-                <Card title="Resumen Financiero" padding="normal">
+                <Card title="Resumen de Ahorros" padding="normal">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="text-center p-4 bg-green-50 rounded-lg">
-                            <div className="flex items-center justify-center gap-2 mb-2">
-                                {Icons.TrendUp}
-                                <span className="text-sm text-gray-600">Total Depositado</span>
-                            </div>
-                            <p className="text-2xl font-bold text-green-600">
-                                {formatCurrency(savingsSummary.summary.totalDeposits || 0)}
-                            </p>
-                        </div>
-                        <div className="text-center p-4 bg-red-50 rounded-lg">
-                            <div className="flex items-center justify-center gap-2 mb-2">
-                                {Icons.TrendDown}
-                                <span className="text-sm text-gray-600">Total Retirado</span>
-                            </div>
-                            <p className="text-2xl font-bold text-red-600">
-                                {formatCurrency(savingsSummary.summary.totalWithdrawals || 0)}
-                            </p>
-                        </div>
                         <div className="text-center p-4 bg-primary-50 rounded-lg">
                             <div className="flex items-center justify-center gap-2 mb-2">
-                                <span className="text-sm text-gray-600">Balance Neto</span>
+                                <span className="text-sm text-gray-600">Fondo Total</span>
                             </div>
                             <p className="text-2xl font-bold text-primary-600">
-                                {formatCurrency(savingsSummary.summary.totalBalance || 0)}
+                                {formatCurrency(savingsSummary.summary.totalSavings || 0)}
+                            </p>
+                        </div>
+                        <div className="text-center p-4 bg-green-50 rounded-lg">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                                {Icons.Users}
+                                <span className="text-sm text-gray-600">Miembros con Ahorros</span>
+                            </div>
+                            <p className="text-2xl font-bold text-green-600">
+                                {savingsSummary.summary.totalMembers || 0}
+                            </p>
+                        </div>
+                        <div className="text-center p-4 bg-purple-50 rounded-lg">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                                <span className="text-sm text-gray-600">Promedio por Miembro</span>
+                            </div>
+                            <p className="text-2xl font-bold text-purple-600">
+                                {formatCurrency(savingsSummary.summary.averageBalance || 0)}
                             </p>
                         </div>
                     </div>
