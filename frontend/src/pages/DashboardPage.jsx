@@ -304,39 +304,6 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* Financial Summary - Admin Only */}
-            {isAdministrator && savingsSummary?.summary && (
-                <Card title="Resumen de Ahorros" padding="normal">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="text-center p-4 bg-primary-50 rounded-lg">
-                            <div className="flex items-center justify-center gap-2 mb-2">
-                                <span className="text-sm text-gray-600">Fondo Total</span>
-                            </div>
-                            <p className="text-2xl font-bold text-primary-600">
-                                {formatCurrency(savingsSummary.summary.totalSavings || 0)}
-                            </p>
-                        </div>
-                        <div className="text-center p-4 bg-green-50 rounded-lg">
-                            <div className="flex items-center justify-center gap-2 mb-2">
-                                {Icons.Users}
-                                <span className="text-sm text-gray-600">Miembros con Ahorros</span>
-                            </div>
-                            <p className="text-2xl font-bold text-green-600">
-                                {savingsSummary.summary.totalMembers || 0}
-                            </p>
-                        </div>
-                        <div className="text-center p-4 bg-purple-50 rounded-lg">
-                            <div className="flex items-center justify-center gap-2 mb-2">
-                                <span className="text-sm text-gray-600">Promedio por Miembro</span>
-                            </div>
-                            <p className="text-2xl font-bold text-purple-600">
-                                {formatCurrency(savingsSummary.summary.averageBalance || 0)}
-                            </p>
-                        </div>
-                    </div>
-                </Card>
-            )}
-
             {/* Recent Activity Section - Admin Only */}
             {isAdministrator && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
