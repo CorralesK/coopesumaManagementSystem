@@ -240,23 +240,14 @@ const NotificationsPage = () => {
             {error && <Alert type="error" message={error} onClose={() => setError('')} />}
             {successMessage && <Alert type="success" message={successMessage} onClose={() => setSuccessMessage('')} />}
 
-            {/* Push Notifications Card - Only show if permissions are denied */}
+            {/* Push Notifications Warning - Only show if permissions are denied */}
             {push.isSupported && push.isDenied && (
-                <Card>
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-full bg-yellow-100">
-                            <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p className="font-medium text-gray-900">Notificaciones Push deshabilitadas</p>
-                            <p className="text-sm text-gray-500">
-                                Los permisos de notificación están bloqueados. Para recibir notificaciones, habilítalos en la configuración de tu navegador.
-                            </p>
-                        </div>
-                    </div>
-                </Card>
+                <Alert
+                    type="warning"
+                    title="Notificaciones Push deshabilitadas"
+                    message="Los permisos de notificación están bloqueados. Para recibir notificaciones, habilítalos en la configuración de tu navegador."
+                    autoClose={false}
+                />
             )}
 
             {/* Filters Card */}
