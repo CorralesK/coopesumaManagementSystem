@@ -18,7 +18,8 @@ import MemberLiquidationHistory from '../../components/members/MemberLiquidation
 import MemberLiquidationSection from '../../components/members/MemberLiquidationSection';
 import MemberSavingsHistory from '../../components/members/MemberSavingsHistory';
 import { formatCurrency } from '../../utils/formatters';
-import { printSavingsReceipt } from '../../utils/printUtils';
+import PrintModal from '../../components/common/PrintModal';
+import SavingsReceiptPrint from '../../components/print/SavingsReceiptPrint';
 import api from '../../services/api';
 
 /**
@@ -45,6 +46,10 @@ const MemberDetailPage = () => {
 
     // Delete confirmation modal state
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    // Print modal state
+    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [receiptData, setReceiptData] = useState(null);
 
     // Use custom hooks
     const { member, loading, error, refetch } = useMember(id);
@@ -137,8 +142,8 @@ const MemberDetailPage = () => {
                 transactionDate: transactionDate.toISOString()
             });
 
-            // Print receipt after successful transaction
-            printSavingsReceipt({
+            // Prepare receipt data and show print modal
+            setReceiptData({
                 transactionType: 'deposit',
                 member: {
                     member_id: parseInt(id),
@@ -154,9 +159,10 @@ const MemberDetailPage = () => {
                 transactionId: response?.data?.transactionId || ''
             });
 
-            setSuccessMessage('Depósito registrado exitosamente. Imprimiendo recibo...');
+            setSuccessMessage('Depósito registrado exitosamente.');
             setShowDepositModal(false);
             setDepositData({ amount: '', description: '' });
+            setShowPrintModal(true);
             refetch();
         } catch (err) {
             let errorMsg = 'Error al registrar el depósito';
@@ -212,8 +218,8 @@ const MemberDetailPage = () => {
                 transactionDate: transactionDate.toISOString()
             });
 
-            // Print receipt after successful transaction
-            printSavingsReceipt({
+            // Prepare receipt data and show print modal
+            setReceiptData({
                 transactionType: 'withdrawal',
                 member: {
                     member_id: parseInt(id),
@@ -229,9 +235,10 @@ const MemberDetailPage = () => {
                 transactionId: response?.data?.transactionId || ''
             });
 
-            setSuccessMessage('Retiro registrado exitosamente. Imprimiendo recibo...');
+            setSuccessMessage('Retiro registrado exitosamente.');
             setShowWithdrawalModal(false);
             setWithdrawalData({ amount: '', description: '' });
+            setShowPrintModal(true);
             refetch();
         } catch (err) {
             let errorMsg = 'Error al registrar el retiro';
@@ -827,6 +834,32 @@ const MemberDetailPage = () => {
                     </div>
                 </div>
             </Modal>
+
+            {/* Print Receipt Modal */}
+            <PrintModal
+                isOpen={showPrintModal}
+                onClose={() => {
+                    setShowPrintModal(false);
+                    setReceiptData(null);
+                }}
+                title={receiptData?.transactionType === 'deposit' ? 'Recibo de Depósito' : 'Recibo de Retiro'}
+                printTitle={`Recibo - ${member?.fullName || ''}`}
+                size="md"
+                paperSize="80mm 200mm"
+            >
+                {receiptData && (
+                    <SavingsReceiptPrint
+                        transactionType={receiptData.transactionType}
+                        member={receiptData.member}
+                        amount={receiptData.amount}
+                        previousBalance={receiptData.previousBalance}
+                        newBalance={receiptData.newBalance}
+                        description={receiptData.description}
+                        transactionDate={receiptData.transactionDate}
+                        transactionId={receiptData.transactionId}
+                    />
+                )}
+            </PrintModal>
 
             {/* Print Styles */}
             <style>{`

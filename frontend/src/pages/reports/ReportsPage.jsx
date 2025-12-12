@@ -8,13 +8,14 @@ import React, { useState, useEffect } from 'react';
 import { useAssemblies } from '../../hooks/useAssemblies';
 import { useReports, useReportStats } from '../../hooks/useReports';
 import { getAttendanceByAssembly } from '../../services/attendanceService';
-import { printAttendanceList } from '../../utils/printUtils';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Select from '../../components/common/Select';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import LiquidationsReport from '../../components/reports/LiquidationsReport';
+import PrintModal from '../../components/common/PrintModal';
+import AttendanceListPrint from '../../components/print/AttendanceListPrint';
 
 /**
  * ReportsPage Component
@@ -23,6 +24,9 @@ import LiquidationsReport from '../../components/reports/LiquidationsReport';
 const ReportsPage = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [selectedAssembly, setSelectedAssembly] = useState('');
+    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [attendeesForPrint, setAttendeesForPrint] = useState([]);
+    const [assemblyForPrint, setAssemblyForPrint] = useState(null);
 
     // Use custom hooks
     const { assemblies, loading: loadingAssemblies } = useAssemblies({ limit: 100 });
@@ -72,18 +76,14 @@ const ReportsPage = () => {
             }
 
             if (!assembly) {
-                alert('No se encontró información de la asamblea');
+                alert('No se encontro informacion de la asamblea');
                 return;
             }
 
-            // Use the print utility to generate and print the report
-            printAttendanceList({
-                attendees: attendanceData,
-                assembly: assembly,
-                title: 'Lista de Asistencia'
-            });
-
-            setSuccessMessage('Reporte generado y abierto para impresión');
+            // Open print modal instead of popup
+            setAttendeesForPrint(attendanceData);
+            setAssemblyForPrint(assembly);
+            setShowPrintModal(true);
         } catch (err) {
             console.error('Error generating report:', err);
             alert(err.message || 'Error al generar el reporte');
@@ -344,6 +344,23 @@ const ReportsPage = () => {
                     </div>
                 </div>
             </Card>
+
+            {/* Print Attendance List Modal */}
+            <PrintModal
+                isOpen={showPrintModal}
+                onClose={() => setShowPrintModal(false)}
+                title="Lista de Asistencia"
+                printTitle={`Lista de Asistencia - ${assemblyForPrint?.title || ''}`}
+                size="xl"
+                orientation="portrait"
+                paperSize="letter"
+            >
+                <AttendanceListPrint
+                    attendees={attendeesForPrint}
+                    assembly={assemblyForPrint}
+                    title="Lista de Asistencia"
+                />
+            </PrintModal>
         </div>
     );
 };

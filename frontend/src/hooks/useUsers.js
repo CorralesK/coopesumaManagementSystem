@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useApi } from "./useApi";
 import * as userService from "../services/userService";
 import { normalizeText } from "../utils/formatters";
-import { printLiquidationReceipt } from "../utils/printUtils";
+// Note: printLiquidationReceipt removed - components should handle printing via PrintModal
 
 /* ============================================================================
    HOOK: useUsers
@@ -195,31 +195,26 @@ export const useUserOperations = () => {
       setError(null);
       const response = await userService.deactivateUser(userId);
 
-      // If user was a member and liquidation occurred, print the receipt
+      // If user was a member and liquidation occurred, return receipt data for component to handle
       if (response.data?.liquidation?.liquidation) {
         const liquidationData = response.data.liquidation;
         const liquidationDetails = liquidationData.liquidation;
 
-        try {
-          // Use receiptId if available, otherwise fall back to liquidationId
-          await printLiquidationReceipt({
-            receiptId: liquidationDetails.receiptId || liquidationData.receiptId,
-            liquidationId: liquidationDetails.liquidationId,
-            member: {
-              fullName: liquidationData.memberName,
-              memberCode: liquidationDetails.memberCode || 'N/A',
-              identification: liquidationDetails.identification || 'N/A'
-            },
-            liquidationType: liquidationDetails.liquidationType || 'exit',
-            savingsAmount: liquidationDetails.savingsLiquidated || 0,
-            totalAmount: liquidationDetails.totalLiquidated || 0,
-            notes: liquidationDetails.notes || '',
-            liquidationDate: liquidationDetails.liquidationDate || new Date()
-          });
-        } catch (printError) {
-          console.error('Error printing liquidation receipt:', printError);
-          // Don't throw error if print fails, just log it
-        }
+        // Add receipt data to response for component to display via PrintModal
+        response.receiptData = {
+          receiptId: liquidationDetails.receiptId || liquidationData.receiptId,
+          liquidationId: liquidationDetails.liquidationId,
+          member: {
+            fullName: liquidationData.memberName,
+            memberCode: liquidationDetails.memberCode || 'N/A',
+            identification: liquidationDetails.identification || 'N/A'
+          },
+          liquidationType: liquidationDetails.liquidationType || 'exit',
+          savingsAmount: liquidationDetails.savingsLiquidated || 0,
+          totalAmount: liquidationDetails.totalLiquidated || 0,
+          notes: liquidationDetails.notes || '',
+          liquidationDate: liquidationDetails.liquidationDate || new Date()
+        };
       }
 
       return response;

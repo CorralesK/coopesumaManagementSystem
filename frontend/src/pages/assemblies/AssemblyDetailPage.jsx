@@ -8,12 +8,13 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAssembly, useAssemblyOperations, useActiveAssembly } from '../../hooks/useAssemblies';
 import { getAttendanceByAssembly } from '../../services/attendanceService';
-import { printAttendanceList } from '../../utils/printUtils';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Modal from '../../components/common/Modal';
+import PrintModal from '../../components/common/PrintModal';
+import AttendanceListPrint from '../../components/print/AttendanceListPrint';
 
 /**
  * AssemblyDetailPage Component
@@ -24,6 +25,9 @@ const AssemblyDetailPage = () => {
     const { id } = useParams();
     const [successMessage, setSuccessMessage] = useState('');
     const [showConcludeModal, setShowConcludeModal] = useState(false);
+    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [attendeesForPrint, setAttendeesForPrint] = useState([]);
+    const [loadingAttendees, setLoadingAttendees] = useState(false);
 
     // Use custom hooks
     const { assembly, loading, error, refetch } = useAssembly(id);
@@ -67,21 +71,22 @@ const AssemblyDetailPage = () => {
 
     const handlePrintAttendanceList = async () => {
         try {
+            setLoadingAttendees(true);
             const response = await getAttendanceByAssembly(id);
             const attendees = response.data || [];
 
             if (attendees.length === 0) {
                 alert('No hay asistentes registrados para imprimir.');
+                setLoadingAttendees(false);
                 return;
             }
 
-            printAttendanceList({
-                attendees: attendees,
-                assembly: assembly,
-                title: 'Lista de Asistencia'
-            });
+            setAttendeesForPrint(attendees);
+            setShowPrintModal(true);
         } catch (err) {
             alert('Error al obtener la lista de asistencia: ' + (err.message || 'Error desconocido'));
+        } finally {
+            setLoadingAttendees(false);
         }
     };
 
@@ -328,11 +333,16 @@ const AssemblyDetailPage = () => {
                                         onClick={handlePrintAttendanceList}
                                         variant="outline"
                                         fullWidth
+                                        disabled={loadingAttendees}
                                     >
-                                        <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                        </svg>
-                                        Imprimir Lista de Asistencia
+                                        {loadingAttendees ? (
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-3"></div>
+                                        ) : (
+                                            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                            </svg>
+                                        )}
+                                        {loadingAttendees ? 'Cargando...' : 'Imprimir Lista de Asistencia'}
                                     </Button>
                                 </>
                             )}
@@ -346,7 +356,7 @@ const AssemblyDetailPage = () => {
                                             </svg>
                                             <p className="text-xs text-gray-600">
                                                 <span className="font-semibold">Asamblea Concluida</span><br />
-                                                Esta asamblea ya finalizó.
+                                                Esta asamblea ya finalizo.
                                             </p>
                                         </div>
                                     </div>
@@ -355,11 +365,16 @@ const AssemblyDetailPage = () => {
                                         onClick={handlePrintAttendanceList}
                                         variant="outline"
                                         fullWidth
+                                        disabled={loadingAttendees}
                                     >
-                                        <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                        </svg>
-                                        Imprimir Lista de Asistencia
+                                        {loadingAttendees ? (
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-3"></div>
+                                        ) : (
+                                            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                            </svg>
+                                        )}
+                                        {loadingAttendees ? 'Cargando...' : 'Imprimir Lista de Asistencia'}
                                     </Button>
                                 </>
                             )}
@@ -367,6 +382,23 @@ const AssemblyDetailPage = () => {
                     </Card>
                 </div>
             </div>
+
+            {/* Print Attendance List Modal */}
+            <PrintModal
+                isOpen={showPrintModal}
+                onClose={() => setShowPrintModal(false)}
+                title="Lista de Asistencia"
+                printTitle={`Lista de Asistencia - ${assembly?.title || ''}`}
+                size="xl"
+                orientation="portrait"
+                paperSize="letter"
+            >
+                <AttendanceListPrint
+                    attendees={attendeesForPrint}
+                    assembly={assembly}
+                    title="Lista de Asistencia"
+                />
+            </PrintModal>
 
             {/* Conclude Assembly Confirmation Modal */}
             <Modal isOpen={showConcludeModal} onClose={handleConcludeCancel} title="Concluir Asamblea" size="lg">

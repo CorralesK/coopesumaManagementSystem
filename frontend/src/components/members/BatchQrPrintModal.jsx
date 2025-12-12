@@ -6,13 +6,14 @@
 
 import React, { useState, useEffect } from 'react';
 import Modal from '../common/Modal';
+import PrintModal from '../common/PrintModal';
 import Button from '../common/Button';
 import Loading from '../common/Loading';
 import Alert from '../common/Alert';
 import Select from '../common/Select';
 import { batchGenerateQRCodes } from '../../services/memberService';
-import { printMemberCards } from '../../utils/printUtils';
 import { getAllQualities, getAllLevels } from '../../services/catalogService';
+import BatchMemberCardsPrint from '../print/BatchMemberCardsPrint';
 
 /**
  * BatchQrPrintModal Component
@@ -29,6 +30,10 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterQualityId, filterLe
     // Catalogs
     const [qualities, setQualities] = useState([]);
     const [levels, setLevels] = useState([]);
+
+    // Print modal state
+    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [printData, setPrintData] = useState([]);
 
     // Load catalogs
     useEffect(() => {
@@ -98,7 +103,7 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterQualityId, filterLe
         );
     };
 
-    // Generate QR codes and print directly
+    // Generate QR codes and show print modal
     const handleGenerateAndPrint = async () => {
         if (selectedMembers.length === 0) {
             setError('Por favor selecciona al menos un miembro');
@@ -136,19 +141,21 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterQualityId, filterLe
                 return a.fullName.localeCompare(b.fullName, 'es');
             });
 
-            // Open print window with cards
-            printMemberCards({
-                members: sortedQRs,
-                cooperativeName: 'Coopesuma'
-            });
-
-            // Close modal after opening print window
-            onClose();
+            // Set print data and show print modal
+            setPrintData(sortedQRs);
+            setShowPrintModal(true);
         } catch (err) {
             setError(err.message || 'Error al generar códigos QR');
         } finally {
             setLoading(false);
         }
+    };
+
+    // Handle print modal close
+    const handlePrintModalClose = () => {
+        setShowPrintModal(false);
+        setPrintData([]);
+        onClose();
     };
 
     if (!isOpen) return null;
@@ -333,6 +340,23 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterQualityId, filterLe
                     </>
                 )}
             </div>
+
+            {/* Print Modal */}
+            <PrintModal
+                isOpen={showPrintModal}
+                onClose={handlePrintModalClose}
+                title={`Carnets Estudiantiles (${printData.length})`}
+                printTitle="Carnets Estudiantiles - Coopesuma"
+                size="2xl"
+                paperSize="letter"
+            >
+                {printData.length > 0 && (
+                    <BatchMemberCardsPrint
+                        members={printData}
+                        cooperativeName="Coopesuma"
+                    />
+                )}
+            </PrintModal>
         </Modal>
     );
 };

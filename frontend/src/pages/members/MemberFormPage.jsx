@@ -13,9 +13,10 @@ import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
+import PrintModal from '../../components/common/PrintModal';
+import AffiliationReceiptPrint from '../../components/print/AffiliationReceiptPrint';
 import { getAllQualities, getAllLevels } from '../../services/catalogService';
 import { MEMBER_QUALITIES } from '../../utils/constants';
-import { printAffiliationReceipt } from '../../utils/printUtils';
 
 /**
  * MemberFormPage Component
@@ -47,6 +48,10 @@ const MemberFormPage = () => {
     });
     const [errors, setErrors] = useState({});
     const [formError, setFormError] = useState('');
+
+    // Print modal state
+    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [receiptData, setReceiptData] = useState(null);
 
     // Load catalogs
     useEffect(() => {
@@ -186,23 +191,19 @@ const MemberFormPage = () => {
             } else {
                 const result = await affiliate(payload);
 
-                // Print affiliation receipt if available
+                // Show print modal for affiliation receipt
                 if (result?.data?.member && result?.data?.receipt) {
-                    try {
-                        printAffiliationReceipt({
-                            member: result.data.member,
-                            amount: result.data.receipt.amount || 500,
-                            receiptNumber: result.data.receipt.receiptNumber,
-                            date: result.data.receipt.date || new Date(),
-                            fiscalYear: result.data.receipt.fiscalYear
-                        });
-                    } catch (receiptError) {
-                        console.error('Error printing receipt:', receiptError);
-                        // Don't fail the whole operation if receipt printing fails
-                    }
+                    setReceiptData({
+                        member: result.data.member,
+                        amount: result.data.receipt.amount || 500,
+                        receiptNumber: result.data.receipt.receiptNumber,
+                        date: result.data.receipt.date || new Date(),
+                        fiscalYear: result.data.receipt.fiscalYear
+                    });
+                    setShowPrintModal(true);
+                } else {
+                    navigate('/members');
                 }
-
-                navigate('/members');
             }
         } catch (err) {
             setFormError(err.message || `Error al ${isEditMode ? 'actualizar' : 'afiliar'} el miembro`);
@@ -375,6 +376,30 @@ const MemberFormPage = () => {
                     </Button>
                 </div>
             </form>
+
+            {/* Print Affiliation Receipt Modal */}
+            <PrintModal
+                isOpen={showPrintModal}
+                onClose={() => {
+                    setShowPrintModal(false);
+                    setReceiptData(null);
+                    navigate('/members');
+                }}
+                title="Recibo de Afiliación"
+                printTitle={`Recibo Afiliación - ${receiptData?.member?.full_name || receiptData?.member?.fullName || ''}`}
+                size="md"
+                paperSize="80mm 200mm"
+            >
+                {receiptData && (
+                    <AffiliationReceiptPrint
+                        member={receiptData.member}
+                        amount={receiptData.amount}
+                        receiptNumber={receiptData.receiptNumber}
+                        date={receiptData.date}
+                        fiscalYear={receiptData.fiscalYear}
+                    />
+                )}
+            </PrintModal>
         </div>
     );
 };

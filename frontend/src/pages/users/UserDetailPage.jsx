@@ -12,6 +12,8 @@ import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Modal from '../../components/common/Modal';
+import PrintModal from '../../components/common/PrintModal';
+import LiquidationReceiptPrint from '../../components/print/LiquidationReceiptPrint';
 import ConfirmDeleteUserModal from '../../components/users/ConfirmDeleteUserModal';
 import { USER_ROLES } from '../../utils/constants';
 
@@ -25,6 +27,10 @@ const UserDetailPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [successMessage, setSuccessMessage] = useState('');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    // Print modal state
+    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [receiptData, setReceiptData] = useState(null);
 
     // Use custom hooks
     const { user, loading, error, refetch } = useUser(id);
@@ -84,7 +90,13 @@ const UserDetailPage = () => {
 
     const handleConfirmDeleteNonMember = async () => {
         try {
-            await deactivate(id);
+            const response = await deactivate(id);
+
+            // If there's receipt data, show print modal
+            if (response?.receiptData) {
+                setReceiptData(response.receiptData);
+                setShowPrintModal(true);
+            }
 
             setSuccessMessage('Usuario eliminado exitosamente');
             setShowDeleteModal(false);
@@ -268,6 +280,32 @@ const UserDetailPage = () => {
                 isLoading={operating}
                 isMember={user?.role === USER_ROLES.MEMBER && !!user?.memberId}
             />
+
+            {/* Print Liquidation Receipt Modal */}
+            <PrintModal
+                isOpen={showPrintModal}
+                onClose={() => {
+                    setShowPrintModal(false);
+                    setReceiptData(null);
+                }}
+                title="Recibo de Liquidación"
+                printTitle={`Recibo Liquidación - ${receiptData?.member?.fullName || ''}`}
+                size="md"
+                paperSize="80mm 200mm"
+            >
+                {receiptData && (
+                    <LiquidationReceiptPrint
+                        member={receiptData.member}
+                        liquidationType={receiptData.liquidationType}
+                        savingsAmount={receiptData.savingsAmount}
+                        totalAmount={receiptData.totalAmount}
+                        notes={receiptData.notes}
+                        liquidationDate={receiptData.liquidationDate}
+                        liquidationId={receiptData.liquidationId}
+                        receiptNumber={receiptData.receiptId}
+                    />
+                )}
+            </PrintModal>
         </div>
     );
 };

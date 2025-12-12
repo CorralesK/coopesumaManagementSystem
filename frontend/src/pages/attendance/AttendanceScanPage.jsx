@@ -9,7 +9,6 @@ import { useActiveAssembly } from '../../hooks/useAssemblies';
 import { useAttendanceRecording, useAssemblyAttendance } from '../../hooks/useAttendance';
 import { useQrScanner } from '../../hooks/useQrScanner';
 import { verifyMemberByQR } from '../../services/memberService';
-import { printAttendanceList } from '../../utils/printUtils';
 import { useAuth } from '../../context/AuthContext';
 import { USER_ROLES } from '../../utils/constants';
 import Card from '../../components/common/Card';
@@ -17,6 +16,8 @@ import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Modal from '../../components/common/Modal';
+import PrintModal from '../../components/common/PrintModal';
+import AttendanceListPrint from '../../components/print/AttendanceListPrint';
 
 /**
  * AttendanceScanPage Component
@@ -30,6 +31,7 @@ const AttendanceScanPage = () => {
     const [verifying, setVerifying] = useState(false);
     const [verifyError, setVerifyError] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
+    const [showPrintModal, setShowPrintModal] = useState(false);
 
     // Use custom hooks
     const { user } = useAuth();
@@ -123,11 +125,7 @@ const AttendanceScanPage = () => {
             return;
         }
 
-        printAttendanceList({
-            attendees: attendance,
-            assembly: activeAssembly,
-            title: 'Lista de Asistencia'
-        });
+        setShowPrintModal(true);
     };
 
     // QR Scanner hook
@@ -409,6 +407,23 @@ const AttendanceScanPage = () => {
                     </div>
                 )}
             </Modal>
+
+            {/* Print Attendance List Modal */}
+            <PrintModal
+                isOpen={showPrintModal}
+                onClose={() => setShowPrintModal(false)}
+                title="Lista de Asistencia"
+                printTitle={`Lista de Asistencia - ${activeAssembly?.title || ''}`}
+                size="xl"
+                orientation="portrait"
+                paperSize="letter"
+            >
+                <AttendanceListPrint
+                    attendees={attendance || []}
+                    assembly={activeAssembly}
+                    title="Lista de Asistencia"
+                />
+            </PrintModal>
         </div>
     );
 };

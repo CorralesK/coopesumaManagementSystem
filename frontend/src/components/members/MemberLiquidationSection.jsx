@@ -7,11 +7,12 @@
 import { useState, forwardRef, useImperativeHandle } from 'react';
 import PropTypes from 'prop-types';
 import { useLiquidationOperations } from '../../hooks/useLiquidations';
-import { printLiquidationReceipt } from '../../utils/printUtils';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
+import PrintModal from '../common/PrintModal';
 import Alert from '../common/Alert';
 import Loading from '../common/Loading';
+import LiquidationReceiptPrint from '../print/LiquidationReceiptPrint';
 
 /**
  * MemberLiquidationSection Component
@@ -27,6 +28,10 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
         notes: ''
     });
     const [preview, setPreview] = useState(null);
+
+    // Print modal state
+    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [receiptData, setReceiptData] = useState(null);
 
     const { loading, error, getPreview, execute, clearState } = useLiquidationOperations();
 
@@ -104,9 +109,9 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
                 notes: liquidationData.notes || null
             });
 
-            // Print receipt after successful liquidation
+            // Prepare receipt data and show print modal
             const liquidationResult = response?.data?.[0];
-            printLiquidationReceipt({
+            setReceiptData({
                 member: member,
                 liquidationType: liquidationData.liquidationType,
                 savingsAmount: preview?.savingsBalance || 0,
@@ -119,6 +124,7 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
 
             setShowConfirmModal(false);
             setShowModal(false);
+            setShowPrintModal(true);
             setLiquidationData({
                 liquidationType: 'periodic',
                 memberContinues: true,
@@ -388,6 +394,32 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
                     </div>
                 </div>
             </Modal>
+
+            {/* Print Receipt Modal */}
+            <PrintModal
+                isOpen={showPrintModal}
+                onClose={() => {
+                    setShowPrintModal(false);
+                    setReceiptData(null);
+                }}
+                title="Recibo de Liquidación"
+                printTitle={`Recibo Liquidación - ${member?.fullName || ''}`}
+                size="md"
+                paperSize="80mm 200mm"
+            >
+                {receiptData && (
+                    <LiquidationReceiptPrint
+                        member={receiptData.member}
+                        liquidationType={receiptData.liquidationType}
+                        savingsAmount={receiptData.savingsAmount}
+                        totalAmount={receiptData.totalAmount}
+                        notes={receiptData.notes}
+                        liquidationDate={receiptData.liquidationDate}
+                        liquidationId={receiptData.liquidationId}
+                        receiptNumber={receiptData.receiptNumber}
+                    />
+                )}
+            </PrintModal>
         </>
     );
 });

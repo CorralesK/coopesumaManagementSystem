@@ -8,7 +8,6 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useSavingsInventoryByYear } from '../../hooks/useSavingsInventory';
 import { formatCurrency, normalizeText } from '../../utils/formatters';
-import { printSavingsReceipt } from '../../utils/printUtils';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -16,6 +15,8 @@ import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Pagination from '../../components/common/Pagination';
 import Modal from '../../components/common/Modal';
+import PrintModal from '../../components/common/PrintModal';
+import SavingsReceiptPrint from '../../components/print/SavingsReceiptPrint';
 import api from '../../services/api';
 
 const MONTHS = [
@@ -48,6 +49,10 @@ const SavingsManagementPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
+
+    // Print modal state
+    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [receiptData, setReceiptData] = useState(null);
 
     const { data: inventory, loading, error: fetchError, refetch } = useSavingsInventoryByYear(calendarYear);
 
@@ -110,8 +115,8 @@ const SavingsManagementPage = () => {
                 transactionDate: transactionDate.toISOString()
             });
 
-            // Print receipt after successful transaction
-            printSavingsReceipt({
+            // Prepare receipt data and show print modal
+            setReceiptData({
                 transactionType: 'deposit',
                 member: selectedMember,
                 amount: amount,
@@ -122,10 +127,11 @@ const SavingsManagementPage = () => {
                 transactionId: response?.data?.transactionId || ''
             });
 
-            setSuccessMessage('Depósito registrado exitosamente. Imprimiendo recibo...');
+            setSuccessMessage('Depósito registrado exitosamente.');
             setShowDepositModal(false);
             setDepositData({ amount: '', description: '' });
             setSelectedMember(null);
+            setShowPrintModal(true);
             refetch();
         } catch (err) {
             const errorMessage = err.response?.data?.message || err.message || 'Error al registrar depósito';
@@ -181,8 +187,8 @@ const SavingsManagementPage = () => {
                 transactionDate: transactionDate.toISOString()
             });
 
-            // Print receipt after successful transaction
-            printSavingsReceipt({
+            // Prepare receipt data and show print modal
+            setReceiptData({
                 transactionType: 'withdrawal',
                 member: selectedMember,
                 amount: amount,
@@ -193,10 +199,11 @@ const SavingsManagementPage = () => {
                 transactionId: response?.data?.transactionId || ''
             });
 
-            setSuccessMessage('Retiro registrado exitosamente. Imprimiendo recibo...');
+            setSuccessMessage('Retiro registrado exitosamente.');
             setShowWithdrawalModal(false);
             setWithdrawalData({ amount: '', description: '' });
             setSelectedMember(null);
+            setShowPrintModal(true);
             refetch();
         } catch (err) {
             const errorMessage = err.response?.data?.message || err.message || 'Error al registrar retiro';
@@ -757,6 +764,32 @@ const SavingsManagementPage = () => {
                     </div>
                 </form>
             </Modal>
+
+            {/* Print Receipt Modal */}
+            <PrintModal
+                isOpen={showPrintModal}
+                onClose={() => {
+                    setShowPrintModal(false);
+                    setReceiptData(null);
+                }}
+                title={receiptData?.transactionType === 'deposit' ? 'Recibo de Depósito' : 'Recibo de Retiro'}
+                printTitle={`Recibo - ${receiptData?.member?.full_name || ''}`}
+                size="md"
+                paperSize="80mm 200mm"
+            >
+                {receiptData && (
+                    <SavingsReceiptPrint
+                        transactionType={receiptData.transactionType}
+                        member={receiptData.member}
+                        amount={receiptData.amount}
+                        previousBalance={receiptData.previousBalance}
+                        newBalance={receiptData.newBalance}
+                        description={receiptData.description}
+                        transactionDate={receiptData.transactionDate}
+                        transactionId={receiptData.transactionId}
+                    />
+                )}
+            </PrintModal>
         </div>
     );
 };
