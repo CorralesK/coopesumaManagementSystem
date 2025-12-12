@@ -12,8 +12,8 @@ self.addEventListener('push', (event) => {
     let data = {
         title: 'COOPLINKCR',
         body: 'Tienes una nueva notificacion',
-        icon: '/logo.png',
-        badge: '/logo.png',
+        icon: '/logotipo.png',
+        badge: '/logotipo.png',
         url: '/notifications'
     };
 
@@ -37,8 +37,8 @@ self.addEventListener('push', (event) => {
 
     const options = {
         body: data.body,
-        icon: data.icon || '/logo.png',
-        badge: data.badge || '/logo.png',
+        icon: data.icon || '/logotipo.png',
+        badge: data.badge || '/logotipo.png',
         vibrate: [100, 50, 100],
         data: {
             url: data.url || '/notifications',

@@ -12,7 +12,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo.png', 'vite.svg', 'sw-push.js'],
+      includeAssets: ['logotipo.png', 'vite.svg', 'sw-push.js'],
       manifest: {
         name: 'COOPLINKCR - Sistema de Gestión Cooperativa',
         short_name: 'COOPLINKCR',
@@ -25,13 +25,13 @@ export default defineConfig({
         orientation: 'portrait-primary',
         icons: [
           {
-            src: '/logo.png',
+            src: '/logotipo.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: '/logo.png',
+            src: '/logotipo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'

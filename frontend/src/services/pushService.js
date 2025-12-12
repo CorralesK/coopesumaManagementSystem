@@ -216,8 +216,8 @@ export const testLocalNotification = async () => {
     const registration = await navigator.serviceWorker.ready;
     await registration.showNotification('Test Notification', {
         body: 'This is a test notification from COOPLINKCR',
-        icon: '/logo.png',
-        badge: '/logo.png',
+        icon: '/logotipo.png',
+        badge: '/logotipo.png',
         tag: 'test-notification'
     });
 
