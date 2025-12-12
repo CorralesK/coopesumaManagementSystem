@@ -62,32 +62,52 @@ const PrintModal = ({
         style.id = styleId;
         style.innerHTML = `
             @media print {
-                /* Hide everything except printable content */
+                /* Reset html and body */
+                html, body {
+                    height: auto !important;
+                    overflow: visible !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+
+                /* Hide everything first */
                 body * {
                     visibility: hidden !important;
                 }
 
-                /* Show the printable container and its children */
+                /* Show the printable container and all its descendants */
                 [data-printable="${printableId}"],
                 [data-printable="${printableId}"] * {
                     visibility: visible !important;
                 }
 
-                /* Position printable content at top-left */
+                /* Position printable content at top-left of page */
                 [data-printable="${printableId}"] {
                     position: absolute !important;
                     left: 0 !important;
                     top: 0 !important;
                     width: 100% !important;
+                    height: auto !important;
                     margin: 0 !important;
-                    padding: 0 !important;
+                    padding: 10px !important;
                     background: white !important;
+                    z-index: 99999 !important;
+                    overflow: visible !important;
+                    box-sizing: border-box !important;
+                }
+
+                /* Hide modal container but keep printable visible */
+                .fixed.inset-0 {
+                    position: static !important;
+                    overflow: visible !important;
+                    background: transparent !important;
+                    padding: 0 !important;
                 }
 
                 /* Page settings */
                 @page {
                     size: ${paperSize} ${orientation};
-                    margin: 1cm;
+                    margin: 10mm;
                 }
 
                 /* Ensure colors print */
@@ -101,6 +121,12 @@ const PrintModal = ({
                 .print-modal-header,
                 .print-modal-actions {
                     display: none !important;
+                    visibility: hidden !important;
+                }
+
+                /* Prevent page breaks inside elements */
+                table, tr, td, th {
+                    page-break-inside: avoid !important;
                 }
             }
         `;

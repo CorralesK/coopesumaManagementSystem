@@ -111,7 +111,7 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
 
             // Prepare receipt data and show print modal
             const liquidationResult = response?.data?.[0];
-            setReceiptData({
+            const receiptInfo = {
                 member: member,
                 liquidationType: liquidationData.liquidationType,
                 savingsAmount: preview?.savingsBalance || 0,
@@ -120,11 +120,13 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
                 liquidationDate: new Date(),
                 liquidationId: liquidationResult?.liquidationId || '',
                 receiptNumber: liquidationResult?.receiptNumber || ''
-            });
+            };
 
+            // Close confirmation modals first
             setShowConfirmModal(false);
             setShowModal(false);
-            setShowPrintModal(true);
+
+            // Reset form data
             setLiquidationData({
                 liquidationType: 'periodic',
                 memberContinues: true,
@@ -132,7 +134,11 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
             });
             clearState();
 
-            // Notify parent component
+            // Set receipt data and show print modal
+            setReceiptData(receiptInfo);
+            setShowPrintModal(true);
+
+            // Notify parent component after showing print modal
             if (onLiquidationComplete) {
                 onLiquidationComplete();
             }

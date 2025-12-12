@@ -23,14 +23,15 @@ const BatchMemberCardsPrint = ({
             <style>{`
                 .batch-cards-print {
                     background: white;
-                    padding: 10mm;
+                    padding: 5mm;
                     font-family: 'Arial', sans-serif;
                 }
                 .batch-cards-print .carnets-grid {
                     display: grid;
                     grid-template-columns: repeat(2, 1fr);
-                    gap: 10mm;
+                    gap: 5mm;
                     width: 100%;
+                    justify-items: center;
                 }
                 .batch-cards-print .carnet-wrapper {
                     page-break-inside: avoid;
@@ -48,6 +49,7 @@ const BatchMemberCardsPrint = ({
                     display: flex;
                     flex-direction: column;
                     overflow: hidden;
+                    flex-shrink: 0;
                 }
                 .batch-cards-print .card-header {
                     background: #2563eb;
@@ -174,10 +176,17 @@ const BatchMemberCardsPrint = ({
                 }
                 @media print {
                     .batch-cards-print {
-                        padding: 0 !important;
+                        padding: 5mm !important;
+                        width: 100% !important;
+                        max-width: 100% !important;
+                    }
+                    .batch-cards-print .carnets-grid {
+                        gap: 5mm !important;
                     }
                     .batch-cards-print .member-card {
                         box-shadow: none !important;
+                        width: 100mm !important;
+                        height: 63mm !important;
                     }
                     .batch-cards-print .card-header {
                         background: #2563eb !important;

@@ -139,69 +139,72 @@ const executeLiquidation = async (liquidationData) => {
             const liquidationTransactions = [];
             const savingsData = balances.savings;
 
-            if (savingsData.balance > 0 && savingsData.accountId) {
-                // Create liquidation transaction for savings
-                const txQuery = `
-                    INSERT INTO transactions (
-                        account_id,
-                        transaction_type,
-                        amount,
-                        transaction_date,
-                        fiscal_year,
-                        description,
-                        status,
-                        created_by
-                    )
-                    VALUES ($1, 'liquidation', $2, CURRENT_DATE, $3, $4, 'completed', $5)
-                    RETURNING transaction_id
-                `;
+            if (savingsData.accountId) {
+                if (savingsData.balance > 0) {
+                    // Create liquidation transaction for savings with balance
+                    const txQuery = `
+                        INSERT INTO transactions (
+                            account_id,
+                            transaction_type,
+                            amount,
+                            transaction_date,
+                            fiscal_year,
+                            description,
+                            status,
+                            created_by
+                        )
+                        VALUES ($1, 'liquidation', $2, CURRENT_DATE, $3, $4, 'completed', $5)
+                        RETURNING transaction_id
+                    `;
 
-                const txValues = [
-                    savingsData.accountId,
-                    savingsData.balance,
-                    fiscalYear,
-                    `Liquidación ${liquidationType === 'periodic' ? 'periódica' : 'por retiro'} - ${member.fullName}`,
-                    processedBy
-                ];
+                    const txValues = [
+                        savingsData.accountId,
+                        savingsData.balance,
+                        fiscalYear,
+                        `Liquidación ${liquidationType === 'periodic' ? 'periódica' : 'por retiro'} - ${member.fullName}`,
+                        processedBy
+                    ];
 
-                const txResult = await client.query(txQuery, txValues);
-                liquidationTransactions.push(txResult.rows[0].transaction_id);
+                    const txResult = await client.query(txQuery, txValues);
+                    liquidationTransactions.push(txResult.rows[0].transaction_id);
 
-                // Reset savings account balance to zero
-                await client.query(
-                    'UPDATE accounts SET current_balance = 0.00, updated_at = CURRENT_TIMESTAMP WHERE account_id = $1',
-                    [savingsData.accountId]
-                );
-            } else if (savingsData.accountId) {
-                // Create a zero-amount liquidation transaction as documentation
-                const txQuery = `
-                    INSERT INTO transactions (
-                        account_id,
-                        transaction_type,
-                        amount,
-                        transaction_date,
-                        fiscal_year,
-                        description,
-                        status,
-                        created_by
-                    )
-                    VALUES ($1, 'liquidation', $2, CURRENT_DATE, $3, $4, 'completed', $5)
-                    RETURNING transaction_id
-                `;
+                    // Reset savings account balance to zero
+                    await client.query(
+                        'UPDATE accounts SET current_balance = 0.00, updated_at = CURRENT_TIMESTAMP WHERE account_id = $1',
+                        [savingsData.accountId]
+                    );
+                } else {
+                    // Create a zero-amount liquidation transaction as documentation
+                    const txQuery = `
+                        INSERT INTO transactions (
+                            account_id,
+                            transaction_type,
+                            amount,
+                            transaction_date,
+                            fiscal_year,
+                            description,
+                            status,
+                            created_by
+                        )
+                        VALUES ($1, 'liquidation', $2, CURRENT_DATE, $3, $4, 'completed', $5)
+                        RETURNING transaction_id
+                    `;
 
-                const txValues = [
-                    savingsData.accountId,
-                    0,
-                    fiscalYear,
-                    `Liquidación ${liquidationType === 'periodic' ? 'periódica' : 'por retiro'} (saldo ₡0.00) - ${member.fullName}`,
-                    processedBy
-                ];
+                    const txValues = [
+                        savingsData.accountId,
+                        0,
+                        fiscalYear,
+                        `Liquidación ${liquidationType === 'periodic' ? 'periódica' : 'por retiro'} (saldo ₡0.00 - formalidad) - ${member.fullName}`,
+                        processedBy
+                    ];
 
-                const txResult = await client.query(txQuery, txValues);
-                liquidationTransactions.push(txResult.rows[0].transaction_id);
+                    const txResult = await client.query(txQuery, txValues);
+                    liquidationTransactions.push(txResult.rows[0].transaction_id);
 
-                logger.info(`Zero balance liquidation created for member ${memberId}`);
+                    logger.info(`Zero balance liquidation created for member ${memberId}`);
+                }
             }
+            // Note: If no savings account exists, we still proceed with the liquidation record
 
             // Commented: Process other accounts (contributions, surplus)
             // for (const accountType of ['contributions', 'surplus']) {

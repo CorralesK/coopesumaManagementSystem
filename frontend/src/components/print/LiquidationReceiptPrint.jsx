@@ -247,6 +247,11 @@ const LiquidationReceiptPrint = ({
                     <div style={{ marginTop: '8px', fontSize: '10px', textAlign: 'center', color: '#666' }}>
                         (Cuenta de Ahorros)
                     </div>
+                    {totalAmount === 0 && (
+                        <div style={{ marginTop: '8px', fontSize: '9px', textAlign: 'center', color: '#666', fontStyle: 'italic' }}>
+                            * Recibo emitido como formalidad - Sin saldo pendiente
+                        </div>
+                    )}
                 </div>
 
                 {notes && (

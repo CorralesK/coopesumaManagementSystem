@@ -31,6 +31,9 @@ const AttendanceListPrint = ({ attendees = [], assembly = {}, title = 'Lista de 
                 .print-attendance-list {
                     background: white;
                     padding: 20px;
+                    min-height: 100%;
+                    display: flex;
+                    flex-direction: column;
                 }
                 .print-attendance-list .document-header {
                     text-align: center;
@@ -110,8 +113,11 @@ const AttendanceListPrint = ({ attendees = [], assembly = {}, title = 'Lista de 
                 .print-attendance-list .attendees-table td:last-child {
                     text-align: center;
                 }
+                .print-attendance-list .content-wrapper {
+                    flex: 1;
+                }
                 .print-attendance-list .footer {
-                    margin-top: 30px;
+                    margin-top: auto;
                     padding-top: 15px;
                     border-top: 1px solid #000;
                     font-size: 9px;
@@ -126,6 +132,7 @@ const AttendanceListPrint = ({ attendees = [], assembly = {}, title = 'Lista de 
                 @media print {
                     .print-attendance-list {
                         padding: 0 !important;
+                        min-height: 100vh !important;
                     }
                     .print-attendance-list .attendees-table th {
                         background: #f5f5f5 !important;
@@ -135,67 +142,69 @@ const AttendanceListPrint = ({ attendees = [], assembly = {}, title = 'Lista de 
                 }
             `}</style>
 
-            <div className="document-header">
-                <h1>COOPESUMA R.L.</h1>
-                <div className="subtitle">{title}</div>
-            </div>
+            <div className="content-wrapper">
+                <div className="document-header">
+                    <h1>COOPESUMA R.L.</h1>
+                    <div className="subtitle">{title}</div>
+                </div>
 
-            <div className="assembly-info">
-                <h2>Informacion de la Asamblea</h2>
-                <div className="info-row">
-                    <span className="label">Nombre:</span>
-                    <span className="value">{assembly.title || 'N/A'}</span>
-                </div>
-                <div className="info-row">
-                    <span className="label">Fecha Programada:</span>
-                    <span className="value">{formatDate(assembly.scheduledDate)}</span>
-                </div>
-                {assembly.startTime && (
+                <div className="assembly-info">
+                    <h2>Informacion de la Asamblea</h2>
                     <div className="info-row">
-                        <span className="label">Hora de Inicio:</span>
-                        <span className="value">{assembly.startTime.substring(0, 5)}</span>
+                        <span className="label">Nombre:</span>
+                        <span className="value">{assembly.title || 'N/A'}</span>
                     </div>
-                )}
-                {assembly.endTime && (
                     <div className="info-row">
-                        <span className="label">Hora de Finalizacion:</span>
-                        <span className="value">{assembly.endTime.substring(0, 5)}</span>
+                        <span className="label">Fecha Programada:</span>
+                        <span className="value">{formatDate(assembly.scheduledDate)}</span>
                     </div>
-                )}
-                <div className="info-row">
-                    <span className="label">Total Asistentes:</span>
-                    <span className="value">{attendees.length}</span>
+                    {assembly.startTime && (
+                        <div className="info-row">
+                            <span className="label">Hora de Inicio:</span>
+                            <span className="value">{assembly.startTime.substring(0, 5)}</span>
+                        </div>
+                    )}
+                    {assembly.endTime && (
+                        <div className="info-row">
+                            <span className="label">Hora de Finalizacion:</span>
+                            <span className="value">{assembly.endTime.substring(0, 5)}</span>
+                        </div>
+                    )}
+                    <div className="info-row">
+                        <span className="label">Total Asistentes:</span>
+                        <span className="value">{attendees.length}</span>
+                    </div>
                 </div>
-            </div>
 
-            {attendees.length > 0 ? (
-                <div className="attendees-section">
-                    <table className="attendees-table">
-                        <thead>
-                            <tr>
-                                <th>N</th>
-                                <th>Nombre Completo</th>
-                                <th>Cedula</th>
-                                <th>Firma</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {attendees.map((attendee, index) => (
-                                <tr key={attendee.memberId || index}>
-                                    <td>{index + 1}</td>
-                                    <td>{attendee.fullName || 'N/A'}</td>
-                                    <td>{attendee.identification || 'N/A'}</td>
-                                    <td>&nbsp;</td>
+                {attendees.length > 0 ? (
+                    <div className="attendees-section">
+                        <table className="attendees-table">
+                            <thead>
+                                <tr>
+                                    <th>N</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Cedula</th>
+                                    <th>Firma</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            ) : (
-                <div className="no-data">
-                    No hay asistentes registrados para esta asamblea.
-                </div>
-            )}
+                            </thead>
+                            <tbody>
+                                {attendees.map((attendee, index) => (
+                                    <tr key={attendee.memberId || index}>
+                                        <td>{index + 1}</td>
+                                        <td>{attendee.fullName || 'N/A'}</td>
+                                        <td>{attendee.identification || 'N/A'}</td>
+                                        <td>&nbsp;</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div className="no-data">
+                        No hay asistentes registrados para esta asamblea.
+                    </div>
+                )}
+            </div>
 
             <div className="footer">
                 Documento generado el {printDate} - COOPESUMA R.L.
