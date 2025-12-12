@@ -62,18 +62,18 @@ const PrintModal = ({
         style.id = styleId;
         style.innerHTML = `
             @media print {
-                /* Hide everything except printable area */
+                /* Hide everything except printable content */
                 body * {
                     visibility: hidden !important;
                 }
 
-                /* The printable container needs to be visible and positioned correctly */
+                /* Show the printable container and its children */
                 [data-printable="${printableId}"],
                 [data-printable="${printableId}"] * {
                     visibility: visible !important;
                 }
 
-                /* Position the printable content at the top of the page */
+                /* Position printable content at top-left */
                 [data-printable="${printableId}"] {
                     position: absolute !important;
                     left: 0 !important;
@@ -84,46 +84,10 @@ const PrintModal = ({
                     background: white !important;
                 }
 
-                /* Make parent containers not take up space */
-                .print-modal-backdrop {
-                    position: absolute !important;
-                    left: 0 !important;
-                    top: 0 !important;
-                    width: 0 !important;
-                    height: 0 !important;
-                    padding: 0 !important;
-                    margin: 0 !important;
-                    overflow: visible !important;
-                }
-
-                .print-modal-wrapper {
-                    position: absolute !important;
-                    left: 0 !important;
-                    top: 0 !important;
-                    width: 0 !important;
-                    height: 0 !important;
-                    max-width: none !important;
-                    max-height: none !important;
-                    padding: 0 !important;
-                    margin: 0 !important;
-                    overflow: visible !important;
-                }
-
-                .print-modal-content {
-                    position: absolute !important;
-                    left: 0 !important;
-                    top: 0 !important;
-                    width: 0 !important;
-                    height: 0 !important;
-                    padding: 0 !important;
-                    margin: 0 !important;
-                    overflow: visible !important;
-                }
-
                 /* Page settings */
                 @page {
                     size: ${paperSize} ${orientation};
-                    margin: 5mm;
+                    margin: 1cm;
                 }
 
                 /* Ensure colors print */
@@ -133,19 +97,10 @@ const PrintModal = ({
                     color-adjust: exact !important;
                 }
 
-                /* Hide modal UI elements completely */
+                /* Hide modal UI elements */
                 .print-modal-header,
                 .print-modal-actions {
                     display: none !important;
-                    visibility: hidden !important;
-                }
-
-                /* Prevent page breaks inside cards */
-                .member-card-container,
-                .member-card,
-                .carnet-wrapper {
-                    page-break-inside: avoid !important;
-                    break-inside: avoid !important;
                 }
             }
         `;
@@ -188,8 +143,8 @@ const PrintModal = ({
     };
 
     return (
-        <div className="print-modal-backdrop fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm bg-white/30">
-            <div className={`print-modal-wrapper bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} transform transition-all max-h-[95vh] sm:max-h-[90vh] flex flex-col`}>
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm bg-white/30">
+            <div className={`bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} transform transition-all max-h-[95vh] sm:max-h-[90vh] flex flex-col`}>
                 {/* Header - Hidden when printing */}
                 <div className="print-modal-header flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 flex-shrink-0">
                     <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate pr-2">
@@ -206,7 +161,7 @@ const PrintModal = ({
                 </div>
 
                 {/* Printable Content */}
-                <div className="print-modal-content flex-1 overflow-auto p-2 sm:p-4">
+                <div className="flex-1 overflow-auto p-2 sm:p-4">
                     <div data-printable={printableId}>
                         {children}
                     </div>
