@@ -32,6 +32,7 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
     // Print modal state
     const [showPrintModal, setShowPrintModal] = useState(false);
     const [receiptData, setReceiptData] = useState(null);
+    const [pendingRefresh, setPendingRefresh] = useState(false);
 
     const { loading, error, getPreview, execute, clearState } = useLiquidationOperations();
 
@@ -143,12 +144,8 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
             });
             clearState();
 
-            // Notify parent component with a delay to ensure print modal is rendered
-            if (onLiquidationComplete) {
-                setTimeout(() => {
-                    onLiquidationComplete();
-                }, 500);
-            }
+            // Mark that we need to refresh when print modal closes
+            setPendingRefresh(true);
         } catch (err) {
             // Error handled by hook
         }
@@ -414,6 +411,11 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
                 onClose={() => {
                     setShowPrintModal(false);
                     setReceiptData(null);
+                    // Only notify parent after print modal is closed
+                    if (pendingRefresh && onLiquidationComplete) {
+                        setPendingRefresh(false);
+                        onLiquidationComplete();
+                    }
                 }}
                 title="Recibo de Liquidación"
                 printTitle={`Recibo Liquidación - ${member?.fullName || ''}`}
