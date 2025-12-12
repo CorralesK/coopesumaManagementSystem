@@ -101,30 +101,39 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
 
     // Handle execute liquidation
     const handleExecute = async () => {
+        // Save current data before any state changes
+        const currentLiquidationType = liquidationData.liquidationType;
+        const currentNotes = liquidationData.notes;
+        const currentSavingsBalance = preview?.savingsBalance || 0;
+
         try {
             const response = await execute({
                 memberIds: [member.memberId],
-                liquidationType: liquidationData.liquidationType,
+                liquidationType: currentLiquidationType,
                 memberContinues: liquidationData.memberContinues,
-                notes: liquidationData.notes || null
+                notes: currentNotes || null
             });
 
-            // Prepare receipt data and show print modal
+            // Prepare receipt data
             const liquidationResult = response?.data?.[0];
             const receiptInfo = {
-                member: member,
-                liquidationType: liquidationData.liquidationType,
-                savingsAmount: preview?.savingsBalance || 0,
-                totalAmount: preview?.savingsBalance || 0,
-                notes: liquidationData.notes,
+                member: { ...member },
+                liquidationType: currentLiquidationType,
+                savingsAmount: currentSavingsBalance,
+                totalAmount: currentSavingsBalance,
+                notes: currentNotes,
                 liquidationDate: new Date(),
                 liquidationId: liquidationResult?.liquidationId || '',
                 receiptNumber: liquidationResult?.receiptNumber || ''
             };
 
-            // Close confirmation modals first
+            // Close confirmation modals
             setShowConfirmModal(false);
             setShowModal(false);
+
+            // Set receipt data and show print modal BEFORE notifying parent
+            setReceiptData(receiptInfo);
+            setShowPrintModal(true);
 
             // Reset form data
             setLiquidationData({
@@ -134,13 +143,11 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
             });
             clearState();
 
-            // Set receipt data and show print modal
-            setReceiptData(receiptInfo);
-            setShowPrintModal(true);
-
-            // Notify parent component after showing print modal
+            // Notify parent component with a delay to ensure print modal is rendered
             if (onLiquidationComplete) {
-                onLiquidationComplete();
+                setTimeout(() => {
+                    onLiquidationComplete();
+                }, 500);
             }
         } catch (err) {
             // Error handled by hook
