@@ -4,7 +4,7 @@
  * Usa CSS @media print en lugar de window.open() para evitar bloqueo de popups
  */
 
-import React, { useEffect, useId } from 'react';
+import { useEffect, useId } from 'react';
 import PropTypes from 'prop-types';
 import Button from './Button';
 
@@ -62,66 +62,26 @@ const PrintModal = ({
         style.id = styleId;
         style.innerHTML = `
             @media print {
-                /* Reset html and body */
-                html, body {
-                    height: auto !important;
-                    overflow: visible !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    background: white !important;
+                /* Hide everything except printable content */
+                body * {
+                    visibility: hidden !important;
                 }
 
-                /* Hide everything first */
-                body > * {
-                    display: none !important;
-                }
-
-                /* Show modal container */
-                body > .fixed {
-                    display: block !important;
-                    position: static !important;
-                    overflow: visible !important;
-                    background: white !important;
-                    padding: 0 !important;
-                    height: auto !important;
-                }
-
-                /* Reset modal inner container */
-                .fixed > div {
-                    max-width: none !important;
-                    max-height: none !important;
-                    width: 100% !important;
-                    height: auto !important;
-                    box-shadow: none !important;
-                    border-radius: 0 !important;
-                    overflow: visible !important;
-                }
-
-                /* Hide modal UI elements */
-                .print-modal-header,
-                .print-modal-actions {
-                    display: none !important;
-                }
-
-                /* Reset printable content wrapper */
-                .flex-1.overflow-auto {
-                    overflow: visible !important;
-                    padding: 0 !important;
-                    height: auto !important;
-                }
-
-                /* Printable content - preserve internal layout */
-                [data-printable="${printableId}"] {
-                    display: block !important;
-                    width: 100% !important;
-                    padding: 5mm !important;
-                    margin: 0 !important;
-                    background: white !important;
-                }
-
-                /* Ensure all children are visible */
+                /* Show the printable container and its children */
+                [data-printable="${printableId}"],
                 [data-printable="${printableId}"] * {
                     visibility: visible !important;
+                }
+
+                /* Position printable content at top-left */
+                [data-printable="${printableId}"] {
+                    position: absolute !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 100% !important;
+                    margin: 0 !important;
+                    padding: 5mm !important;
+                    background: white !important;
                 }
 
                 /* Page settings */
@@ -137,11 +97,16 @@ const PrintModal = ({
                     color-adjust: exact !important;
                 }
 
-                /* Prevent page breaks inside cards and tables */
+                /* Hide modal UI elements */
+                .print-modal-header,
+                .print-modal-actions {
+                    display: none !important;
+                }
+
+                /* Prevent page breaks inside cards */
                 .member-card-container,
                 .member-card,
-                .carnet-wrapper,
-                table, tr, td, th {
+                .carnet-wrapper {
                     page-break-inside: avoid !important;
                     break-inside: avoid !important;
                 }
