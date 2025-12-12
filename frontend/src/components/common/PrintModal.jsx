@@ -175,26 +175,27 @@ const PrintModal = ({
 
     if (!isOpen) return null;
 
+    // Responsive size classes - full width on mobile, constrained on larger screens
     const sizeClasses = {
-        sm: 'max-w-md',
-        md: 'max-w-lg',
-        lg: 'max-w-2xl',
-        xl: 'max-w-4xl',
-        '2xl': 'max-w-6xl',
-        full: 'max-w-full mx-4'
+        sm: 'max-w-full sm:max-w-md',
+        md: 'max-w-full sm:max-w-lg',
+        lg: 'max-w-full sm:max-w-2xl',
+        xl: 'max-w-full sm:max-w-4xl',
+        '2xl': 'max-w-full sm:max-w-6xl',
+        full: 'max-w-full'
     };
 
     return (
-        <div className="print-modal-backdrop fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 backdrop-blur-sm bg-white/30">
-            <div className={`print-modal-wrapper bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} transform transition-all max-h-[90vh] flex flex-col`}>
+        <div className="print-modal-backdrop fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm bg-white/30">
+            <div className={`print-modal-wrapper bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} transform transition-all max-h-[95vh] sm:max-h-[90vh] flex flex-col`}>
                 {/* Header - Hidden when printing */}
-                <div className="print-modal-header flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-                    <h3 className="text-xl font-semibold text-gray-900">
+                <div className="print-modal-header flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 flex-shrink-0">
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate pr-2">
                         {title}
                     </h3>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                        className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none flex-shrink-0"
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -203,18 +204,18 @@ const PrintModal = ({
                 </div>
 
                 {/* Printable Content */}
-                <div className="print-modal-content flex-1 overflow-auto p-4">
+                <div className="print-modal-content flex-1 overflow-auto p-2 sm:p-4">
                     <div data-printable={printableId}>
                         {children}
                     </div>
                 </div>
 
                 {/* Actions - Hidden when printing */}
-                <div className="print-modal-actions flex justify-end gap-3 p-4 border-t border-gray-200 flex-shrink-0">
-                    <Button variant="outline" onClick={onClose}>
+                <div className="print-modal-actions flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 p-3 sm:p-4 border-t border-gray-200 flex-shrink-0">
+                    <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
                         Cerrar
                     </Button>
-                    <Button variant="primary" onClick={handlePrint}>
+                    <Button variant="primary" onClick={handlePrint} className="w-full sm:w-auto">
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
