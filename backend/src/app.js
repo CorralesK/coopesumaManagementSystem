@@ -15,6 +15,9 @@ const requestLogger = require('./middlewares/requestLogger');
 
 const app = express();
 
+// Trust proxy - Required for Railway/Vercel to handle HTTPS correctly
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
