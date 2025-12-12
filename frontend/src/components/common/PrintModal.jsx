@@ -68,46 +68,66 @@ const PrintModal = ({
                     overflow: visible !important;
                     margin: 0 !important;
                     padding: 0 !important;
+                    background: white !important;
                 }
 
                 /* Hide everything first */
-                body * {
-                    visibility: hidden !important;
+                body > * {
+                    display: none !important;
                 }
 
-                /* Show the printable container and all its descendants */
-                [data-printable="${printableId}"],
-                [data-printable="${printableId}"] * {
-                    visibility: visible !important;
-                }
-
-                /* Position printable content at top-left of page */
-                [data-printable="${printableId}"] {
-                    position: absolute !important;
-                    left: 0 !important;
-                    top: 0 !important;
-                    width: 100% !important;
-                    height: auto !important;
-                    margin: 0 !important;
-                    padding: 10px !important;
-                    background: white !important;
-                    z-index: 99999 !important;
-                    overflow: visible !important;
-                    box-sizing: border-box !important;
-                }
-
-                /* Hide modal container but keep printable visible */
-                .fixed.inset-0 {
+                /* Show modal container */
+                body > .fixed {
+                    display: block !important;
                     position: static !important;
                     overflow: visible !important;
-                    background: transparent !important;
+                    background: white !important;
                     padding: 0 !important;
+                    height: auto !important;
+                }
+
+                /* Reset modal inner container */
+                .fixed > div {
+                    max-width: none !important;
+                    max-height: none !important;
+                    width: 100% !important;
+                    height: auto !important;
+                    box-shadow: none !important;
+                    border-radius: 0 !important;
+                    overflow: visible !important;
+                }
+
+                /* Hide modal UI elements */
+                .print-modal-header,
+                .print-modal-actions {
+                    display: none !important;
+                }
+
+                /* Reset printable content wrapper */
+                .flex-1.overflow-auto {
+                    overflow: visible !important;
+                    padding: 0 !important;
+                    height: auto !important;
+                }
+
+                /* Printable content - preserve internal layout */
+                [data-printable="${printableId}"] {
+                    display: block !important;
+                    width: 100% !important;
+                    padding: 5mm !important;
+                    margin: 0 !important;
+                    background: white !important;
+                }
+
+                /* Ensure all children are visible */
+                [data-printable="${printableId}"] * {
+                    visibility: visible !important;
                 }
 
                 /* Page settings */
                 @page {
                     size: ${paperSize} ${orientation};
-                    margin: 10mm;
+                    margin: 5mm;
                 }
 
                 /* Ensure colors print */
@@ -117,16 +137,13 @@ const PrintModal = ({
                     color-adjust: exact !important;
                 }
 
-                /* Hide modal UI elements */
-                .print-modal-header,
-                .print-modal-actions {
-                    display: none !important;
-                    visibility: hidden !important;
-                }
-
-                /* Prevent page breaks inside elements */
+                /* Prevent page breaks inside cards and tables */
+                .member-card-container,
+                .member-card,
+                .carnet-wrapper,
                 table, tr, td, th {
                     page-break-inside: avoid !important;
+                    break-inside: avoid !important;
                 }
             }
         `;
