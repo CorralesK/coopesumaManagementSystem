@@ -62,26 +62,39 @@ const PrintModal = ({
         style.id = styleId;
         style.innerHTML = `
             @media print {
-                /* Hide everything except printable content */
+                /* Hide everything */
                 body * {
                     visibility: hidden !important;
                 }
 
-                /* Show the printable container and its children */
+                /* Hide modal backdrop and wrapper completely */
+                .print-modal-backdrop,
+                .print-modal-wrapper {
+                    position: static !important;
+                    overflow: visible !important;
+                    background: transparent !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    max-height: none !important;
+                    box-shadow: none !important;
+                }
+
+                /* Show only the printable container and its children */
                 [data-printable="${printableId}"],
                 [data-printable="${printableId}"] * {
                     visibility: visible !important;
                 }
 
-                /* Position printable content at top-left */
+                /* Position printable content at top-left of page */
                 [data-printable="${printableId}"] {
-                    position: absolute !important;
+                    position: fixed !important;
                     left: 0 !important;
                     top: 0 !important;
                     width: 100% !important;
                     margin: 0 !important;
-                    padding: 5mm !important;
+                    padding: 0 !important;
                     background: white !important;
+                    z-index: 99999 !important;
                 }
 
                 /* Page settings */
@@ -101,6 +114,7 @@ const PrintModal = ({
                 .print-modal-header,
                 .print-modal-actions {
                     display: none !important;
+                    visibility: hidden !important;
                 }
 
                 /* Prevent page breaks inside cards */
@@ -150,8 +164,8 @@ const PrintModal = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 backdrop-blur-sm bg-white/30">
-            <div className={`bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} transform transition-all max-h-[90vh] flex flex-col`}>
+        <div className="print-modal-backdrop fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 backdrop-blur-sm bg-white/30">
+            <div className={`print-modal-wrapper bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} transform transition-all max-h-[90vh] flex flex-col`}>
                 {/* Header - Hidden when printing */}
                 <div className="print-modal-header flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
                     <h3 className="text-xl font-semibold text-gray-900">

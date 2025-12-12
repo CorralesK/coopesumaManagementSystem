@@ -1,7 +1,7 @@
 /**
  * BatchMemberCardsPrint Component
  * Componente para impresion de carnets de miembros en lote
- * Optimizado para imprimir 2 carnets por fila, 4 por pagina
+ * Optimizado para imprimir 2 carnets por fila, 3 filas por pagina (6 por pagina)
  */
 
 import PropTypes from 'prop-types';
@@ -11,10 +11,10 @@ const BatchMemberCardsPrint = ({
     members = [],
     cooperativeName = 'Coopesuma'
 }) => {
-    // Dividir miembros en grupos de 4 (2x2 por página)
+    // Dividir miembros en grupos de 6 (2x3 por página)
     const pages = [];
-    for (let i = 0; i < members.length; i += 4) {
-        pages.push(members.slice(i, i + 4));
+    for (let i = 0; i < members.length; i += 6) {
+        pages.push(members.slice(i, i + 6));
     }
 
     return (
@@ -25,20 +25,21 @@ const BatchMemberCardsPrint = ({
                     font-family: 'Arial', sans-serif;
                 }
                 .batch-cards-print .print-page {
-                    display: flex;
-                    flex-wrap: wrap;
+                    display: grid;
+                    grid-template-columns: repeat(2, 100mm);
+                    grid-template-rows: repeat(3, auto);
+                    gap: 4mm 6mm;
                     justify-content: center;
-                    align-content: flex-start;
-                    gap: 8mm;
+                    align-content: start;
                     page-break-after: always;
-                    min-height: 250mm;
-                    padding: 5mm 0;
+                    padding: 2mm 0;
                 }
                 .batch-cards-print .print-page:last-child {
                     page-break-after: auto;
                 }
                 .batch-cards-print .carnet-wrapper {
-                    flex: 0 0 auto;
+                    width: 100mm;
+                    height: 63mm;
                 }
 
                 /* Override MemberCard container styles for batch print */
@@ -53,20 +54,12 @@ const BatchMemberCardsPrint = ({
                         margin: 0 !important;
                     }
                     .batch-cards-print .print-page {
-                        gap: 8mm !important;
+                        gap: 4mm 6mm !important;
                         padding: 0 !important;
                         margin: 0 !important;
-                        min-height: auto !important;
-                        height: auto !important;
                     }
-                    .batch-cards-print .carnet-wrapper {
-                        page-break-inside: avoid !important;
-                        break-inside: avoid !important;
-                    }
-                    .batch-cards-print .member-card-container {
-                        page-break-inside: avoid !important;
-                        break-inside: avoid !important;
-                    }
+                    .batch-cards-print .carnet-wrapper,
+                    .batch-cards-print .member-card-container,
                     .batch-cards-print .member-card {
                         page-break-inside: avoid !important;
                         break-inside: avoid !important;
