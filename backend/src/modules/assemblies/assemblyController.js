@@ -149,6 +149,53 @@ const getActiveAssembly = async (req, res) => {
 };
 
 /**
+ * Get active assembly or last concluded assembly for dashboard
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const getActiveOrLastConcludedAssembly = async (req, res) => {
+    try {
+        const assembly = await assemblyService.getActiveOrLastConcludedAssembly();
+
+        if (!assembly) {
+            return successResponse(
+                res,
+                'No hay asambleas disponibles',
+                null
+            );
+        }
+
+        return successResponse(
+            res,
+            assembly.is_active ? 'Asamblea activa encontrada' : 'Última asamblea concluida encontrada',
+            assembly
+        );
+    } catch (error) {
+        if (error.isOperational) {
+            return errorResponse(
+                res,
+                error.message,
+                error.errorCode,
+                error.statusCode
+            );
+        }
+
+        logger.error('Unexpected error in getActiveOrLastConcludedAssembly controller', {
+            error: error.message,
+            stack: error.stack
+        });
+
+        return errorResponse(
+            res,
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    }
+};
+
+/**
  * Create new assembly
  *
  * @param {Object} req - Express request object
@@ -386,6 +433,7 @@ module.exports = {
     getAllAssemblies,
     getAssemblyById,
     getActiveAssembly,
+    getActiveOrLastConcludedAssembly,
     createAssembly,
     updateAssembly,
     deleteAssembly,

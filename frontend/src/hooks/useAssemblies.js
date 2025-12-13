@@ -9,6 +9,7 @@ import {
     getAllAssemblies,
     getAssemblyById,
     getActiveAssembly,
+    getCurrentAssembly,
     createAssembly,
     updateAssembly,
     deleteAssembly,
@@ -201,6 +202,48 @@ export const useActiveAssembly = () => {
         loading,
         error,
         refetch: fetchActiveAssembly
+    };
+};
+
+/**
+ * Hook for fetching the current assembly for dashboard
+ * Returns active assembly if exists, otherwise the most recently concluded one
+ * @returns {Object} Current assembly state and operations
+ */
+export const useCurrentAssembly = () => {
+    const [currentAssembly, setCurrentAssembly] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const fetchCurrentAssembly = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const response = await getCurrentAssembly();
+            setCurrentAssembly(response.data);
+        } catch (err) {
+            // No assembly available is not an error
+            if (err.statusCode === 404) {
+                setCurrentAssembly(null);
+                setError(null);
+            } else {
+                setError(err.message || 'Error loading current assembly');
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchCurrentAssembly();
+    }, [fetchCurrentAssembly]);
+
+    return {
+        currentAssembly,
+        loading,
+        error,
+        refetch: fetchCurrentAssembly
     };
 };
 

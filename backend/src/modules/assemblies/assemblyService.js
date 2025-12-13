@@ -439,11 +439,37 @@ const deactivateAssembly = async (assemblyId) => {
     }
 };
 
+/**
+ * Get active assembly or last concluded assembly with stats
+ * For dashboard display - shows current active or most recent concluded
+ *
+ * @returns {Promise<Object|null>} Assembly object with attendance stats or null
+ */
+const getActiveOrLastConcludedAssembly = async () => {
+    try {
+        const assembly = await assemblyRepository.findActiveOrLastConcluded();
+
+        if (!assembly) {
+            return null;
+        }
+
+        return assembly;
+    } catch (error) {
+        logger.error('Error getting active or last concluded assembly:', error);
+        throw new AssemblyError(
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    }
+};
+
 module.exports = {
     getAssemblyById,
     getAssemblyWithStats,
     getActiveAssembly,
     getActiveAssemblyWithStats,
+    getActiveOrLastConcludedAssembly,
     getAllAssemblies,
     createAssembly,
     updateAssembly,
