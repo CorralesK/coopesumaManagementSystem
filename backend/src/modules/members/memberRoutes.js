@@ -195,6 +195,30 @@ router.post(
     memberController.verifyMemberByQr
 );
 
+/**
+ * POST /api/members/receipt/affiliation/pdf
+ * Download affiliation receipt as PDF (for mobile)
+ * Private: Requires authentication and permission
+ */
+router.post(
+    '/receipt/affiliation/pdf',
+    authMiddleware,
+    requireRole([USER_ROLES.ADMINISTRATOR, USER_ROLES.REGISTRAR]),
+    memberController.downloadAffiliationReceiptPDF
+);
+
+/**
+ * POST /api/members/receipt/liquidation/pdf
+ * Download liquidation receipt as PDF (for mobile)
+ * Private: Requires authentication and permission
+ */
+router.post(
+    '/receipt/liquidation/pdf',
+    authMiddleware,
+    requireRole([USER_ROLES.ADMINISTRATOR, USER_ROLES.REGISTRAR]),
+    memberController.downloadLiquidationReceiptPDF
+);
+
 // ============================================================================
 // Public Routes
 // ============================================================================

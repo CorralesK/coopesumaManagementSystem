@@ -11,6 +11,7 @@ const MESSAGES = require('../../constants/messages');
 const ERROR_CODES = require('../../constants/errorCodes');
 const logger = require('../../utils/logger');
 const { uploadToCloudinary, deleteFromCloudinary, extractPublicIdFromUrl } = require('../uploads/uploadService');
+const { createAffiliationReceiptPDF, createLiquidationReceiptPDF } = require('../../utils/pdfUtils');
 
 /**
  * Get all members (adapted to new structure)
@@ -747,6 +748,70 @@ const generateMemberCardsPDF = async (req, res) => {
     }
 };
 
+/**
+ * Download affiliation receipt as PDF
+ * POST /api/members/receipt/affiliation/pdf
+ */
+const downloadAffiliationReceiptPDF = async (req, res, next) => {
+    try {
+        const receiptData = req.body;
+
+        // Validate required fields
+        if (!receiptData.member) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required receipt data'
+            });
+        }
+
+        // Create PDF
+        const pdfDoc = createAffiliationReceiptPDF(receiptData);
+
+        // Set headers for PDF download
+        const filename = `recibo-afiliacion-${Date.now()}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        // Pipe the PDF to response
+        pdfDoc.pipe(res);
+    } catch (error) {
+        logger.error('Controller error - downloadAffiliationReceiptPDF:', error);
+        next(error);
+    }
+};
+
+/**
+ * Download liquidation receipt as PDF
+ * POST /api/members/receipt/liquidation/pdf
+ */
+const downloadLiquidationReceiptPDF = async (req, res, next) => {
+    try {
+        const receiptData = req.body;
+
+        // Validate required fields
+        if (!receiptData.member) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required receipt data'
+            });
+        }
+
+        // Create PDF
+        const pdfDoc = createLiquidationReceiptPDF(receiptData);
+
+        // Set headers for PDF download
+        const filename = `recibo-liquidacion-${Date.now()}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        // Pipe the PDF to response
+        pdfDoc.pipe(res);
+    } catch (error) {
+        logger.error('Controller error - downloadLiquidationReceiptPDF:', error);
+        next(error);
+    }
+};
+
 module.exports = {
     getAllMembers,
     getMemberById,
@@ -760,5 +825,7 @@ module.exports = {
     generateMemberCardsPDF,
     verifyMemberByQr,
     publicVerifyMember,
-    getMemberDashboard
+    getMemberDashboard,
+    downloadAffiliationReceiptPDF,
+    downloadLiquidationReceiptPDF
 };

@@ -399,6 +399,8 @@ const MemberFormPage = () => {
                 printTitle={`Recibo Afiliación - ${receiptData?.member?.full_name || receiptData?.member?.fullName || ''}`}
                 size="md"
                 paperSize="80mm 200mm"
+                receiptData={receiptData}
+                receiptType="affiliation"
             >
                 {receiptData && (
                     <AffiliationReceiptPrint

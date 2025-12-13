@@ -108,4 +108,16 @@ router.get(
     savingsController.getMemberSavingsTransactions
 );
 
+/**
+ * @route POST /api/savings/receipt/pdf
+ * @desc Download savings receipt as PDF (for mobile)
+ * @access Private - Manager/Administrator only
+ */
+router.post(
+    '/receipt/pdf',
+    authenticate,
+    checkPermission('manage_savings'),
+    savingsController.downloadReceiptPDF
+);
+
 module.exports = router;
