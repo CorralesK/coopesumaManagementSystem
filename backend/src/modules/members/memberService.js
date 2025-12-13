@@ -834,7 +834,6 @@ const getMemberDashboard = async (userId) => {
                 a.account_id,
                 a.account_type,
                 a.current_balance,
-                a.last_fiscal_year_balance,
                 a.created_at,
                 a.updated_at
             FROM accounts a
@@ -844,11 +843,9 @@ const getMemberDashboard = async (userId) => {
 
         const accountsResult = await db.query(accountsQuery, [member.member_id]);
         const accounts = accountsResult.rows.map(acc => ({
-            accountId: acc.account_id,
-            accountType: acc.account_type,
-            currentBalance: parseFloat(acc.current_balance || 0),
-            lastFiscalYearBalance: parseFloat(acc.last_fiscal_year_balance || 0),
-            displayName: getAccountDisplayName(acc.account_type),
+            ...acc,
+            currentBalance: parseFloat(acc.currentBalance || 0),
+            displayName: getAccountDisplayName(acc.accountType),
             available: true
         }));
 
@@ -876,15 +873,9 @@ const getMemberDashboard = async (userId) => {
 
         const transactionsResult = await db.query(transactionsQuery, [member.member_id]);
         const recentTransactions = transactionsResult.rows.map(tx => ({
-            transactionId: tx.transaction_id,
-            accountType: tx.account_type,
-            accountDisplayName: getAccountDisplayName(tx.account_type),
-            transactionType: tx.transaction_type,
-            amount: parseFloat(tx.amount),
-            transactionDate: tx.transaction_date,
-            fiscalYear: tx.fiscal_year,
-            description: tx.description,
-            status: tx.status
+            ...tx,
+            accountDisplayName: getAccountDisplayName(tx.accountType),
+            amount: parseFloat(tx.amount)
         }));
 
         // 4. Contribution status - DISABLED (not implemented yet)
