@@ -4,7 +4,7 @@
  * @module utils/printUtils
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import api from '../services/api';
 
 /**
  * Check if the current device is mobile
@@ -21,19 +21,11 @@ const isMobileDevice = () => {
  */
 const downloadPDFFromBackend = async (endpoint, filename) => {
     try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}${endpoint}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+        const response = await api.get(endpoint, {
+            responseType: 'blob'
         });
 
-        if (!response.ok) {
-            throw new Error('Error al generar el PDF');
-        }
-
-        const blob = await response.blob();
+        const blob = new Blob([response.data], { type: 'application/pdf' });
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
