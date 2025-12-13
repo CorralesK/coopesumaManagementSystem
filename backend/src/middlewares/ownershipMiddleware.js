@@ -27,22 +27,22 @@ const checkMemberOwnership = async (req, res, next) => {
         if (!userMember) {
             return res.status(403).json({
                 success: false,
-                message: 'Access denied',
+                message: 'Acceso denegado',
                 error: 'FORBIDDEN'
             });
         }
 
         // Verify ownership
-        if (userMember.member_id !== requestedMemberId) {
+        if (userMember.memberId !== requestedMemberId) {
             logger.warn('Unauthorized member access attempt', {
                 userId: req.user.userId,
                 requestedMemberId,
-                actualMemberId: userMember.member_id
+                actualMemberId: userMember.memberId
             });
 
             return res.status(403).json({
                 success: false,
-                message: 'You can only access your own data',
+                message: 'Solo puedes acceder a tus propios datos',
                 error: 'FORBIDDEN'
             });
         }
@@ -55,7 +55,7 @@ const checkMemberOwnership = async (req, res, next) => {
         logger.error('Error in checkMemberOwnership middleware:', error);
         return res.status(500).json({
             success: false,
-            message: 'Internal server error',
+            message: 'Error interno del servidor',
             error: 'INTERNAL_ERROR'
         });
     }
@@ -79,7 +79,7 @@ const checkNotificationOwnership = async (req, res, next) => {
         if (result.rows.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'Notification not found',
+                message: 'Notificación no encontrada',
                 error: 'NOT_FOUND'
             });
         }
@@ -87,16 +87,16 @@ const checkNotificationOwnership = async (req, res, next) => {
         const notification = result.rows[0];
 
         // Verify ownership
-        if (notification.user_id !== userId) {
+        if (notification.userId !== userId) {
             logger.warn('Unauthorized notification access attempt', {
                 userId,
                 notificationId,
-                actualOwnerId: notification.user_id
+                actualOwnerId: notification.userId
             });
 
             return res.status(403).json({
                 success: false,
-                message: 'You can only access your own notifications',
+                message: 'Solo puedes acceder a tus propias notificaciones',
                 error: 'FORBIDDEN'
             });
         }
@@ -107,7 +107,7 @@ const checkNotificationOwnership = async (req, res, next) => {
         logger.error('Error in checkNotificationOwnership middleware:', error);
         return res.status(500).json({
             success: false,
-            message: 'Internal server error',
+            message: 'Error interno del servidor',
             error: 'INTERNAL_ERROR'
         });
     }
@@ -132,7 +132,7 @@ const checkWithdrawalOwnership = async (req, res, next) => {
         if (!userMember) {
             return res.status(403).json({
                 success: false,
-                message: 'Access denied',
+                message: 'Acceso denegado',
                 error: 'FORBIDDEN'
             });
         }
@@ -147,7 +147,7 @@ const checkWithdrawalOwnership = async (req, res, next) => {
         if (result.rows.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'Request not found',
+                message: 'Solicitud no encontrada',
                 error: 'NOT_FOUND'
             });
         }
@@ -155,16 +155,16 @@ const checkWithdrawalOwnership = async (req, res, next) => {
         const request = result.rows[0];
 
         // Verify ownership
-        if (request.member_id !== userMember.member_id) {
+        if (request.memberId !== userMember.memberId) {
             logger.warn('Unauthorized withdrawal request access attempt', {
                 userId: req.user.userId,
                 requestId,
-                actualMemberId: request.member_id
+                actualMemberId: request.memberId
             });
 
             return res.status(403).json({
                 success: false,
-                message: 'You can only access your own requests',
+                message: 'Solo puedes acceder a tus propias solicitudes',
                 error: 'FORBIDDEN'
             });
         }
@@ -175,7 +175,7 @@ const checkWithdrawalOwnership = async (req, res, next) => {
         logger.error('Error in checkWithdrawalOwnership middleware:', error);
         return res.status(500).json({
             success: false,
-            message: 'Internal server error',
+            message: 'Error interno del servidor',
             error: 'INTERNAL_ERROR'
         });
     }
@@ -200,7 +200,7 @@ const checkReceiptOwnership = async (req, res, next) => {
         if (!userMember) {
             return res.status(403).json({
                 success: false,
-                message: 'Access denied',
+                message: 'Acceso denegado',
                 error: 'FORBIDDEN'
             });
         }
@@ -215,7 +215,7 @@ const checkReceiptOwnership = async (req, res, next) => {
         if (result.rows.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'Receipt not found',
+                message: 'Recibo no encontrado',
                 error: 'NOT_FOUND'
             });
         }
@@ -223,16 +223,16 @@ const checkReceiptOwnership = async (req, res, next) => {
         const receipt = result.rows[0];
 
         // Verify ownership
-        if (receipt.member_id !== userMember.member_id) {
+        if (receipt.memberId !== userMember.memberId) {
             logger.warn('Unauthorized receipt access attempt', {
                 userId: req.user.userId,
                 receiptId,
-                actualMemberId: receipt.member_id
+                actualMemberId: receipt.memberId
             });
 
             return res.status(403).json({
                 success: false,
-                message: 'You can only access your own receipts',
+                message: 'Solo puedes acceder a tus propios recibos',
                 error: 'FORBIDDEN'
             });
         }
@@ -243,7 +243,7 @@ const checkReceiptOwnership = async (req, res, next) => {
         logger.error('Error in checkReceiptOwnership middleware:', error);
         return res.status(500).json({
             success: false,
-            message: 'Internal server error',
+            message: 'Error interno del servidor',
             error: 'INTERNAL_ERROR'
         });
     }
