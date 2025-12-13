@@ -8,7 +8,8 @@
 
 const reportRepository = require('./reportRepository');
 const assemblyRepository = require('../assemblies/assemblyRepository');
-const { createAttendanceReport, createAttendanceStatsReport } = require('../../utils/pdfUtils');
+const liquidationRepository = require('../liquidations/liquidationRepository');
+const { createAttendanceReport, createAttendanceStatsReport, createLiquidationsReport, createAttendanceListReport } = require('../../utils/pdfUtils');
 const ERROR_CODES = require('../../constants/errorCodes');
 const MESSAGES = require('../../constants/messages');
 const logger = require('../../utils/logger');
@@ -241,9 +242,102 @@ const getAttendanceStats = async (assemblyId) => {
     }
 };
 
+/**
+ * Generate liquidations report PDF
+ *
+ * @param {Object} dateRange - Date range { startDate, endDate }
+ * @returns {Promise<PDFDocument>} PDF document stream
+ * @throws {ReportError} If validation fails
+ */
+const generateLiquidationsReportPDF = async (dateRange) => {
+    try {
+        // Get liquidations in date range
+        const liquidations = await liquidationRepository.getAllLiquidations({
+            startDate: dateRange.startDate,
+            endDate: dateRange.endDate
+        });
+
+        // Calculate stats (data comes in camelCase from repository)
+        const stats = {
+            total: liquidations.length,
+            periodic: liquidations.filter(l => l.liquidationType === 'periodic').length,
+            exit: liquidations.filter(l => l.liquidationType === 'exit').length,
+            totalSavings: liquidations.reduce((sum, l) => sum + (parseFloat(l.totalSavings) || 0), 0)
+        };
+
+        // Generate PDF
+        const pdfDoc = createLiquidationsReport(liquidations, stats, dateRange);
+
+        logger.info('Liquidations report PDF generated', {
+            dateRange,
+            totalLiquidations: liquidations.length
+        });
+
+        return pdfDoc;
+    } catch (error) {
+        if (error.isOperational) {
+            throw error;
+        }
+
+        logger.error('Error generating liquidations report PDF:', error);
+        throw new ReportError(
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    }
+};
+
+/**
+ * Generate attendance list report PDF
+ *
+ * @param {number} assemblyId - Assembly ID
+ * @returns {Promise<PDFDocument>} PDF document stream
+ * @throws {ReportError} If validation fails
+ */
+const generateAttendanceListReportPDF = async (assemblyId) => {
+    try {
+        // Verify assembly exists
+        const assembly = await assemblyRepository.findById(assemblyId);
+        if (!assembly) {
+            throw new ReportError(
+                MESSAGES.ASSEMBLY_NOT_FOUND,
+                ERROR_CODES.ASSEMBLY_NOT_FOUND,
+                404
+            );
+        }
+
+        // Get attendee list
+        const attendeeList = await reportRepository.getAttendeeList(assemblyId);
+
+        // Generate PDF
+        const pdfDoc = createAttendanceListReport(attendeeList, assembly);
+
+        logger.info('Attendance list report PDF generated', {
+            assemblyId,
+            totalAttendees: attendeeList.length
+        });
+
+        return pdfDoc;
+    } catch (error) {
+        if (error.isOperational) {
+            throw error;
+        }
+
+        logger.error('Error generating attendance list report PDF:', error);
+        throw new ReportError(
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    }
+};
+
 module.exports = {
     generateAttendanceReport,
     generateAttendanceStatsReport,
     getAttendanceStats,
+    generateLiquidationsReportPDF,
+    generateAttendanceListReportPDF,
     ReportError
 };

@@ -105,4 +105,43 @@ router.get(
     reportController.getAttendanceStats
 );
 
+// ============================================================================
+// PDF Download Routes (for mobile)
+// ============================================================================
+
+/**
+ * GET /api/reports/liquidations/pdf
+ * Generate and download liquidations report PDF
+ * Protected: Requires authentication
+ * Accessible by: Administrator only
+ *
+ * Query parameters:
+ * - startDate: Start date (YYYY-MM-DD)
+ * - endDate: End date (YYYY-MM-DD)
+ *
+ * Response: PDF file download
+ */
+router.get(
+    '/liquidations/pdf',
+    authMiddleware,
+    requireRole([USER_ROLES.ADMINISTRATOR]),
+    reportController.generateLiquidationsReportPDF
+);
+
+/**
+ * GET /api/reports/attendance-list/:assemblyId/pdf
+ * Generate and download attendance list report PDF
+ * Protected: Requires authentication
+ * Accessible by: Administrator only
+ *
+ * Response: PDF file download
+ */
+router.get(
+    '/attendance-list/:assemblyId/pdf',
+    authMiddleware,
+    requireRole([USER_ROLES.ADMINISTRATOR]),
+    validateParams(assemblyIdParamSchema),
+    reportController.generateAttendanceListReportPDF
+);
+
 module.exports = router;

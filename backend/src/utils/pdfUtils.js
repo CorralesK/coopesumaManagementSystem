@@ -353,9 +353,351 @@ const createAttendanceStatsReport = (assemblyData, stats, statsByQualityLevel) =
     }
 };
 
+/**
+ * Format currency for display in PDF
+ *
+ * @param {number} amount - Amount to format
+ * @returns {string} Formatted currency string
+ */
+const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-CR', {
+        style: 'currency',
+        currency: 'CRC',
+        minimumFractionDigits: 2
+    }).format(amount || 0);
+};
+
+/**
+ * Create liquidations report PDF
+ *
+ * @param {Array} liquidations - List of liquidations
+ * @param {Object} stats - Statistics object { total, periodic, exit, totalSavings }
+ * @param {Object} dateRange - Date range { startDate, endDate }
+ * @returns {PDFDocument} PDF document stream
+ */
+const createLiquidationsReport = (liquidations, stats, dateRange) => {
+    try {
+        const doc = new PDFDocument({
+            size: 'LETTER',
+            margins: {
+                top: 50,
+                bottom: 50,
+                left: 50,
+                right: 50
+            }
+        });
+
+        // Header
+        doc
+            .fontSize(18)
+            .font('Helvetica-Bold')
+            .text('COOPESUMA R.L.', { align: 'center' })
+            .moveDown(0.3);
+
+        doc
+            .fontSize(14)
+            .text('Reporte de Liquidaciones', { align: 'center' })
+            .moveDown(0.5);
+
+        // Date range
+        doc
+            .fontSize(10)
+            .font('Helvetica')
+            .text(`Periodo: ${formatDate(dateRange.startDate)} - ${formatDate(dateRange.endDate)}`, { align: 'center' })
+            .moveDown(1);
+
+        // Statistics summary
+        doc
+            .fontSize(11)
+            .font('Helvetica-Bold')
+            .text('Resumen:')
+            .moveDown(0.3);
+
+        doc
+            .fontSize(10)
+            .font('Helvetica')
+            .text(`Total de liquidaciones: ${stats.total}`)
+            .text(`Liquidaciones periódicas: ${stats.periodic}`)
+            .text(`Liquidaciones por retiro: ${stats.exit}`)
+            .text(`Total en ahorros liquidados: ${formatCurrency(stats.totalSavings)}`)
+            .moveDown(1);
+
+        if (liquidations.length === 0) {
+            doc
+                .fontSize(12)
+                .font('Helvetica-Oblique')
+                .text('No hay liquidaciones en el periodo seleccionado.', { align: 'center' });
+        } else {
+            // Table Header
+            const tableTop = doc.y;
+            const col1X = 50;   // N°
+            const col2X = 80;   // Fecha
+            const col3X = 160;  // Asociado
+            const col4X = 380;  // Tipo
+            const col5X = 460;  // Monto
+
+            doc
+                .fontSize(10)
+                .font('Helvetica-Bold')
+                .text('N°', col1X, tableTop)
+                .text('Fecha', col2X, tableTop)
+                .text('Asociado', col3X, tableTop)
+                .text('Tipo', col4X, tableTop)
+                .text('Ahorros', col5X, tableTop);
+
+            // Draw header line
+            doc
+                .moveTo(50, tableTop + 15)
+                .lineTo(doc.page.width - 50, tableTop + 15)
+                .stroke();
+
+            let currentY = tableTop + 25;
+            const rowHeight = 20;
+
+            // Table Rows
+            liquidations.forEach((liq, index) => {
+                // Check if we need a new page
+                if (currentY + rowHeight > doc.page.height - 70) {
+                    doc.addPage();
+                    currentY = 50;
+
+                    // Repeat header on new page
+                    doc
+                        .fontSize(10)
+                        .font('Helvetica-Bold')
+                        .text('N°', col1X, currentY)
+                        .text('Fecha', col2X, currentY)
+                        .text('Asociado', col3X, currentY)
+                        .text('Tipo', col4X, currentY)
+                        .text('Ahorros', col5X, currentY);
+
+                    doc
+                        .moveTo(50, currentY + 15)
+                        .lineTo(doc.page.width - 50, currentY + 15)
+                        .stroke();
+
+                    currentY += 25;
+                }
+
+                const liquidationDate = new Date(liq.liquidationDate || liq.liquidation_date || liq.createdAt || liq.created_at);
+                const dateStr = liquidationDate.toLocaleDateString('es-CR');
+                const memberName = (liq.memberName || liq.member_name || 'N/A').substring(0, 35);
+                const typeStr = (liq.liquidationType || liq.liquidation_type) === 'periodic' ? 'Periódica' : 'Retiro';
+                const savingsAmount = formatCurrency(liq.totalSavings || liq.total_savings);
+
+                doc
+                    .fontSize(9)
+                    .font('Helvetica')
+                    .text((index + 1).toString(), col1X, currentY)
+                    .text(dateStr, col2X, currentY)
+                    .text(memberName, col3X, currentY)
+                    .text(typeStr, col4X, currentY)
+                    .text(savingsAmount, col5X, currentY);
+
+                currentY += rowHeight;
+            });
+
+            // Total row
+            currentY += 10;
+            doc
+                .moveTo(50, currentY)
+                .lineTo(doc.page.width - 50, currentY)
+                .stroke();
+
+            currentY += 10;
+            doc
+                .fontSize(10)
+                .font('Helvetica-Bold')
+                .text('TOTAL:', col4X, currentY)
+                .text(formatCurrency(stats.totalSavings), col5X, currentY);
+        }
+
+        // Footer
+        doc
+            .fontSize(8)
+            .font('Helvetica')
+            .text(
+                `Documento generado el ${formatDate(new Date())} - COOPESUMA R.L.`,
+                50,
+                doc.page.height - 40,
+                { align: 'center' }
+            );
+
+        return doc;
+    } catch (error) {
+        logger.error('Error creating liquidations report PDF:', error);
+        throw error;
+    }
+};
+
+/**
+ * Create simple attendance list report PDF (for reports page)
+ *
+ * @param {Array} attendees - List of attendees
+ * @param {Object} assembly - Assembly information
+ * @returns {PDFDocument} PDF document stream
+ */
+const createAttendanceListReport = (attendees, assembly) => {
+    try {
+        const doc = new PDFDocument({
+            size: 'LETTER',
+            margins: {
+                top: 50,
+                bottom: 50,
+                left: 50,
+                right: 50
+            }
+        });
+
+        // Header
+        doc
+            .fontSize(18)
+            .font('Helvetica-Bold')
+            .text('COOPESUMA R.L.', { align: 'center' })
+            .moveDown(0.3);
+
+        doc
+            .fontSize(14)
+            .text('Lista de Asistencia', { align: 'center' })
+            .moveDown(1);
+
+        // Assembly Information
+        doc
+            .fontSize(11)
+            .font('Helvetica-Bold')
+            .text('Información de la Asamblea')
+            .moveDown(0.3);
+
+        doc
+            .fontSize(10)
+            .font('Helvetica-Bold')
+            .text('Nombre: ', { continued: true })
+            .font('Helvetica')
+            .text(assembly.title || 'N/A')
+            .moveDown(0.2);
+
+        doc
+            .font('Helvetica-Bold')
+            .text('Fecha: ', { continued: true })
+            .font('Helvetica')
+            .text(formatDate(assembly.scheduled_date || assembly.scheduledDate))
+            .moveDown(0.2);
+
+        if (assembly.start_time || assembly.startTime) {
+            doc
+                .font('Helvetica-Bold')
+                .text('Hora de Inicio: ', { continued: true })
+                .font('Helvetica')
+                .text(formatTime(assembly.start_time || assembly.startTime))
+                .moveDown(0.2);
+        }
+
+        doc.moveDown(1);
+
+        if (attendees.length === 0) {
+            doc
+                .fontSize(12)
+                .font('Helvetica-Oblique')
+                .text('No hay asistentes registrados para esta asamblea.', { align: 'center' });
+        } else {
+            // Table Header
+            const tableTop = doc.y;
+            const col1X = 50;   // N°
+            const col2X = 80;   // Nombre
+            const col3X = 320;  // Cédula
+            const col4X = 420;  // Firma
+
+            doc
+                .fontSize(10)
+                .font('Helvetica-Bold')
+                .text('N°', col1X, tableTop)
+                .text('Nombre Completo', col2X, tableTop)
+                .text('Cédula', col3X, tableTop)
+                .text('Firma', col4X, tableTop);
+
+            // Draw header line
+            doc
+                .moveTo(50, tableTop + 15)
+                .lineTo(doc.page.width - 50, tableTop + 15)
+                .stroke();
+
+            let currentY = tableTop + 25;
+            const rowHeight = 25;
+
+            // Table Rows
+            attendees.forEach((attendee, index) => {
+                // Check if we need a new page
+                if (currentY + rowHeight > doc.page.height - 70) {
+                    doc.addPage();
+                    currentY = 50;
+
+                    // Repeat header on new page
+                    doc
+                        .fontSize(10)
+                        .font('Helvetica-Bold')
+                        .text('N°', col1X, currentY)
+                        .text('Nombre Completo', col2X, currentY)
+                        .text('Cédula', col3X, currentY)
+                        .text('Firma', col4X, currentY);
+
+                    doc
+                        .moveTo(50, currentY + 15)
+                        .lineTo(doc.page.width - 50, currentY + 15)
+                        .stroke();
+
+                    currentY += 25;
+                }
+
+                const fullName = (attendee.full_name || attendee.fullName || 'N/A').substring(0, 40);
+                const identification = attendee.identification || 'N/A';
+
+                doc
+                    .fontSize(9)
+                    .font('Helvetica')
+                    .text((index + 1).toString(), col1X, currentY)
+                    .text(fullName, col2X, currentY)
+                    .text(identification, col3X, currentY);
+
+                // Signature box
+                doc
+                    .rect(col4X, currentY - 3, 80, 18)
+                    .stroke();
+
+                currentY += rowHeight;
+            });
+
+            // Summary
+            doc.moveDown(2);
+            doc
+                .fontSize(11)
+                .font('Helvetica-Bold')
+                .text(`Total de Asistentes: ${attendees.length}`, { align: 'center' });
+        }
+
+        // Footer
+        doc
+            .fontSize(8)
+            .font('Helvetica')
+            .text(
+                `Documento generado el ${formatDate(new Date())} - COOPESUMA R.L.`,
+                50,
+                doc.page.height - 40,
+                { align: 'center' }
+            );
+
+        return doc;
+    } catch (error) {
+        logger.error('Error creating attendance list report PDF:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     createAttendanceReport,
     createAttendanceStatsReport,
+    createLiquidationsReport,
+    createAttendanceListReport,
     formatDate,
-    formatTime
+    formatTime,
+    formatCurrency
 };
