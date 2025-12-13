@@ -138,7 +138,7 @@ const MemberProfilePage = () => {
                     {/* Member Code */}
                     {memberData.memberCode && (
                         <p className="text-sm text-gray-500 mt-1 text-center">
-                            Código de Asociado: <span className="font-medium">{memberData.memberCode}</span>
+                            Número de Asociado: <span className="font-medium">{memberData.memberCode}</span>
                         </p>
                     )}
 
@@ -153,7 +153,7 @@ const MemberProfilePage = () => {
                 </div>
 
                 {/* Personal Information */}
-                <div className="pt-6 space-y-6">
+                <div className="pt-8 space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900">Datos Personales</h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -206,7 +206,7 @@ const MemberProfilePage = () => {
                 </div>
 
                 {/* Affiliation Information */}
-                <div className="pt-6 mt-6 border-t border-gray-200 space-y-6">
+                <div className="pt-8 mt-6 border-t border-gray-200 space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900">Información de Afiliación</h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

@@ -23,8 +23,8 @@ export const downloadSavingsReceiptPDF = async (receiptData) => {
             responseType: 'blob'
         });
 
-        const blob = new Blob([response.data], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
+        // response.data is already a Blob, no need to wrap it again
+        const url = window.URL.createObjectURL(response.data);
         const link = document.createElement('a');
         link.href = url;
         link.download = `recibo-${receiptData.transactionType}-${Date.now()}.pdf`;
@@ -48,8 +48,8 @@ export const downloadAffiliationReceiptPDF = async (receiptData) => {
             responseType: 'blob'
         });
 
-        const blob = new Blob([response.data], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
+        // response.data is already a Blob, no need to wrap it again
+        const url = window.URL.createObjectURL(response.data);
         const link = document.createElement('a');
         link.href = url;
         link.download = `recibo-afiliacion-${Date.now()}.pdf`;
@@ -73,8 +73,8 @@ export const downloadLiquidationReceiptPDF = async (receiptData) => {
             responseType: 'blob'
         });
 
-        const blob = new Blob([response.data], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
+        // response.data is already a Blob, no need to wrap it again
+        const url = window.URL.createObjectURL(response.data);
         const link = document.createElement('a');
         link.href = url;
         link.download = `recibo-liquidacion-${Date.now()}.pdf`;
