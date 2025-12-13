@@ -55,7 +55,7 @@ const checkMemberOwnership = async (req, res, next) => {
         logger.error('Error in checkMemberOwnership middleware:', error);
         return res.status(500).json({
             success: false,
-            message: 'Internal server error',
+            message: 'Error interno del servidor',
             error: 'INTERNAL_ERROR'
         });
     }
@@ -79,7 +79,7 @@ const checkNotificationOwnership = async (req, res, next) => {
         if (result.rows.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'Notification not found',
+                message: 'Notificación no encontrada',
                 error: 'NOT_FOUND'
             });
         }
@@ -87,16 +87,16 @@ const checkNotificationOwnership = async (req, res, next) => {
         const notification = result.rows[0];
 
         // Verify ownership
-        if (notification.user_id !== userId) {
+        if (notification.userId !== userId) {
             logger.warn('Unauthorized notification access attempt', {
                 userId,
                 notificationId,
-                actualOwnerId: notification.user_id
+                actualOwnerId: notification.userId
             });
 
             return res.status(403).json({
                 success: false,
-                message: 'You can only access your own notifications',
+                message: 'Solo puedes acceder a tus propias notificaciones',
                 error: 'FORBIDDEN'
             });
         }
