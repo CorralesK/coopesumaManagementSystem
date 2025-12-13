@@ -22,7 +22,7 @@ const isMobileDevice = () => {
 const downloadPDFFromBackend = async (endpoint, filename) => {
     // Get the base URL from the api instance
     const baseURL = api.defaults.baseURL;
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     const fullURL = `${baseURL}${endpoint}`;
 
     // Log the URL for debugging

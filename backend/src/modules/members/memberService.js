@@ -828,7 +828,7 @@ const getMemberDashboard = async (userId) => {
             );
         }
 
-        // 2. Get all accounts with balances
+        // 2. Get savings account only (contributions and surplus not implemented yet)
         const accountsQuery = `
             SELECT
                 a.account_id,
@@ -839,27 +839,20 @@ const getMemberDashboard = async (userId) => {
                 a.updated_at
             FROM accounts a
             WHERE a.member_id = $1
-            ORDER BY
-                CASE a.account_type
-                    WHEN 'savings' THEN 1
-                    WHEN 'contributions' THEN 2
-                    WHEN 'surplus' THEN 3
-                    WHEN 'affiliation' THEN 4
-                    ELSE 5
-                END
+                AND a.account_type = 'savings'
         `;
 
         const accountsResult = await db.query(accountsQuery, [member.member_id]);
         const accounts = accountsResult.rows.map(acc => ({
             accountId: acc.account_id,
             accountType: acc.account_type,
-            currentBalance: parseFloat(acc.current_balance),
-            lastFiscalYearBalance: parseFloat(acc.last_fiscal_year_balance),
+            currentBalance: parseFloat(acc.current_balance || 0),
+            lastFiscalYearBalance: parseFloat(acc.last_fiscal_year_balance || 0),
             displayName: getAccountDisplayName(acc.account_type),
-            available: acc.account_type !== 'affiliation' // Affiliation account not visible to members
+            available: true
         }));
 
-        // 3. Get recent transactions (last 10 across all accounts)
+        // 3. Get recent savings transactions only (last 10)
         const transactionsQuery = `
             SELECT
                 t.transaction_id,
@@ -875,6 +868,7 @@ const getMemberDashboard = async (userId) => {
             FROM transactions t
             JOIN accounts a ON t.account_id = a.account_id
             WHERE a.member_id = $1
+                AND a.account_type = 'savings'
                 AND t.status = 'completed'
             ORDER BY t.transaction_date DESC, t.created_at DESC
             LIMIT 10
@@ -893,7 +887,9 @@ const getMemberDashboard = async (userId) => {
             status: tx.status
         }));
 
-        // 4. Get contribution status for current fiscal year using contributions_detail
+        // 4. Contribution status - DISABLED (not implemented yet)
+        // TODO: Uncomment when contributions/surplus features are implemented
+        /*
         const currentFiscalYear = await getCurrentFiscalYear();
 
         const contributionStatusQuery = `
@@ -952,6 +948,8 @@ const getMemberDashboard = async (userId) => {
                 isComplete: (parseInt(contribData.tracts_paid) || 0) >= allTracts.length
             };
         }
+        */
+        const contributionStatus = null;
 
         // 5. Get pending withdrawal requests (if any)
         const pendingRequestsQuery = `
@@ -1003,9 +1001,9 @@ const getMemberDashboard = async (userId) => {
                 isActive: member.is_active,
                 photoUrl: member.photo_url
             },
-            accounts: accounts.filter(acc => acc.available), // Hide affiliation account
+            accounts,
             recentTransactions,
-            contributionStatus,
+            // contributionStatus - disabled (not implemented yet)
             pendingRequests
         };
 
@@ -1038,10 +1036,17 @@ const getAccountDisplayName = (accountType) => {
 
 /**
  * Helper function to get current fiscal year
+ * Falls back to current year if get_fiscal_year function doesn't exist
  */
 const getCurrentFiscalYear = async () => {
-    const result = await db.query('SELECT get_fiscal_year(CURRENT_DATE) AS fiscal_year');
-    return result.rows[0].fiscal_year;
+    try {
+        const result = await db.query('SELECT get_fiscal_year(CURRENT_DATE) AS fiscal_year');
+        return result.rows[0]?.fiscal_year || new Date().getFullYear();
+    } catch (error) {
+        // Fallback to current year if function doesn't exist
+        logger.warn('get_fiscal_year function not found, using current year');
+        return new Date().getFullYear();
+    }
 };
 
 /**
