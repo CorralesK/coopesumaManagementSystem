@@ -20,13 +20,21 @@ const isMobileDevice = () => {
  * @param {string} filename - Filename for the PDF
  */
 const downloadPDFFromBackend = async (endpoint, filename) => {
-    try {
-        // Get the base URL from the api instance
-        const baseURL = api.defaults.baseURL;
-        const token = localStorage.getItem('token');
+    // Get the base URL from the api instance
+    const baseURL = api.defaults.baseURL;
+    const token = localStorage.getItem('token');
+    const fullURL = `${baseURL}${endpoint}`;
 
+    // Log the URL for debugging
+    console.log('=== PDF Download Debug Info ===');
+    console.log('Base URL:', baseURL);
+    console.log('Endpoint:', endpoint);
+    console.log('Full URL:', fullURL);
+    console.log('Token present:', !!token);
+
+    try {
         // Use fetch directly for better control over the response
-        const response = await fetch(`${baseURL}${endpoint}`, {
+        const response = await fetch(fullURL, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -34,26 +42,44 @@ const downloadPDFFromBackend = async (endpoint, filename) => {
             }
         });
 
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('PDF generation failed:', errorText);
-            throw new Error('Error al generar el PDF');
+            let errorMessage = `Error ${response.status}: ${response.statusText}`;
+            try {
+                const errorData = await response.text();
+                console.error('Server error response:', errorData);
+                // Try to parse as JSON for better error message
+                try {
+                    const jsonError = JSON.parse(errorData);
+                    errorMessage = jsonError.message || jsonError.error || errorMessage;
+                } catch {
+                    if (errorData) errorMessage = errorData;
+                }
+            } catch (e) {
+                console.error('Could not read error response:', e);
+            }
+            throw new Error(errorMessage);
         }
 
         const blob = await response.blob();
+        console.log('Blob received - type:', blob.type, 'size:', blob.size);
 
         // Verify the blob is actually a PDF
-        if (blob.type !== 'application/pdf' && blob.size < 100) {
-            console.error('Invalid PDF response:', blob.type, blob.size);
-            throw new Error('El servidor no devolvió un PDF válido');
+        if (blob.size < 100) {
+            console.error('Invalid PDF response - blob too small:', blob.size);
+            throw new Error('El servidor devolvió un PDF vacío o inválido');
         }
 
         const url = window.URL.createObjectURL(blob);
 
         // For iOS Safari, we need to open in a new window
         if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            console.log('iOS detected - opening in new window');
             window.open(url, '_blank');
         } else {
+            console.log('Android/other - triggering download');
             const link = document.createElement('a');
             link.href = url;
             link.download = filename;
@@ -64,9 +90,16 @@ const downloadPDFFromBackend = async (endpoint, filename) => {
 
         // Cleanup after a delay
         setTimeout(() => window.URL.revokeObjectURL(url), 5000);
+        console.log('=== PDF Download Complete ===');
     } catch (error) {
-        console.error('Error downloading PDF:', error);
-        alert('Error al descargar el PDF. Por favor intenta de nuevo.');
+        console.error('=== PDF Download Error ===');
+        console.error('Error type:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Full error:', error);
+
+        // Show more detailed error to user
+        const errorDetails = `URL: ${fullURL}\nError: ${error.message}`;
+        alert(`Error al descargar el PDF:\n\n${errorDetails}\n\nRevisa la consola del navegador para más detalles.`);
     }
 };
 
