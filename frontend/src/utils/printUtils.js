@@ -1337,6 +1337,548 @@ export const printMemberCards = ({ members = [], cooperativeName = 'Coopesuma' }
  * @param {number} options.liquidationId - Liquidation ID
  * @param {string} options.receiptNumber - Receipt number (optional)
  */
+/**
+ * Print liquidations report with proper pagination
+ * Opens a new window with HTML that properly handles multi-page tables
+ * @param {Object} options - Print options
+ * @param {Array} options.liquidations - List of liquidations
+ * @param {Object} options.stats - Statistics object
+ * @param {Object} options.dateRange - Date range { startDate, endDate }
+ */
+export const printLiquidationsReport = ({
+    liquidations = [],
+    stats = {},
+    dateRange = {}
+}) => {
+    const printWindow = window.open('', '_blank');
+
+    if (!printWindow) {
+        alert('Por favor, permite las ventanas emergentes para imprimir.');
+        return;
+    }
+
+    const formatDate = (date) => {
+        if (!date) return 'N/A';
+        return new Date(date).toLocaleDateString('es-CR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('es-CR', {
+            style: 'currency',
+            currency: 'CRC',
+            minimumFractionDigits: 2
+        }).format(amount || 0);
+    };
+
+    const printDate = new Date().toLocaleString('es-CR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    // Generate table rows
+    const tableRows = liquidations.map((liq, index) => `
+        <tr>
+            <td style="text-align: center;">${index + 1}</td>
+            <td>${new Date(liq.liquidationDate || liq.createdAt).toLocaleDateString('es-CR')}</td>
+            <td>${liq.memberName || 'N/A'}</td>
+            <td style="text-align: center;">${liq.liquidationType === 'periodic' ? 'Periodica' : 'Retiro'}</td>
+            <td style="text-align: right;">${formatCurrency(liq.totalSavings)}</td>
+        </tr>
+    `).join('');
+
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Reporte de Liquidaciones</title>
+            <style>
+                @media print {
+                    @page {
+                        size: letter portrait;
+                        margin: 15mm 20mm;
+                    }
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    thead {
+                        display: table-header-group;
+                    }
+                    tfoot {
+                        display: table-footer-group;
+                    }
+                    tr {
+                        page-break-inside: avoid;
+                    }
+                }
+
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    font-family: 'Times New Roman', Times, serif;
+                    background: white;
+                    color: #000;
+                    line-height: 1.4;
+                    padding: 20px;
+                }
+
+                .document-header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 2px solid #000;
+                }
+
+                .document-header h1 {
+                    font-size: 18px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    margin-bottom: 8px;
+                }
+
+                .document-header .subtitle {
+                    font-size: 14px;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+
+                .period-info {
+                    text-align: center;
+                    margin-bottom: 20px;
+                    font-size: 12px;
+                }
+
+                .stats-section {
+                    margin-bottom: 20px;
+                    padding: 12px;
+                    border: 1px solid #000;
+                }
+
+                .stats-section h2 {
+                    font-size: 11px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    margin-bottom: 10px;
+                    padding-bottom: 5px;
+                    border-bottom: 1px solid #000;
+                }
+
+                .stats-grid {
+                    display: flex;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                }
+
+                .stat-item {
+                    text-align: center;
+                    padding: 8px 15px;
+                    border: 1px solid #ccc;
+                    min-width: 120px;
+                }
+
+                .stat-item .label {
+                    font-size: 9px;
+                    text-transform: uppercase;
+                    margin-bottom: 3px;
+                }
+
+                .stat-item .value {
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 10px;
+                }
+
+                thead th {
+                    padding: 8px 5px;
+                    text-align: left;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    border: 1px solid #000;
+                    border-bottom: 2px solid #000;
+                    background: #f5f5f5;
+                }
+
+                tbody td {
+                    padding: 6px 5px;
+                    border: 1px solid #000;
+                }
+
+                tbody tr:nth-child(even) {
+                    background: #fafafa;
+                }
+
+                tfoot td {
+                    padding: 8px 5px;
+                    font-weight: bold;
+                    border: 1px solid #000;
+                    background: #f0f0f0;
+                }
+
+                .footer {
+                    margin-top: 30px;
+                    padding-top: 15px;
+                    border-top: 1px solid #000;
+                    font-size: 9px;
+                    text-align: center;
+                }
+
+                .no-data {
+                    text-align: center;
+                    padding: 40px;
+                    font-style: italic;
+                    font-size: 12px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="document-header">
+                <h1>COOPESUMA R.L.</h1>
+                <div class="subtitle">Reporte de Liquidaciones</div>
+            </div>
+
+            <div class="period-info">
+                <strong>Periodo:</strong> ${formatDate(dateRange.startDate)} - ${formatDate(dateRange.endDate)}
+            </div>
+
+            <div class="stats-section">
+                <h2>Resumen</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="label">Total Liquidaciones</div>
+                        <div class="value">${stats.total || 0}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">Periodicas</div>
+                        <div class="value">${stats.periodic || 0}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">Por Retiro</div>
+                        <div class="value">${stats.exit || 0}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">Monto Total</div>
+                        <div class="value">${formatCurrency(stats.totalSavings || stats.totalAmount)}</div>
+                    </div>
+                </div>
+            </div>
+
+            ${liquidations.length > 0 ? `
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 8%; text-align: center;">N</th>
+                            <th style="width: 15%;">Fecha</th>
+                            <th style="width: 42%;">Miembro</th>
+                            <th style="width: 15%; text-align: center;">Tipo</th>
+                            <th style="width: 20%; text-align: right;">Monto Ahorros</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="text-align: right;">TOTAL:</td>
+                            <td style="text-align: right;">${formatCurrency(stats.totalSavings || stats.totalAmount)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            ` : `
+                <div class="no-data">
+                    No hay liquidaciones en el periodo seleccionado.
+                </div>
+            `}
+
+            <div class="footer">
+                Documento generado el ${printDate} - COOPESUMA R.L.
+            </div>
+
+            <script>
+                window.onload = function() {
+                    window.print();
+                    window.onafterprint = function() {
+                        window.close();
+                    };
+                };
+            </script>
+        </body>
+        </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+};
+
+/**
+ * Print attendance list report with proper pagination
+ * Opens a new window with HTML that properly handles multi-page tables
+ * @param {Object} options - Print options
+ * @param {Array} options.attendees - List of attendees
+ * @param {Object} options.assembly - Assembly information
+ * @param {string} options.title - Document title
+ */
+export const printAttendanceListReport = ({ attendees = [], assembly = {}, title = 'Lista de Asistencia' }) => {
+    const printWindow = window.open('', '_blank');
+
+    if (!printWindow) {
+        alert('Por favor, permite las ventanas emergentes para imprimir.');
+        return;
+    }
+
+    const formatDate = (date) => {
+        if (!date) return 'N/A';
+        return new Date(date).toLocaleDateString('es-CR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    const printDate = new Date().toLocaleString('es-CR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    // Generate table rows
+    const tableRows = attendees.map((attendee, index) => `
+        <tr>
+            <td style="text-align: center; font-weight: bold;">${index + 1}</td>
+            <td>${attendee.fullName || 'N/A'}</td>
+            <td>${attendee.identification || 'N/A'}</td>
+            <td></td>
+        </tr>
+    `).join('');
+
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${title}</title>
+            <style>
+                @media print {
+                    @page {
+                        size: letter portrait;
+                        margin: 15mm 20mm;
+                    }
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    thead {
+                        display: table-header-group;
+                    }
+                    tr {
+                        page-break-inside: avoid;
+                    }
+                }
+
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    font-family: 'Times New Roman', Times, serif;
+                    background: white;
+                    color: #000;
+                    line-height: 1.4;
+                    padding: 20px;
+                }
+
+                .document-header {
+                    text-align: center;
+                    margin-bottom: 25px;
+                    padding-bottom: 15px;
+                    border-bottom: 2px solid #000;
+                }
+
+                .document-header h1 {
+                    font-size: 18px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    margin-bottom: 8px;
+                }
+
+                .document-header .subtitle {
+                    font-size: 14px;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+
+                .assembly-info {
+                    margin-bottom: 25px;
+                    padding: 15px 0;
+                }
+
+                .assembly-info h2 {
+                    font-size: 13px;
+                    font-weight: bold;
+                    margin-bottom: 12px;
+                    text-transform: uppercase;
+                }
+
+                .info-row {
+                    display: flex;
+                    margin-bottom: 6px;
+                    font-size: 11px;
+                }
+
+                .info-row .label {
+                    font-weight: bold;
+                    width: 150px;
+                    flex-shrink: 0;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 11px;
+                }
+
+                thead th {
+                    padding: 10px 8px;
+                    text-align: left;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    border: 1px solid #000;
+                    border-bottom: 2px solid #000;
+                    background: #f5f5f5;
+                }
+
+                tbody td {
+                    padding: 10px 8px;
+                    border: 1px solid #000;
+                    min-height: 35px;
+                }
+
+                .footer {
+                    margin-top: 30px;
+                    padding-top: 15px;
+                    border-top: 1px solid #000;
+                    font-size: 9px;
+                    text-align: center;
+                }
+
+                .summary {
+                    margin-top: 20px;
+                    padding: 10px;
+                    background: #f5f5f5;
+                    border: 1px solid #000;
+                    font-size: 11px;
+                    text-align: center;
+                }
+
+                .no-data {
+                    text-align: center;
+                    padding: 40px;
+                    font-style: italic;
+                    font-size: 12px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="document-header">
+                <h1>COOPESUMA R.L.</h1>
+                <div class="subtitle">${title}</div>
+            </div>
+
+            <div class="assembly-info">
+                <h2>Informacion de la Asamblea</h2>
+                <div class="info-row">
+                    <span class="label">Nombre:</span>
+                    <span>${assembly.title || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Fecha Programada:</span>
+                    <span>${formatDate(assembly.scheduledDate)}</span>
+                </div>
+                ${assembly.startTime ? `
+                <div class="info-row">
+                    <span class="label">Hora de Inicio:</span>
+                    <span>${assembly.startTime.substring(0, 5)}</span>
+                </div>
+                ` : ''}
+                ${assembly.endTime ? `
+                <div class="info-row">
+                    <span class="label">Hora de Finalizacion:</span>
+                    <span>${assembly.endTime.substring(0, 5)}</span>
+                </div>
+                ` : ''}
+            </div>
+
+            ${attendees.length > 0 ? `
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 8%; text-align: center;">N</th>
+                            <th style="width: 42%;">Nombre Completo</th>
+                            <th style="width: 20%;">Cedula</th>
+                            <th style="width: 30%; text-align: center;">Firma</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+
+                <div class="summary">
+                    <strong>Total de Asistentes: ${attendees.length}</strong>
+                </div>
+            ` : `
+                <div class="no-data">
+                    No hay asistentes registrados para esta asamblea.
+                </div>
+            `}
+
+            <div class="footer">
+                Documento generado el ${printDate} - COOPESUMA R.L.
+            </div>
+
+            <script>
+                window.onload = function() {
+                    window.print();
+                    window.onafterprint = function() {
+                        window.close();
+                    };
+                };
+            </script>
+        </body>
+        </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+};
+
 export const printLiquidationReceipt = ({
     member = {},
     liquidationType = 'periodic',
