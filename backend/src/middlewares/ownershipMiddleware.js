@@ -27,22 +27,22 @@ const checkMemberOwnership = async (req, res, next) => {
         if (!userMember) {
             return res.status(403).json({
                 success: false,
-                message: 'Access denied',
+                message: 'Acceso denegado',
                 error: 'FORBIDDEN'
             });
         }
 
         // Verify ownership
-        if (userMember.member_id !== requestedMemberId) {
+        if (userMember.memberId !== requestedMemberId) {
             logger.warn('Unauthorized member access attempt', {
                 userId: req.user.userId,
                 requestedMemberId,
-                actualMemberId: userMember.member_id
+                actualMemberId: userMember.memberId
             });
 
             return res.status(403).json({
                 success: false,
-                message: 'You can only access your own data',
+                message: 'Solo puedes acceder a tus propios datos',
                 error: 'FORBIDDEN'
             });
         }

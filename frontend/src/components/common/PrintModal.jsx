@@ -8,6 +8,7 @@ import { useEffect, useId, useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from './Button';
 import { isMobileDevice, downloadSavingsReceiptPDF, downloadAffiliationReceiptPDF, downloadLiquidationReceiptPDF } from '../../utils/receiptUtils';
+import { printReceipt } from '../../utils/printReceiptUtils';
 
 const PrintModal = ({
     isOpen,
@@ -152,18 +153,26 @@ const PrintModal = ({
             return;
         }
 
-        // Desktop: Use regular print
-        const originalTitle = document.title;
-        if (printTitle) {
-            document.title = printTitle;
+        // Desktop: Use HTML window approach for receipts, regular print for other content
+        if (receiptData && receiptType) {
+            // Use HTML window approach for receipts (avoids duplication)
+            printReceipt({ receiptData, receiptType });
+            // Close modal after opening print window
+            onClose();
+        } else {
+            // Fallback for non-receipt prints (if any)
+            const originalTitle = document.title;
+            if (printTitle) {
+                document.title = printTitle;
+            }
+
+            window.print();
+
+            // Restore title after print dialog
+            setTimeout(() => {
+                document.title = originalTitle;
+            }, 100);
         }
-
-        window.print();
-
-        // Restore title after print dialog
-        setTimeout(() => {
-            document.title = originalTitle;
-        }, 100);
     };
 
     if (!isOpen) return null;
