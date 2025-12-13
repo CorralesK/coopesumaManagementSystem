@@ -92,8 +92,8 @@ const ImageUpload = ({
     };
 
     const containerClasses = `
-        relative border-2 border-dashed rounded-lg p-4 text-center cursor-pointer
-        transition-colors duration-200
+        relative border-2 border-dashed rounded-lg p-4 cursor-pointer
+        transition-colors duration-200 flex items-center justify-center
         ${dragOver ? 'border-primary-500 bg-primary-50' : 'border-gray-300'}
         ${error ? 'border-red-500' : ''}
         ${disabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'hover:border-primary-400 hover:bg-gray-50'}
@@ -151,9 +151,9 @@ const ImageUpload = ({
                         )}
                     </div>
                 ) : (
-                    <div className="py-6">
+                    <div className="py-6 text-center">
                         <svg
-                            className="mx-auto h-12 w-12 text-gray-400"
+                            className="h-12 w-12 text-gray-400 mx-auto"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
