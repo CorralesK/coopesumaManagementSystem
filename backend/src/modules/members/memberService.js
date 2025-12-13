@@ -1367,6 +1367,64 @@ const affiliateMember = async (memberData) => {
     }
 };
 
+/**
+ * Generate PDF with member cards (batch)
+ *
+ * @param {Array<number>} memberIds - Array of member IDs
+ * @returns {Promise<PDFDocument>} PDF document stream
+ */
+const generateMemberCardsPDF = async (memberIds) => {
+    const { createMemberCardsPDF } = require('../../utils/pdfUtils');
+
+    try {
+        // Generate QR data for all members
+        const qrDataArray = await generateBatchQrCodes(memberIds);
+
+        // Filter out errors
+        const successfulMembers = qrDataArray.filter(qr => !qr.error);
+
+        if (successfulMembers.length === 0) {
+            throw new MemberError(
+                'No se pudo generar datos para ningun miembro',
+                ERROR_CODES.INTERNAL_ERROR,
+                400
+            );
+        }
+
+        // Sort by quality, level and name
+        const sortedMembers = successfulMembers.sort((a, b) => {
+            if (a.qualityId !== b.qualityId) {
+                return (a.qualityId || 0) - (b.qualityId || 0);
+            }
+            if (a.levelId !== b.levelId) {
+                return (a.levelId || 0) - (b.levelId || 0);
+            }
+            return (a.fullName || '').localeCompare(b.fullName || '', 'es');
+        });
+
+        // Generate PDF
+        const pdfDoc = createMemberCardsPDF(sortedMembers);
+
+        logger.info('Member cards PDF generated', {
+            totalMembers: memberIds.length,
+            successfulCards: sortedMembers.length
+        });
+
+        return pdfDoc;
+    } catch (error) {
+        if (error.isOperational) {
+            throw error;
+        }
+
+        logger.error('Error generating member cards PDF:', error);
+        throw new MemberError(
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    }
+};
+
 module.exports = {
     getMemberById,
     getAllMembers,
@@ -1376,6 +1434,7 @@ module.exports = {
     generateMemberQr,
     regenerateMemberQr,
     generateBatchQrCodes,
+    generateMemberCardsPDF,
     verifyMemberByQr,
     publicVerifyMember,
     getMemberDashboard,

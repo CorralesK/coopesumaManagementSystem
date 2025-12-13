@@ -841,11 +841,229 @@ const createAttendanceListReport = (attendees, assembly) => {
     }
 };
 
+/**
+ * Create member cards PDF (batch carnets)
+ * Generates 4 cards per page (2x2 layout)
+ *
+ * @param {Array} members - List of members with QR data
+ * @returns {PDFDocument} PDF document stream
+ */
+const createMemberCardsPDF = (members) => {
+    try {
+        const doc = new PDFDocument({
+            size: 'LETTER',
+            margins: {
+                top: 20,
+                bottom: 20,
+                left: 20,
+                right: 20
+            }
+        });
+
+        const pageWidth = doc.page.width;
+        const pageHeight = doc.page.height;
+
+        // Card dimensions (credit card size approximately)
+        const cardWidth = 255; // ~90mm
+        const cardHeight = 160; // ~56mm
+        const cardGap = 15;
+
+        // Calculate positions for 2x2 grid
+        const startX = (pageWidth - (cardWidth * 2 + cardGap)) / 2;
+        const startY = 40;
+
+        // Process members in groups of 4
+        for (let i = 0; i < members.length; i++) {
+            const member = members[i];
+            const cardIndex = i % 4;
+
+            // Add new page after every 4 cards (except first)
+            if (i > 0 && cardIndex === 0) {
+                doc.addPage();
+            }
+
+            // Calculate card position
+            const col = cardIndex % 2;
+            const row = Math.floor(cardIndex / 2);
+            const x = startX + col * (cardWidth + cardGap);
+            const y = startY + row * (cardHeight + cardGap);
+
+            // Draw card border
+            doc
+                .lineWidth(1)
+                .rect(x, y, cardWidth, cardHeight)
+                .stroke('#e5e7eb');
+
+            // Header section (white background with text)
+            const headerHeight = 28;
+            doc
+                .fillColor('#ffffff')
+                .rect(x, y, cardWidth, headerHeight)
+                .fill();
+
+            // Header border bottom
+            doc
+                .moveTo(x, y + headerHeight)
+                .lineTo(x + cardWidth, y + headerHeight)
+                .lineWidth(1)
+                .stroke('#e5e7eb');
+
+            // Header text (COOPESUMA)
+            doc
+                .fontSize(14)
+                .font('Helvetica-Bold')
+                .fillColor('#2563eb')
+                .text('COOPESUMA', x, y + 8, {
+                    width: cardWidth,
+                    align: 'center'
+                });
+
+            // Body section
+            const bodyY = y + headerHeight + 5;
+            const photoSize = 55;
+            const photoX = x + 10;
+            const photoY = bodyY + 5;
+
+            // Photo placeholder or image
+            if (member.photoUrl) {
+                // For photos, we can't easily load external URLs in pdfkit
+                // Draw a placeholder box instead
+                doc
+                    .rect(photoX, photoY, photoSize, photoSize + 10)
+                    .fillAndStroke('#f3f4f6', '#e5e7eb');
+                doc
+                    .fontSize(6)
+                    .font('Helvetica')
+                    .fillColor('#9ca3af')
+                    .text('FOTO', photoX, photoY + photoSize / 2, {
+                        width: photoSize,
+                        align: 'center'
+                    });
+            } else {
+                doc
+                    .rect(photoX, photoY, photoSize, photoSize + 10)
+                    .fillAndStroke('#f3f4f6', '#e5e7eb');
+                doc
+                    .fontSize(6)
+                    .font('Helvetica')
+                    .fillColor('#9ca3af')
+                    .text('SIN FOTO', photoX, photoY + photoSize / 2, {
+                        width: photoSize,
+                        align: 'center'
+                    });
+            }
+
+            // Member info section
+            const infoX = photoX + photoSize + 8;
+            const infoWidth = cardWidth - photoSize - 85;
+            let infoY = bodyY + 5;
+
+            // Full name (truncate if too long)
+            const fullName = (member.fullName || 'N/A').substring(0, 25);
+            doc
+                .fontSize(9)
+                .font('Helvetica-Bold')
+                .fillColor('#1f2937')
+                .text(fullName, infoX, infoY, {
+                    width: infoWidth,
+                    lineBreak: false
+                });
+
+            infoY += 14;
+
+            // Cedula
+            doc
+                .fontSize(7)
+                .font('Helvetica-Bold')
+                .fillColor('#374151')
+                .text('Cedula: ', infoX, infoY, { continued: true })
+                .font('Helvetica')
+                .fillColor('#4b5563')
+                .text(member.identification || 'N/A');
+
+            infoY += 11;
+
+            // Member code (N° Asociado)
+            if (member.memberCode) {
+                doc
+                    .fontSize(7)
+                    .font('Helvetica-Bold')
+                    .fillColor('#374151')
+                    .text('N° Asociado: ', infoX, infoY, { continued: true })
+                    .font('Helvetica')
+                    .fillColor('#4b5563')
+                    .text(member.memberCode);
+            }
+
+            // QR Code section
+            const qrSize = 60;
+            const qrX = x + cardWidth - qrSize - 10;
+            const qrY = bodyY + 3;
+
+            if (member.qrCodeDataUrl) {
+                // Draw QR code from base64 data URL
+                try {
+                    const base64Data = member.qrCodeDataUrl.replace(/^data:image\/\w+;base64,/, '');
+                    const qrBuffer = Buffer.from(base64Data, 'base64');
+                    doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
+                } catch (err) {
+                    // If QR fails, draw placeholder
+                    doc
+                        .rect(qrX, qrY, qrSize, qrSize)
+                        .fillAndStroke('#f3f4f6', '#e5e7eb');
+                    doc
+                        .fontSize(6)
+                        .fillColor('#9ca3af')
+                        .text('QR', qrX, qrY + qrSize / 2 - 3, {
+                            width: qrSize,
+                            align: 'center'
+                        });
+                }
+            } else {
+                doc
+                    .rect(qrX, qrY, qrSize, qrSize)
+                    .fillAndStroke('#f3f4f6', '#e5e7eb');
+                doc
+                    .fontSize(6)
+                    .fillColor('#9ca3af')
+                    .text('Sin QR', qrX, qrY + qrSize / 2 - 3, {
+                        width: qrSize,
+                        align: 'center'
+                    });
+            }
+
+            // Footer section
+            const footerY = y + cardHeight - 18;
+            doc
+                .moveTo(x, footerY)
+                .lineTo(x + cardWidth, footerY)
+                .lineWidth(0.5)
+                .stroke('#e5e7eb');
+
+            doc
+                .fontSize(6)
+                .font('Helvetica')
+                .fillColor('#64748b')
+                .text('Cooperativa Estudiantil', x, footerY + 5, {
+                    width: cardWidth,
+                    align: 'center'
+                });
+        }
+
+        doc.end();
+        return doc;
+    } catch (error) {
+        logger.error('Error creating member cards PDF:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     createAttendanceReport,
     createAttendanceStatsReport,
     createLiquidationsReport,
     createAttendanceListReport,
+    createMemberCardsPDF,
     formatDate,
     formatTime,
     formatCurrency

@@ -21,6 +21,7 @@ import { formatCurrency } from '../../utils/formatters';
 import PrintModal from '../../components/common/PrintModal';
 import SavingsReceiptPrint from '../../components/print/SavingsReceiptPrint';
 import api from '../../services/api';
+import { downloadMemberCardsPDF } from '../../services/memberService';
 
 /**
  * MemberDetailPage Component
@@ -50,6 +51,7 @@ const MemberDetailPage = () => {
     // Print modal state
     const [showPrintModal, setShowPrintModal] = useState(false);
     const [receiptData, setReceiptData] = useState(null);
+    const [printingCard, setPrintingCard] = useState(false);
 
     // Use custom hooks
     const { member, loading, error, refetch } = useMember(id);
@@ -97,6 +99,29 @@ const MemberDetailPage = () => {
 
     const handleDeleteMember = () => {
         setShowDeleteModal(true);
+    };
+
+    // Check if device is mobile
+    const isMobileDevice = () => {
+        return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    };
+
+    // Handle print/download carnet
+    const handlePrintCarnet = async () => {
+        if (isMobileDevice()) {
+            // Mobile - download PDF from backend
+            try {
+                setPrintingCard(true);
+                await downloadMemberCardsPDF([member.memberId]);
+            } catch (err) {
+                setErrorMessage('Error al descargar el carnet: ' + (err.message || 'Error desconocido'));
+            } finally {
+                setPrintingCard(false);
+            }
+        } else {
+            // Desktop - use browser print
+            window.print();
+        }
     };
 
     const handleContinueToLiquidation = () => {
@@ -647,7 +672,16 @@ const MemberDetailPage = () => {
                         </div>
                         <div className="mt-6 flex space-x-3 print-hide">
                             <Button onClick={() => setQrModalOpen(false)} variant="outline">Cerrar</Button>
-                            <Button onClick={() => window.print()} variant="primary">Imprimir Carnet</Button>
+                            <Button onClick={handlePrintCarnet} variant="primary" disabled={printingCard}>
+                                {printingCard ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                        Descargando...
+                                    </>
+                                ) : (
+                                    'Imprimir Carnet'
+                                )}
+                            </Button>
                         </div>
                     </div>
                 </Modal>

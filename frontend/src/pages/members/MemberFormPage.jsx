@@ -15,6 +15,7 @@ import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import PrintModal from '../../components/common/PrintModal';
 import AffiliationReceiptPrint from '../../components/print/AffiliationReceiptPrint';
+import ImageUpload from '../../components/common/ImageUpload';
 import { getAllQualities, getAllLevels } from '../../services/catalogService';
 import { MEMBER_QUALITIES } from '../../utils/constants';
 
@@ -44,7 +45,8 @@ const MemberFormPage = () => {
         levelId: '',
         gender: '',
         institutionalEmail: '',
-        photoUrl: ''
+        photoUrl: '',
+        photoFile: null // New field for uploaded file
     });
     const [errors, setErrors] = useState({});
     const [formError, setFormError] = useState('');
@@ -108,7 +110,20 @@ const MemberFormPage = () => {
 
     // Handle input changes
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
+        const { name, value, type } = e.target;
+
+        // Handle file input from ImageUpload component
+        if (type === 'file') {
+            setFormData(prev => ({
+                ...prev,
+                photoFile: value, // value is the File object or null
+                photoUrl: '' // Clear URL when file is selected
+            }));
+            if (errors.photo) {
+                setErrors(prev => ({ ...prev, photo: '' }));
+            }
+            return;
+        }
 
         // If changing quality, reset level
         if (name === 'qualityId') {
@@ -155,10 +170,6 @@ const MemberFormPage = () => {
             newErrors.institutionalEmail = 'Debe ser un correo institucional del MEP';
         }
 
-        if (formData.photoUrl && !/^https?:\/\/.+/.test(formData.photoUrl)) {
-            newErrors.photoUrl = 'La URL de la foto debe ser válida';
-        }
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -175,15 +186,24 @@ const MemberFormPage = () => {
         try {
             setFormError('');
 
-            const payload = {
-                fullName: formData.fullName.trim(),
-                identification: formData.identification.trim(),
-                institutionalEmail: formData.institutionalEmail.trim(),
-                qualityId: parseInt(formData.qualityId),
-                levelId: formData.levelId ? parseInt(formData.levelId) : null,
-                gender: formData.gender || null,
-                photoUrl: formData.photoUrl.trim() || null
-            };
+            // Create FormData for file upload support
+            const payload = new FormData();
+            payload.append('fullName', formData.fullName.trim());
+            payload.append('identification', formData.identification.trim());
+            payload.append('institutionalEmail', formData.institutionalEmail.trim());
+            payload.append('qualityId', formData.qualityId);
+            if (formData.levelId) {
+                payload.append('levelId', formData.levelId);
+            }
+            if (formData.gender) {
+                payload.append('gender', formData.gender);
+            }
+            // Add photo file if selected, otherwise keep existing URL
+            if (formData.photoFile) {
+                payload.append('photo', formData.photoFile);
+            } else if (formData.photoUrl) {
+                payload.append('photoUrl', formData.photoUrl);
+            }
 
             if (isEditMode) {
                 await update(id, payload);
@@ -330,27 +350,17 @@ const MemberFormPage = () => {
                         {/* Fotografía */}
                         <div>
                             <h2 className="text-lg font-semibold text-gray-900 mb-4">Fotografía</h2>
-                            <Input
-                                label="URL de Foto"
-                                name="photoUrl"
-                                type="url"
-                                value={formData.photoUrl}
+                            <ImageUpload
+                                label="Foto del Miembro"
+                                name="photo"
+                                value={formData.photoFile || formData.photoUrl}
                                 onChange={handleInputChange}
-                                error={errors.photoUrl}
-                                placeholder="https://ejemplo.com/foto.jpg (opcional)"
+                                error={errors.photo}
+                                maxSizeMB={5}
                             />
-
-                            {formData.photoUrl && (
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Vista Previa</label>
-                                    <img
-                                        src={formData.photoUrl}
-                                        alt="Vista previa"
-                                        className="w-32 h-32 object-cover rounded-lg border-2 border-gray-300"
-                                        onError={(e) => { e.target.style.display = 'none'; }}
-                                    />
-                                </div>
-                            )}
+                            <p className="text-xs text-gray-500 mt-1">
+                                En dispositivos móviles puede usar la cámara directamente
+                            </p>
                         </div>
                     </div>
                 </Card>
