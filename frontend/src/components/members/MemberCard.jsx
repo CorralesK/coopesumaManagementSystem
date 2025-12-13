@@ -6,6 +6,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import CoopesumaLogo from '../../assets/logos/CoopesumaLogo.png';
 
 /**
  * MemberCard Component
@@ -29,7 +30,8 @@ const MemberCard = ({ member, cooperativeName = 'Coopesuma', showCutLines = fals
             <div className="member-card">
                 {/* Header */}
                 <div className="card-header">
-                    <h1 className="card-title">{cooperativeName}</h1>
+                    <img src={CoopesumaLogo} alt="COOPESUMA" className="header-logo" />
+                    <span className="header-title">COOPESUMA</span>
                 </div>
 
                 {/* Main Content */}
@@ -55,8 +57,13 @@ const MemberCard = ({ member, cooperativeName = 'Coopesuma', showCutLines = fals
                     <div className="card-info">
                         <p className="member-name">{member.fullName}</p>
                         <p className="member-detail">
-                            <span className="detail-label">Cédula:</span> {member.identification}
+                            <span className="detail-label">Cedula:</span> {member.identification}
                         </p>
+                        {member.memberCode && (
+                            <p className="member-detail">
+                                <span className="detail-label">N° Asociado:</span> {member.memberCode}
+                            </p>
+                        )}
                     </div>
 
                     {/* QR Code */}
@@ -107,18 +114,25 @@ const MemberCard = ({ member, cooperativeName = 'Coopesuma', showCutLines = fals
 
                 /* Header */
                 .card-header {
-                    background: #2563eb;
-                    padding: 1mm 3mm;
-                    text-align: center;
+                    background: white;
+                    padding: 2mm 3mm;
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    gap: 2mm;
+                    border-bottom: 1px solid #e5e7eb;
                 }
 
-                .card-title {
-                    font-size: 16pt;
+                .header-logo {
+                    height: 8mm;
+                    width: auto;
+                    object-fit: contain;
+                }
+
+                .header-title {
+                    font-size: 14pt;
                     font-weight: bold;
-                    color: white;
+                    color: #2563eb;
                     margin: 0;
                     line-height: 1;
                     font-family: 'Arial', sans-serif;
@@ -259,7 +273,7 @@ const MemberCard = ({ member, cooperativeName = 'Coopesuma', showCutLines = fals
                     }
 
                     .card-header {
-                        background: #2563eb !important;
+                        background: white !important;
                     }
 
                     .with-cut-lines {
@@ -279,6 +293,7 @@ MemberCard.propTypes = {
     member: PropTypes.shape({
         fullName: PropTypes.string.isRequired,
         identification: PropTypes.string.isRequired,
+        memberCode: PropTypes.string,
         qualityName: PropTypes.string,
         levelName: PropTypes.string,
         photoUrl: PropTypes.string,
