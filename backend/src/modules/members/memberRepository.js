@@ -498,6 +498,7 @@ const findByUserId = async (userId) => {
             m.photo_url,
             m.qr_hash,
             m.affiliation_date,
+            m.last_liquidation_date,
             m.is_active,
             m.created_at,
             m.updated_at,
