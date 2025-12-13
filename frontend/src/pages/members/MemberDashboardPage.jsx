@@ -191,7 +191,7 @@ const MemberDashboardPage = () => {
 
             {/* Header */}
             <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Dashboard</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Saldo de Ahorros</h1>
                 <p className="text-gray-500 mt-1">Bienvenido, {dashboardData.member?.fullName}</p>
             </div>
 
@@ -201,7 +201,6 @@ const MemberDashboardPage = () => {
                     onClick={() => navigate('/my-transactions')}
                     className="cursor-pointer hover:opacity-80 transition-opacity"
                 >
-                    <p className="text-sm font-medium text-gray-600 mb-2">Saldo de Ahorros</p>
                     <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-600">
                         {formatCurrency(savingsBalance)}
                     </p>
