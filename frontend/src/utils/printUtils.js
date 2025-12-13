@@ -21,18 +21,45 @@ const generateAndDownloadPDF = async (htmlContent, filename) => {
     try {
         const html2pdf = (await import('html2pdf.js')).default;
 
-        // Create a temporary container
+        // Parse HTML and extract body content
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, 'text/html');
+        const bodyContent = doc.body.innerHTML;
+        const styleContent = doc.head.querySelector('style')?.innerHTML || '';
+
+        // Create a visible container for html2canvas to capture
         const container = document.createElement('div');
-        container.innerHTML = htmlContent;
-        container.style.position = 'absolute';
-        container.style.left = '-9999px';
+        container.innerHTML = bodyContent;
+        container.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 215.9mm;
+            background: white;
+            z-index: -9999;
+            padding: 20px;
+            font-family: 'Times New Roman', Times, serif;
+            color: #000;
+            line-height: 1.4;
+        `;
+
+        // Add styles
+        const style = document.createElement('style');
+        style.textContent = styleContent;
+        container.prepend(style);
+
         document.body.appendChild(container);
 
         const opt = {
             margin: [10, 10, 10, 10],
             filename: filename,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                windowWidth: 816 // Letter width in pixels at 96dpi
+            },
             jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
