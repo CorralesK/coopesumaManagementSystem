@@ -33,10 +33,10 @@ const MemberProfilePage = () => {
             setLoading(true);
             setError(null);
             const response = await api.get('/members/me/dashboard');
-            setMemberData(response.data.data.member);
+            setMemberData(response.data.member);
         } catch (err) {
             console.error('Error fetching member data:', err);
-            setError(err.response?.data?.message || 'Error al cargar la informacion');
+            setError(err.message || 'Error al cargar la informacion');
         } finally {
             setLoading(false);
         }

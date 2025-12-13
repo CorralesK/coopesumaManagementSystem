@@ -83,18 +83,17 @@ const PrintModal = ({
                     left: 0 !important;
                     top: 0 !important;
                     width: 100% !important;
+                    max-width: 100% !important;
                     margin: 0 !important;
                     padding: 0 !important;
                     background: white !important;
-                    page-break-after: avoid !important;
-                    page-break-before: avoid !important;
-                    page-break-inside: avoid !important;
+                    overflow: visible !important;
                 }
 
                 /* Page settings */
                 @page {
-                    size: ${paperSize} ${orientation};
-                    margin: 1cm;
+                    size: ${paperSize === '80mm 200mm' ? 'auto' : paperSize} ${orientation};
+                    margin: ${paperSize === '80mm 200mm' ? '0.5cm' : '1cm'};
                 }
 
                 /* Ensure colors print */

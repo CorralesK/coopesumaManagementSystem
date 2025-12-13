@@ -44,17 +44,17 @@ const MemberTransactionsPage = () => {
 
             // First get the member ID from dashboard
             const dashboardResponse = await api.get('/members/me/dashboard');
-            const memberId = dashboardResponse.data.data.member.memberId;
+            const memberId = dashboardResponse.data.member.memberId;
 
             // Then get the savings transactions
             const response = await api.get(`/savings/${memberId}/transactions`);
-            const data = response.data.data;
+            const data = response.data;
 
             setTransactions(data.transactions || []);
             setCurrentBalance(data.currentBalance || 0);
         } catch (err) {
             console.error('Error fetching transactions:', err);
-            setError(err.response?.data?.message || 'Error al cargar las transacciones');
+            setError(err.message || 'Error al cargar las transacciones');
         } finally {
             setLoading(false);
         }
