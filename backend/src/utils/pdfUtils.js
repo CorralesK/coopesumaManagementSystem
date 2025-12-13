@@ -915,8 +915,8 @@ const createMemberCardsPDF = (members) => {
             // Header with logo and text centered
             const logoHeight = 18;
             const logoWidth = 18;
-            const textWidth = 80;
-            const totalHeaderWidth = logoWidth + 5 + textWidth;
+            const headerTextWidth = 100;
+            const totalHeaderWidth = logoWidth + 8 + headerTextWidth;
             const headerStartX = x + (cardWidth - totalHeaderWidth) / 2;
 
             // Logo
@@ -930,13 +930,14 @@ const createMemberCardsPDF = (members) => {
                 logger.warn('Could not load logo for member card:', err.message);
             }
 
-            // Header text (COOPESUMA)
+            // Header text (COOPESUMA) - must be on single line
             doc
                 .fontSize(14)
                 .font('Helvetica-Bold')
                 .fillColor('#2563eb')
-                .text('COOPESUMA', headerStartX + logoWidth + 5, y + 8, {
-                    width: textWidth
+                .text('COOPESUMA', headerStartX + logoWidth + 8, y + 7, {
+                    width: headerTextWidth,
+                    lineBreak: false
                 });
 
             // Body section
