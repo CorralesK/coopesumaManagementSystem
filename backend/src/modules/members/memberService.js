@@ -738,7 +738,7 @@ const verifyMemberByQr = async (qrHash) => {
         }
 
         logger.info('Member verified by QR', {
-            memberId: member.member_id,
+            memberId: member.memberId,
             identification: member.identification
         });
 
@@ -780,18 +780,18 @@ const publicVerifyMember = async (qrHash) => {
         }
 
         logger.info('Public member verification', {
-            memberId: member.member_id,
-            isActive: member.is_active
+            memberId: member.memberId,
+            isActive: member.isActive
         });
 
         // Return only public information (adapted to new structure)
         return {
-            fullName: member.full_name,
+            fullName: member.fullName,
             identification: member.identification,
-            qualityName: member.quality_name,
-            levelName: member.level_name,
-            photoUrl: member.photo_url,
-            isActive: member.is_active
+            qualityName: member.qualityName,
+            levelName: member.levelName,
+            photoUrl: member.photoUrl,
+            isActive: member.isActive
         };
     } catch (error) {
         if (error.isOperational) {
@@ -841,7 +841,7 @@ const getMemberDashboard = async (userId) => {
                 AND a.account_type = 'savings'
         `;
 
-        const accountsResult = await db.query(accountsQuery, [member.member_id]);
+        const accountsResult = await db.query(accountsQuery, [member.memberId]);
         const accounts = accountsResult.rows.map(acc => ({
             ...acc,
             currentBalance: parseFloat(acc.currentBalance || 0),
@@ -871,7 +871,7 @@ const getMemberDashboard = async (userId) => {
             LIMIT 10
         `;
 
-        const transactionsResult = await db.query(transactionsQuery, [member.member_id]);
+        const transactionsResult = await db.query(transactionsQuery, [member.memberId]);
         const recentTransactions = transactionsResult.rows.map(tx => ({
             ...tx,
             accountDisplayName: getAccountDisplayName(tx.accountType),
@@ -899,7 +899,7 @@ const getMemberDashboard = async (userId) => {
         `;
 
         const contributionResult = await db.query(contributionStatusQuery, [
-            member.member_id,
+            member.memberId,
             currentFiscalYear
         ]);
 
@@ -960,37 +960,37 @@ const getMemberDashboard = async (userId) => {
             ORDER BY wr.requested_at DESC
         `;
 
-        const pendingRequestsResult = await db.query(pendingRequestsQuery, [member.member_id]);
+        const pendingRequestsResult = await db.query(pendingRequestsQuery, [member.memberId]);
         const pendingRequests = pendingRequestsResult.rows.map(req => ({
-            requestId: req.request_id,
-            accountType: req.account_type,
-            accountDisplayName: getAccountDisplayName(req.account_type),
+            requestId: req.requestId,
+            accountType: req.accountType,
+            accountDisplayName: getAccountDisplayName(req.accountType),
             amount: parseFloat(req.amount),
             reason: req.reason,
             status: req.status,
-            requestedAt: req.requested_at,
-            transferTo: req.transfer_to_account_type ? getAccountDisplayName(req.transfer_to_account_type) : null
+            requestedAt: req.requestedAt,
+            transferTo: req.transferToAccountType ? getAccountDisplayName(req.transferToAccountType) : null
         }));
 
         // 6. Return dashboard data
         return {
             member: {
-                memberId: member.member_id,
-                fullName: member.full_name,
-                memberCode: member.member_code,
+                memberId: member.memberId,
+                fullName: member.fullName,
+                memberCode: member.memberCode,
                 identification: member.identification,
                 gender: member.gender,
-                qualityId: member.quality_id,
-                qualityCode: member.quality_code,
-                qualityName: member.quality_name,
-                levelId: member.level_id,
-                levelCode: member.level_code,
-                levelName: member.level_name,
-                institutionalEmail: member.institutional_email,
-                affiliationDate: member.affiliation_date,
-                lastLiquidationDate: member.last_liquidation_date,
-                isActive: member.is_active,
-                photoUrl: member.photo_url
+                qualityId: member.qualityId,
+                qualityCode: member.qualityCode,
+                qualityName: member.qualityName,
+                levelId: member.levelId,
+                levelCode: member.levelCode,
+                levelName: member.levelName,
+                institutionalEmail: member.institutionalEmail,
+                affiliationDate: member.affiliationDate,
+                lastLiquidationDate: member.lastLiquidationDate,
+                isActive: member.isActive,
+                photoUrl: member.photoUrl
             },
             accounts,
             recentTransactions,
