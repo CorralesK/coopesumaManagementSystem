@@ -24,11 +24,14 @@ import DashboardPage from './pages/DashboardPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import NotFoundPage from './pages/NotFoundPage';
 
-// Member Pages (placeholders - will be implemented)
+// Member Pages
 import MembersListPage from './pages/members/MembersListPage';
 import MemberFormPage from './pages/members/MemberFormPage';
 import MemberDetailPage from './pages/members/MemberDetailPage';
 import MemberDashboardPage from './pages/members/MemberDashboardPage';
+import MemberTransactionsPage from './pages/members/MemberTransactionsPage';
+import MemberProfilePage from './pages/members/MemberProfilePage';
+import MemberNotificationsPage from './pages/members/MemberNotificationsPage';
 
 // Assembly Pages
 import AssembliesListPage from './pages/assemblies/AssembliesListPage';
@@ -109,7 +112,43 @@ function App() {
                         }
                     />
 
-                    {/* Member Withdrawal Requests (Member role only) */}
+                    {/* Member Transactions History (Member role only) */}
+                    <Route
+                        path="/my-transactions"
+                        element={
+                            <ProtectedRoute requiredRole={USER_ROLES.MEMBER}>
+                                <Layout>
+                                    <MemberTransactionsPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Member Profile (Member role only) */}
+                    <Route
+                        path="/my-profile"
+                        element={
+                            <ProtectedRoute requiredRole={USER_ROLES.MEMBER}>
+                                <Layout>
+                                    <MemberProfilePage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Member Notifications (Member role only) */}
+                    <Route
+                        path="/my-notifications"
+                        element={
+                            <ProtectedRoute requiredRole={USER_ROLES.MEMBER}>
+                                <Layout>
+                                    <MemberNotificationsPage />
+                                </Layout>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Member Withdrawal Requests (Member role only) - Keep for backwards compatibility */}
                     <Route
                         path="/my-withdrawals"
                         element={
