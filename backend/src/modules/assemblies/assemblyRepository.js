@@ -341,15 +341,35 @@ const activate = async (assemblyId) => {
  * @returns {Promise<Object>} Deactivated assembly object
  */
 const deactivate = async (assemblyId) => {
-    // Get current time for end_time (TIME type)
-    const now = new Date();
-    const endTime = now.toTimeString().substring(0, 8); // HH:MM:SS format
+    try {
+        const now = new Date();
 
-    return update(assemblyId, {
-        is_active: false,
-        end_time: endTime,
-        concluded_at: now
-    });
+        // Only update concluded_at, don't update end_time to avoid constraint violations
+        // when assembly spans across midnight or timezone differences
+        const query = `
+            UPDATE assemblies
+            SET is_active = false,
+                concluded_at = $2,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE assembly_id = $1
+            RETURNING
+                assembly_id,
+                title,
+                scheduled_date,
+                start_time,
+                end_time,
+                is_active,
+                concluded_at,
+                created_by,
+                updated_at
+        `;
+
+        const result = await db.query(query, [assemblyId, now]);
+        return result.rows[0];
+    } catch (error) {
+        logger.error('Error deactivating assembly:', error);
+        throw error;
+    }
 };
 
 /**
