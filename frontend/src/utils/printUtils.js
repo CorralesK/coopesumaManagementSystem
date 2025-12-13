@@ -104,6 +104,98 @@ const downloadPDFFromBackend = async (endpoint, filename) => {
 };
 
 /**
+ * Download PDF from backend endpoint using POST with body data
+ * @param {string} endpoint - API endpoint path
+ * @param {string} filename - Filename for the PDF
+ * @param {Object} bodyData - Data to send in POST request body
+ */
+export const downloadPDFFromBackendPOST = async (endpoint, filename, bodyData) => {
+    // Get the base URL from the api instance
+    const baseURL = api.defaults.baseURL;
+    const token = sessionStorage.getItem('token');
+    const fullURL = `${baseURL}${endpoint}`;
+
+    // Log the URL for debugging
+    console.log('=== PDF Download (POST) Debug Info ===');
+    console.log('Base URL:', baseURL);
+    console.log('Endpoint:', endpoint);
+    console.log('Full URL:', fullURL);
+    console.log('Token present:', !!token);
+    console.log('Body data:', bodyData);
+
+    try {
+        // Use fetch directly for better control over the response
+        const response = await fetch(fullURL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/pdf',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(bodyData)
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+        if (!response.ok) {
+            let errorMessage = `Error ${response.status}: ${response.statusText}`;
+            try {
+                const errorData = await response.text();
+                console.error('Server error response:', errorData);
+                // Try to parse as JSON for better error message
+                try {
+                    const jsonError = JSON.parse(errorData);
+                    errorMessage = jsonError.message || jsonError.error || errorMessage;
+                } catch {
+                    if (errorData) errorMessage = errorData;
+                }
+            } catch (e) {
+                console.error('Could not read error response:', e);
+            }
+            throw new Error(errorMessage);
+        }
+
+        const blob = await response.blob();
+        console.log('Blob received - type:', blob.type, 'size:', blob.size);
+
+        // Verify the blob is actually a PDF
+        if (blob.size < 100) {
+            console.error('Invalid PDF response - blob too small:', blob.size);
+            throw new Error('El servidor devolvió un PDF vacío o inválido');
+        }
+
+        const url = window.URL.createObjectURL(blob);
+
+        // For iOS Safari, we need to open in a new window
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            console.log('iOS detected - opening in new window');
+            window.open(url, '_blank');
+        } else {
+            console.log('Android/other - triggering download');
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Cleanup after a delay
+        setTimeout(() => window.URL.revokeObjectURL(url), 5000);
+        console.log('=== PDF Download Complete ===');
+    } catch (error) {
+        console.error('=== PDF Download Error ===');
+        console.error('Error type:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Full error:', error);
+
+        // Re-throw the error so callers can handle it
+        throw new Error(error.message || 'Error al descargar el PDF');
+    }
+};
+
+/**
  * Print attendance list with proper formatting
  * @param {Object} options - Print options
  * @param {Array} options.attendees - List of attendees
