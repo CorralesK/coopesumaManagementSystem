@@ -130,7 +130,7 @@ const MemberDashboardPage = () => {
             fetchDashboard(); // Refresh data
         } catch (err) {
             setWithdrawalErrors({
-                submit: err.response?.data?.message || 'Error al enviar la solicitud'
+                submit: err.message || 'Error al enviar la solicitud'
             });
         } finally {
             setSubmitting(false);
@@ -144,14 +144,17 @@ const MemberDashboardPage = () => {
     };
 
     if (loading) {
-        return <Loading message="Cargando tu informacion..." />;
+        return <Loading message="Cargando tu información..." />;
     }
 
     if (error) {
         return (
-            <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Dashboard</h1>
+                </div>
                 <Alert type="error" message={error} />
-                <div className="mt-4 text-center">
+                <div className="flex justify-center">
                     <Button onClick={fetchDashboard} variant="primary">
                         Reintentar
                     </Button>
@@ -162,8 +165,11 @@ const MemberDashboardPage = () => {
 
     if (!dashboardData) {
         return (
-            <div className="max-w-4xl mx-auto px-4 py-8">
-                <Alert type="warning" message="No se pudo cargar tu informacion" />
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Dashboard</h1>
+                </div>
+                <Alert type="warning" message="No se pudo cargar tu información" />
             </div>
         );
     }
@@ -173,7 +179,7 @@ const MemberDashboardPage = () => {
     const recentTransactions = getSavingsTransactions();
 
     return (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        <div className="space-y-6">
             {/* Success Alert */}
             {successMessage && (
                 <Alert
@@ -184,42 +190,52 @@ const MemberDashboardPage = () => {
             )}
 
             {/* Header */}
-            <div className="text-center sm:text-left">
+            <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Dashboard</h1>
+                <p className="text-gray-500 mt-1">Bienvenido, {dashboardData.member?.fullName}</p>
             </div>
 
-            {/* Account Balance Card - Clickable */}
-            <Card padding="lg">
+            {/* Account Balance Card */}
+            <Card>
                 <div
                     onClick={() => navigate('/my-transactions')}
                     className="cursor-pointer hover:opacity-80 transition-opacity"
                 >
-                    <p className="text-sm font-medium text-gray-600 mb-1">Saldo de Ahorros</p>
-                    <p className="text-4xl sm:text-5xl font-bold text-primary-600">
+                    <p className="text-sm font-medium text-gray-600 mb-2">Saldo de Ahorros</p>
+                    <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-600">
                         {formatCurrency(savingsBalance)}
                     </p>
-                    <p className="text-xs text-gray-500 mt-2 flex items-center justify-center sm:justify-start gap-1">
+                    <p className="text-xs text-gray-500 mt-3 flex items-center gap-1">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
-                        Toca para ver historial completo
+                        Ver historial completo
                     </p>
                 </div>
             </Card>
 
-            {/* Withdrawal Request Button */}
-            <div className="flex justify-center">
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Button
                     onClick={openWithdrawalModal}
                     variant="primary"
-                    size="lg"
-                    className="w-full sm:w-auto px-8"
+                    fullWidth
                     disabled={savingsBalance <= 0}
                 >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Solicitar Retiro
+                </Button>
+                <Button
+                    onClick={() => navigate('/my-profile')}
+                    variant="outline"
+                    fullWidth
+                >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Ver Mi Perfil
                 </Button>
             </div>
 
@@ -230,21 +246,21 @@ const MemberDashboardPage = () => {
                         {pendingRequests.map((request) => (
                             <div
                                 key={request.requestId}
-                                className="flex items-center justify-between py-3 px-4 bg-yellow-50 border border-yellow-200 rounded-lg"
+                                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
                             >
-                                <div>
+                                <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-yellow-800">
                                         Retiro de Ahorros
                                     </p>
-                                    <p className="text-xs text-yellow-600">
+                                    <p className="text-xs text-yellow-600 mt-1">
                                         {formatDate(request.requestedAt)}
                                     </p>
                                 </div>
-                                <div className="text-right">
+                                <div className="text-left sm:text-right">
                                     <p className="text-lg font-bold text-yellow-900">
                                         {formatCurrency(request.amount)}
                                     </p>
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mt-1">
                                         Pendiente
                                     </span>
                                 </div>
@@ -257,21 +273,21 @@ const MemberDashboardPage = () => {
             {/* Recent Transactions */}
             <Card title="Transacciones Recientes">
                 {recentTransactions.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                        <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="text-center py-12">
+                        <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
                         </svg>
-                        <p>No hay transacciones registradas</p>
+                        <p className="text-gray-500">No hay transacciones registradas</p>
                     </div>
                 ) : (
                     <div className="space-y-1">
                         {recentTransactions.map((tx) => (
                             <div
                                 key={tx.transactionId}
-                                className="flex items-center justify-between py-3 px-2 hover:bg-gray-50 rounded-lg transition-colors"
+                                className="flex items-center justify-between py-3 px-3 hover:bg-gray-50 rounded-lg transition-colors"
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                                         tx.transactionType.includes('deposit') || tx.transactionType.includes('transfer_in')
                                             ? 'bg-green-100'
                                             : 'bg-red-100'
@@ -286,18 +302,18 @@ const MemberDashboardPage = () => {
                                             </svg>
                                         )}
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 truncate">
                                             {tx.transactionType.includes('deposit') || tx.transactionType.includes('transfer_in')
-                                                ? 'Deposito'
+                                                ? 'Depósito'
                                                 : 'Retiro'}
                                         </p>
-                                        <p className="text-xs text-gray-500">
+                                        <p className="text-xs text-gray-500 truncate">
                                             {formatDate(tx.transactionDate)}
                                         </p>
                                     </div>
                                 </div>
-                                <p className={`text-base font-semibold ${
+                                <p className={`text-base font-semibold flex-shrink-0 ${
                                     tx.transactionType.includes('deposit') || tx.transactionType.includes('transfer_in')
                                         ? 'text-green-600'
                                         : 'text-red-600'
