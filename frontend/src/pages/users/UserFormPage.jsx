@@ -28,11 +28,11 @@ const UserFormPage = () => {
     const { user, loading: loadingUser } = useUser(id);
     const { create, update, loading: submitting, error: operationError } = useUserOperations();
 
-    // Form state
+    // Form state - Default role is REGISTRAR (Member role is only for affiliated members)
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
-        role: USER_ROLES.MEMBER
+        role: USER_ROLES.REGISTRAR
     });
     const [errors, setErrors] = useState({});
     const [formError, setFormError] = useState('');
@@ -122,13 +122,28 @@ const UserFormPage = () => {
         }
     };
 
-    // Role options
-    const roleOptions = [
-        { value: USER_ROLES.ADMINISTRATOR, label: 'Administrador' },
-        { value: USER_ROLES.REGISTRAR, label: 'Registrador' },
-        { value: USER_ROLES.MANAGER, label: 'Tesorero' },
-        { value: USER_ROLES.MEMBER, label: 'Miembro' }
-    ];
+    // Role options - Member role is only assigned when affiliating a member
+    const getRoleOptions = () => {
+        const baseOptions = [
+            { value: USER_ROLES.ADMINISTRATOR, label: 'Administrador' },
+            { value: USER_ROLES.REGISTRAR, label: 'Registrador' },
+            { value: USER_ROLES.MANAGER, label: 'Tesorero' }
+        ];
+
+        // In edit mode, if user is already a member, show the member option but disabled info
+        // If user has a linked member, they can keep the member role
+        if (isEditMode && user?.role === USER_ROLES.MEMBER) {
+            return [
+                ...baseOptions,
+                { value: USER_ROLES.MEMBER, label: 'Miembro' }
+            ];
+        }
+
+        // In create mode or edit mode without member role, don't show member option
+        return baseOptions;
+    };
+
+    const roleOptions = getRoleOptions();
 
     if (loadingUser) {
         return <Loading message="Cargando datos del usuario..." />;
@@ -222,16 +237,31 @@ const UserFormPage = () => {
                                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                 </svg>
                                 <div className="text-sm text-primary-700">
-                                    <p className="font-semibold mb-2">Descripción de Roles:</p>
+                                    <p className="font-semibold mb-2">Descripcion de Roles:</p>
                                     <ul className="space-y-1 list-disc list-inside">
                                         <li><strong>Administrador:</strong> Acceso completo al sistema</li>
                                         <li><strong>Registrador:</strong> Puede registrar asistencia a asambleas</li>
-                                        <li><strong>Tesorero:</strong> Acceso a toda la gestión financiera</li>
-                                        <li><strong>Miembro:</strong> Acceso limitado a su propia información</li>
+                                        <li><strong>Tesorero:</strong> Acceso a toda la gestion financiera</li>
                                     </ul>
+                                    <p className="mt-2 text-xs">El rol <strong>Miembro</strong> se asigna automaticamente al afiliar un nuevo miembro desde la seccion de Miembros.</p>
                                 </div>
                             </div>
                         </div>
+
+                        {/* Warning for member users */}
+                        {isEditMode && user?.role === USER_ROLES.MEMBER && (
+                            <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                                <div className="flex">
+                                    <svg className="w-5 h-5 text-yellow-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                    <div className="text-sm text-yellow-700">
+                                        <p className="font-semibold">Este usuario es un miembro afiliado</p>
+                                        <p className="mt-1">Si cambia el rol, el usuario perdera acceso a su dashboard de miembro y no podra ver su informacion de ahorros.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Info Box for New Users */}
                         {!isEditMode && (
