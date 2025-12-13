@@ -18,10 +18,11 @@ import MemberLiquidationHistory from '../../components/members/MemberLiquidation
 import MemberLiquidationSection from '../../components/members/MemberLiquidationSection';
 import MemberSavingsHistory from '../../components/members/MemberSavingsHistory';
 import { formatCurrency } from '../../utils/formatters';
+import { printMemberCards } from '../../utils/printUtils';
 import PrintModal from '../../components/common/PrintModal';
 import SavingsReceiptPrint from '../../components/print/SavingsReceiptPrint';
 import api from '../../services/api';
-import { downloadMemberCardsPDF } from '../../services/memberService';
+import { downloadMemberCardsPDF, getMemberQR } from '../../services/memberService';
 
 /**
  * MemberDetailPage Component
@@ -108,19 +109,33 @@ const MemberDetailPage = () => {
 
     // Handle print/download carnet
     const handlePrintCarnet = async () => {
-        if (isMobileDevice()) {
-            // Mobile - download PDF from backend
-            try {
-                setPrintingCard(true);
+        try {
+            setPrintingCard(true);
+
+            if (isMobileDevice()) {
+                // Mobile - download PDF from backend
                 await downloadMemberCardsPDF([member.memberId]);
-            } catch (err) {
-                setErrorMessage('Error al descargar el carnet: ' + (err.message || 'Error desconocido'));
-            } finally {
-                setPrintingCard(false);
+            } else {
+                // Desktop - use printMemberCards (same as batch print)
+                // Need to get QR code data first
+                const qrResponse = await getMemberQR(member.memberId);
+                const memberWithQR = {
+                    ...member,
+                    qrCodeDataUrl: qrResponse.data?.qrCodeDataUrl || member.qrCodeDataUrl
+                };
+
+                printMemberCards({
+                    members: [memberWithQR],
+                    cooperativeName: 'Coopesuma'
+                });
             }
-        } else {
-            // Desktop - use browser print
-            window.print();
+
+            // Close modal after print
+            setQrModalOpen(false);
+        } catch (err) {
+            setErrorMessage('Error al imprimir el carnet: ' + (err.message || 'Error desconocido'));
+        } finally {
+            setPrintingCard(false);
         }
     };
 
@@ -897,9 +912,8 @@ const MemberDetailPage = () => {
                 )}
             </PrintModal>
 
-            {/* Print Styles */}
+            {/* Preview Styles - Responsive */}
             <style>{`
-                /* Preview Container - Responsive */
                 .member-card-preview-container {
                     display: flex;
                     justify-content: center;
@@ -938,53 +952,6 @@ const MemberDetailPage = () => {
                 @media (min-width: 769px) {
                     .member-card-preview-wrapper {
                         transform: scale(1);
-                    }
-                }
-
-                @media print {
-                    @page {
-                        size: A4 portrait;
-                        margin: 10mm;
-                    }
-
-                    html, body {
-                        width: 210mm;
-                        height: 297mm;
-                        margin: 0;
-                        padding: 0;
-                        overflow: hidden;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                    }
-
-                    body * {
-                        visibility: hidden;
-                    }
-
-                    #printable-card,
-                    #printable-card * {
-                        visibility: visible;
-                    }
-
-                    #printable-card {
-                        position: fixed;
-                        left: 50%;
-                        top: 50%;
-                        transform: translate(-50%, -50%);
-                        margin: 0;
-                        padding: 0;
-                    }
-
-                    .member-card-preview-wrapper {
-                        transform: none !important;
-                    }
-
-                    .print-hide {
-                        display: none !important;
-                    }
-
-                    .member-card-preview-container {
-                        padding: 0;
                     }
                 }
             `}</style>
