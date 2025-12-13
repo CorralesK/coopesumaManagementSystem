@@ -12,9 +12,7 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Select from '../../components/common/Select';
 import Alert from '../../components/common/Alert';
-import PrintModal from '../../components/common/PrintModal';
-import AttendanceListPrint from '../../components/print/AttendanceListPrint';
-import LiquidationsReportPrint from '../../components/print/LiquidationsReportPrint';
+import { printAttendanceListReport, printLiquidationsReport } from '../../utils/printUtils';
 
 /**
  * ReportsPage Component
@@ -25,9 +23,6 @@ const ReportsPage = () => {
     const [selectedAssembly, setSelectedAssembly] = useState('');
     const [loadingAttendance, setLoadingAttendance] = useState(false);
     const [attendanceError, setAttendanceError] = useState(null);
-    const [showAttendancePrint, setShowAttendancePrint] = useState(false);
-    const [attendeesForPrint, setAttendeesForPrint] = useState([]);
-    const [assemblyForPrint, setAssemblyForPrint] = useState(null);
 
     // Liquidations report state
     const [liquidationFilters, setLiquidationFilters] = useState({
@@ -37,9 +32,6 @@ const ReportsPage = () => {
     });
     const [loadingLiquidations, setLoadingLiquidations] = useState(false);
     const [liquidationError, setLiquidationError] = useState(null);
-    const [showLiquidationsPrint, setShowLiquidationsPrint] = useState(false);
-    const [liquidationsForPrint, setLiquidationsForPrint] = useState([]);
-    const [liquidationStats, setLiquidationStats] = useState(null);
 
     // Fetch assemblies
     const { assemblies, loading: loadingAssemblies } = useAssemblies({ limit: 100 });
@@ -75,9 +67,12 @@ const ReportsPage = () => {
                 return;
             }
 
-            setAttendeesForPrint(attendanceData);
-            setAssemblyForPrint(assembly);
-            setShowAttendancePrint(true);
+            // Open print window directly
+            printAttendanceListReport({
+                attendees: attendanceData,
+                assembly: assembly,
+                title: 'Lista de Asistencia'
+            });
         } catch (err) {
             setAttendanceError(err.message || 'Error al generar el reporte');
         } finally {
@@ -138,15 +133,12 @@ const ReportsPage = () => {
             const response = await getLiquidationHistory(params);
             const liquidations = response.data || [];
 
-            // Calculate statistics
+            // Calculate statistics (only savings)
             const stats = {
                 total: liquidations.length,
                 periodic: liquidations.filter(l => l.liquidationType === 'periodic').length,
                 exit: liquidations.filter(l => l.liquidationType === 'exit').length,
-                totalAmount: liquidations.reduce((sum, l) => sum + (parseFloat(l.totalAmount) || 0), 0),
-                totalSavings: liquidations.reduce((sum, l) => sum + (parseFloat(l.totalSavings) || 0), 0),
-                totalContributions: liquidations.reduce((sum, l) => sum + (parseFloat(l.totalContributions) || 0), 0),
-                totalSurplus: liquidations.reduce((sum, l) => sum + (parseFloat(l.totalSurplus) || 0), 0)
+                totalSavings: liquidations.reduce((sum, l) => sum + (parseFloat(l.totalSavings) || 0), 0)
             };
 
             if (liquidations.length === 0) {
@@ -154,9 +146,15 @@ const ReportsPage = () => {
                 return;
             }
 
-            setLiquidationsForPrint(liquidations);
-            setLiquidationStats(stats);
-            setShowLiquidationsPrint(true);
+            // Open print window directly
+            printLiquidationsReport({
+                liquidations: liquidations,
+                stats: stats,
+                dateRange: {
+                    startDate: liquidationFilters.startDate,
+                    endDate: liquidationFilters.endDate
+                }
+            });
         } catch (err) {
             setLiquidationError(err.message || 'Error al generar el reporte');
         } finally {
@@ -238,7 +236,7 @@ const ReportsPage = () => {
                             </div>
                             <div>
                                 <p className="text-sm text-gray-600">
-                                    Genera un reporte de liquidaciones con totales por periodo.
+                                    Genera un reporte de liquidaciones de ahorros por periodo.
                                 </p>
                             </div>
                         </div>
@@ -334,43 +332,6 @@ const ReportsPage = () => {
                     </div>
                 </Card>
             </div>
-
-            {/* Print Attendance List Modal */}
-            <PrintModal
-                isOpen={showAttendancePrint}
-                onClose={() => setShowAttendancePrint(false)}
-                title="Lista de Asistencia"
-                printTitle={`Lista de Asistencia - ${assemblyForPrint?.title || ''}`}
-                size="xl"
-                orientation="portrait"
-                paperSize="letter"
-            >
-                <AttendanceListPrint
-                    attendees={attendeesForPrint}
-                    assembly={assemblyForPrint}
-                    title="Lista de Asistencia"
-                />
-            </PrintModal>
-
-            {/* Print Liquidations Report Modal */}
-            <PrintModal
-                isOpen={showLiquidationsPrint}
-                onClose={() => setShowLiquidationsPrint(false)}
-                title="Reporte de Liquidaciones"
-                printTitle={`Reporte Liquidaciones - ${liquidationFilters.startDate} a ${liquidationFilters.endDate}`}
-                size="xl"
-                orientation="landscape"
-                paperSize="letter"
-            >
-                <LiquidationsReportPrint
-                    liquidations={liquidationsForPrint}
-                    stats={liquidationStats}
-                    dateRange={{
-                        startDate: liquidationFilters.startDate,
-                        endDate: liquidationFilters.endDate
-                    }}
-                />
-            </PrintModal>
         </div>
     );
 };

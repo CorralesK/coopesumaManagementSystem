@@ -227,7 +227,7 @@ const DashboardPage = () => {
     const inactiveMembers = totalMembers - activeMembers;
     const totalSavings = savingsSummary?.summary?.totalSavings || 0;
     const pendingCount = pendingWithdrawals?.length || 0;
-    const attendanceRate = attendanceStats?.attendancePercentage || 0;
+    const totalAttendance = parseInt(attendanceStats?.stats?.totalAttendance, 10) || 0;
     const isCurrentAssemblyActive = currentAssembly?.is_active === true;
 
     return (
@@ -297,7 +297,7 @@ const DashboardPage = () => {
                     />
                     <StatCard
                         title="Asistencia"
-                        value={currentAssembly ? `${attendanceRate}%` : 'N/A'}
+                        value={currentAssembly ? totalAttendance : 'N/A'}
                         subtitle={currentAssembly
                             ? (isCurrentAssemblyActive ? 'Asamblea activa' : 'Última asamblea')
                             : 'Sin asambleas'}
