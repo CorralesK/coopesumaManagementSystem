@@ -18,6 +18,7 @@ const ERROR_CODES = require('../../constants/errorCodes');
 const MESSAGES = require('../../constants/messages');
 const logger = require('../../utils/logger');
 const db = require('../../config/database');
+const { getNow, getCurrentYear } = require('../../utils/dateUtils');
 
 /**
  * Custom error class for operational errors
@@ -239,7 +240,7 @@ const createMember = async (memberData) => {
             memberData.institutionalEmail || null,
             memberData.photoUrl || null,
             qrHash,
-            memberData.affiliationDate || new Date(),
+            memberData.affiliationDate || getNow(),
             true
         ];
 
@@ -1117,12 +1118,12 @@ const affiliateMember = async (memberData) => {
 
         // Get next consecutive within the transaction to prevent race conditions
         const nextConsecutive = await memberRepository.getNextMemberCodeConsecutive(client);
-        const currentYear = new Date().getFullYear();
-        const memberCode = `${nextConsecutive}-${currentYear}`;
+        const currentYearValue = getCurrentYear();
+        const memberCode = `${nextConsecutive}-${currentYearValue}`;
 
         logger.info('Generated member code', {
             consecutive: nextConsecutive,
-            year: currentYear,
+            year: currentYearValue,
             memberCode
         });
 
@@ -1160,7 +1161,7 @@ const affiliateMember = async (memberData) => {
             memberData.institutionalEmail || null,
             memberData.photoUrl || null,
             qrHash,
-            memberData.affiliationDate || new Date(),
+            memberData.affiliationDate || getNow(),
             true
         ];
 
@@ -1315,7 +1316,7 @@ const affiliateMember = async (memberData) => {
             affiliationTransaction,
             receipt: {
                 receiptNumber: `AF-${newMember.member_id}-${currentFiscalYear}`,
-                date: new Date(),
+                date: getNow(),
                 memberName: newMember.full_name,
                 memberCode: newMember.member_code,
                 identification: newMember.identification,

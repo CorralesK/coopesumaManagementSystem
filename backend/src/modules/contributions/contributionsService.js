@@ -11,6 +11,7 @@ const db = require('../../config/database');
 const logger = require('../../utils/logger');
 const ERROR_CODES = require('../../constants/errorCodes');
 const MESSAGES = require('../../constants/messages');
+const { getNow } = require('../../utils/dateUtils');
 
 /**
  * Custom error class for operational errors
@@ -319,7 +320,7 @@ const registerContribution = async (contributionData) => {
                 const transaction = await contributionsRepository.registerContribution({
                     accountId: account.account_id,
                     amount: amountPerTract,
-                    transactionDate: contributionData.transactionDate || new Date(),
+                    transactionDate: contributionData.transactionDate || getNow(),
                     fiscalYear: fiscalYear,
                     description,
                     createdBy: contributionData.createdBy
@@ -406,7 +407,7 @@ const registerContribution = async (contributionData) => {
         const transaction = await contributionsRepository.registerContribution({
             accountId: account.account_id,
             amount: contributionData.amount,
-            transactionDate: contributionData.transactionDate || new Date(),
+            transactionDate: contributionData.transactionDate || getNow(),
             fiscalYear: fiscalYear,
             description,
             createdBy: contributionData.createdBy

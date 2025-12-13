@@ -10,6 +10,7 @@ const db = require('../../config/database');
 const logger = require('../../utils/logger');
 const ERROR_CODES = require('../../constants/errorCodes');
 const MESSAGES = require('../../constants/messages');
+const { getNow, getCurrentYear } = require('../../utils/dateUtils');
 
 class LiquidationError extends Error {
     constructor(message, errorCode, statusCode) {
@@ -271,7 +272,7 @@ const executeLiquidation = async (liquidationData) => {
                 memberId,
                 cooperativeId: member.cooperativeId,
                 liquidationType,
-                liquidationDate: new Date(),
+                liquidationDate: getNow(),
                 totalSavings: balances.savings.balance,
                 totalContributions: 0, // Not liquidating contributions
                 totalSurplus: 0, // Not liquidating surplus
@@ -386,9 +387,9 @@ const getLiquidationStats = async (cooperativeId) => {
         const pendingMembers = await liquidationRepository.getMembersPendingLiquidation(cooperativeId);
 
         // Get liquidations from current fiscal year
-        const currentYear = new Date().getFullYear();
-        const yearStart = `${currentYear}-01-01`;
-        const yearEnd = `${currentYear}-12-31`;
+        const currentYearValue = getCurrentYear();
+        const yearStart = `${currentYearValue}-01-01`;
+        const yearEnd = `${currentYearValue}-12-31`;
 
         const yearLiquidations = await liquidationRepository.getAllLiquidations({
             cooperativeId,

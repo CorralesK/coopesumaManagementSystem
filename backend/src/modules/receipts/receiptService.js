@@ -8,6 +8,7 @@ const db = require('../../config/database');
 const logger = require('../../utils/logger');
 const ERROR_CODES = require('../../constants/errorCodes');
 const MESSAGES = require('../../constants/messages');
+const { getCurrentYear } = require('../../utils/dateUtils');
 
 class ReceiptError extends Error {
     constructor(message, errorCode, statusCode) {
@@ -22,7 +23,7 @@ class ReceiptError extends Error {
  * Generate receipt number (format: YYYY-NNNN)
  */
 const generateReceiptNumber = async (client = db) => {
-    const year = new Date().getFullYear();
+    const year = getCurrentYear();
 
     const query = `
         SELECT receipt_number

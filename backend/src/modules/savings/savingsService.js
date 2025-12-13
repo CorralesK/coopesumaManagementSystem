@@ -11,6 +11,7 @@ const db = require('../../config/database');
 const logger = require('../../utils/logger');
 const ERROR_CODES = require('../../constants/errorCodes');
 const MESSAGES = require('../../constants/messages');
+const { getNow } = require('../../utils/dateUtils');
 
 /**
  * Custom error class for operational errors
@@ -143,7 +144,7 @@ const registerDeposit = async (depositData) => {
         const transaction = await savingsRepository.createDeposit({
             accountId: account.account_id,
             amount: depositData.amount,
-            transactionDate: depositData.transactionDate || new Date(),
+            transactionDate: depositData.transactionDate || getNow(),
             fiscalYear: fiscalYear,
             description: depositData.description || `Savings deposit - ${member.fullName}`,
             createdBy: depositData.createdBy
@@ -502,7 +503,7 @@ const registerWithdrawal = async (withdrawalData) => {
             accountId: account.account_id,
             amount: withdrawalData.amount,
             receiptNumber: withdrawalData.receiptNumber,
-            transactionDate: withdrawalData.transactionDate || new Date(),
+            transactionDate: withdrawalData.transactionDate || getNow(),
             fiscalYear: fiscalYear,
             description: withdrawalData.description || `Savings withdrawal - ${member.fullName}`,
             createdBy: withdrawalData.createdBy
