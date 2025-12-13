@@ -263,8 +263,16 @@ const downloadReceiptPDF = async (req, res, next) => {
     try {
         const receiptData = req.body;
 
+        // Log received data for debugging
+        logger.info('Receipt PDF request received:', {
+            transactionType: receiptData.transactionType,
+            hasMember: !!receiptData.member,
+            memberKeys: receiptData.member ? Object.keys(receiptData.member) : []
+        });
+
         // Validate required fields
         if (!receiptData.transactionType || !receiptData.member) {
+            logger.warn('Missing required receipt data');
             return res.status(400).json({
                 success: false,
                 message: 'Missing required receipt data'
@@ -279,11 +287,27 @@ const downloadReceiptPDF = async (req, res, next) => {
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
+        // Handle PDF stream errors
+        pdfDoc.on('error', (err) => {
+            logger.error('PDF generation error:', err);
+            if (!res.headersSent) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Error generating PDF'
+                });
+            }
+        });
+
         // Pipe the PDF to response
         pdfDoc.pipe(res);
     } catch (error) {
         logger.error('Controller error - downloadReceiptPDF:', error);
-        next(error);
+        if (!res.headersSent) {
+            res.status(500).json({
+                success: false,
+                message: 'Error generating PDF: ' + error.message
+            });
+        }
     }
 };
 
