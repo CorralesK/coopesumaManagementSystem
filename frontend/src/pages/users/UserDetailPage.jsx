@@ -60,16 +60,6 @@ const UserDetailPage = () => {
         return roleLabels[role] || role;
     };
 
-    // Get role badge config
-    const getRoleBadgeConfig = (role) => {
-        const roleConfig = {
-            [USER_ROLES.ADMINISTRATOR]: { class: 'bg-purple-100 text-purple-800 border-purple-200' },
-            [USER_ROLES.REGISTRAR]: { class: 'bg-primary-100 text-primary-800 border-primary-200' },
-            [USER_ROLES.MANAGER]: { class: 'bg-green-100 text-green-800 border-green-200' },
-            [USER_ROLES.MEMBER]: { class: 'bg-gray-100 text-gray-800 border-gray-200' }
-        };
-        return roleConfig[role] || { class: 'bg-gray-100 text-gray-800 border-gray-200' };
-    };
 
     // Event handlers
     const handleDeleteClick = () => {
@@ -133,8 +123,6 @@ const UserDetailPage = () => {
         );
     }
 
-    const roleBadgeConfig = getRoleBadgeConfig(user.role);
-
     return (
         <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8">
             {/* Header */}
@@ -187,11 +175,7 @@ const UserDetailPage = () => {
 
                                 <div className="pb-3 border-b border-gray-200">
                                     <dt className="text-sm font-medium text-gray-500" style={{ marginBottom: '0.25rem' }}>Rol</dt>
-                                    <dd style={{ marginBottom: 0 }}>
-                                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold border ${roleBadgeConfig.class}`}>
-                                            {getRoleLabel(user.role)}
-                                        </span>
-                                    </dd>
+                                    <dd className="text-base text-gray-900" style={{ marginBottom: 0 }}>{getRoleLabel(user.role)}</dd>
                                 </div>
                             </div>
                         </div>
