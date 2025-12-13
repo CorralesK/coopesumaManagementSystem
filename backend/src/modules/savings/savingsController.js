@@ -7,6 +7,7 @@
 
 const savingsService = require('./savingsService');
 const logger = require('../../utils/logger');
+const { getNow, toCostaRicaTime } = require('../../utils/dateUtils');
 
 /**
  * Get savings for a specific member
@@ -58,7 +59,7 @@ const registerDeposit = async (req, res, next) => {
         const depositData = {
             memberId: parseInt(memberId),
             amount: parseFloat(amount),
-            transactionDate: transactionDate ? new Date(transactionDate) : new Date(),
+            transactionDate: transactionDate ? toCostaRicaTime(transactionDate) : getNow(),
             description,
             createdBy: req.user.userId
         };
@@ -214,7 +215,7 @@ const registerWithdrawal = async (req, res, next) => {
         const withdrawalData = {
             memberId: parseInt(memberId),
             amount: parseFloat(amount),
-            transactionDate: transactionDate ? new Date(transactionDate) : new Date(),
+            transactionDate: transactionDate ? toCostaRicaTime(transactionDate) : getNow(),
             description,
             createdBy: req.user.userId
         };

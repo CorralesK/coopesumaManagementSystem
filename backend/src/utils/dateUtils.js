@@ -1,6 +1,43 @@
 /**
  * Date and Time Utilities
+ * All dates are handled in Costa Rica timezone (America/Costa_Rica, UTC-6)
  */
+
+const COSTA_RICA_TIMEZONE = 'America/Costa_Rica';
+
+/**
+ * Get current date/time in Costa Rica timezone
+ * @returns {Date} - Date object adjusted to Costa Rica time
+ */
+const getNow = () => {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: COSTA_RICA_TIMEZONE }));
+};
+
+/**
+ * Get current date in Costa Rica timezone as ISO string (YYYY-MM-DD)
+ * @returns {string} - Date string in YYYY-MM-DD format
+ */
+const getTodayISO = () => {
+    return formatDate(getNow());
+};
+
+/**
+ * Get current year in Costa Rica timezone
+ * @returns {number} - Current year
+ */
+const getCurrentYear = () => {
+    return getNow().getFullYear();
+};
+
+/**
+ * Convert any date to Costa Rica timezone
+ * @param {Date|string} date - Date to convert
+ * @returns {Date} - Date in Costa Rica timezone
+ */
+const toCostaRicaTime = (date) => {
+    const d = new Date(date);
+    return new Date(d.toLocaleString('en-US', { timeZone: COSTA_RICA_TIMEZONE }));
+};
 
 /**
  * Format date to YYYY-MM-DD
@@ -38,35 +75,35 @@ const formatDateTime = (date) => {
 };
 
 /**
- * Check if date is in the past
+ * Check if date is in the past (Costa Rica timezone)
  * @param {Date|string} date - Date to check
  * @returns {boolean} - True if date is in the past
  */
 const isPastDate = (date) => {
-    const d = new Date(date);
-    const now = new Date();
+    const d = toCostaRicaTime(date);
+    const now = getNow();
     return d < now;
 };
 
 /**
- * Check if date is in the future
+ * Check if date is in the future (Costa Rica timezone)
  * @param {Date|string} date - Date to check
  * @returns {boolean} - True if date is in the future
  */
 const isFutureDate = (date) => {
-    const d = new Date(date);
-    const now = new Date();
+    const d = toCostaRicaTime(date);
+    const now = getNow();
     return d > now;
 };
 
 /**
- * Check if date is today
+ * Check if date is today (Costa Rica timezone)
  * @param {Date|string} date - Date to check
  * @returns {boolean} - True if date is today
  */
 const isToday = (date) => {
-    const d = new Date(date);
-    const today = new Date();
+    const d = toCostaRicaTime(date);
+    const today = getNow();
     return d.toDateString() === today.toDateString();
 };
 
@@ -83,12 +120,12 @@ const addDays = (date, days) => {
 };
 
 /**
- * Get date range for reports
+ * Get date range for reports (Costa Rica timezone)
  * @param {string} period - Period type (today, week, month, year)
  * @returns {Object} - Object with startDate and endDate
  */
 const getDateRange = (period) => {
-    const now = new Date();
+    const now = getNow();
     let startDate, endDate;
 
     switch (period) {
@@ -98,7 +135,7 @@ const getDateRange = (period) => {
         break;
     case 'week':
         startDate = new Date(now.setDate(now.getDate() - 7));
-        endDate = new Date();
+        endDate = getNow();
         break;
     case 'month':
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -110,13 +147,18 @@ const getDateRange = (period) => {
         break;
     default:
         startDate = new Date(now.setDate(now.getDate() - 30));
-        endDate = new Date();
+        endDate = getNow();
     }
 
     return { startDate, endDate };
 };
 
 module.exports = {
+    COSTA_RICA_TIMEZONE,
+    getNow,
+    getTodayISO,
+    getCurrentYear,
+    toCostaRicaTime,
     formatDate,
     formatTime,
     formatDateTime,

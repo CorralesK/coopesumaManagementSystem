@@ -7,6 +7,7 @@
 
 const db = require('../../config/database');
 const logger = require('../../utils/logger');
+const { getNow } = require('../../utils/dateUtils');
 
 /**
  * Get contributions account for a member
@@ -176,7 +177,7 @@ const registerContribution = async (contributionData, client = db) => {
             contributionData.accountId,
             'deposit',
             contributionData.amount,
-            contributionData.transactionDate || new Date(),
+            contributionData.transactionDate || getNow(),
             contributionData.fiscalYear,
             contributionData.description,
             'completed',

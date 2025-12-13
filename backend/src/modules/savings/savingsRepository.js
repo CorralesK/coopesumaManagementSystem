@@ -7,6 +7,7 @@
 
 const db = require('../../config/database');
 const logger = require('../../utils/logger');
+const { getNow } = require('../../utils/dateUtils');
 
 /**
  * Get savings account for a member
@@ -139,7 +140,7 @@ const createDeposit = async (transactionData, client = db) => {
             transactionData.accountId,
             'deposit',
             transactionData.amount,
-            transactionData.transactionDate || new Date(),
+            transactionData.transactionDate || getNow(),
             transactionData.fiscalYear,
             transactionData.description || 'Depósito de ahorros',
             'completed',
@@ -394,7 +395,7 @@ const createWithdrawal = async (transactionData, client = db) => {
             transactionData.accountId,
             'withdrawal',
             transactionData.amount,
-            transactionData.transactionDate || new Date(),
+            transactionData.transactionDate || getNow(),
             transactionData.fiscalYear,
             transactionData.receiptNumber,
             transactionData.description || 'Retiro de ahorros',

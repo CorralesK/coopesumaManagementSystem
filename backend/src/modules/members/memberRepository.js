@@ -7,6 +7,7 @@
 
 const db = require('../../config/database');
 const logger = require('../../utils/logger');
+const { getNow } = require('../../utils/dateUtils');
 
 /**
  * Find member by ID with quality and level information
@@ -331,7 +332,7 @@ const create = async (memberData) => {
             memberData.institutionalEmail || null,
             memberData.photoUrl || null,
             memberData.qrHash,
-            memberData.affiliationDate || new Date(),
+            memberData.affiliationDate || getNow(),
             memberData.isActive !== undefined ? memberData.isActive : true
         ];
 

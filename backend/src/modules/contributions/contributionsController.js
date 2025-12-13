@@ -7,6 +7,7 @@
 
 const contributionsService = require('./contributionsService');
 const logger = require('../../utils/logger');
+const { getNow, toCostaRicaTime } = require('../../utils/dateUtils');
 
 /**
  * Get contribution periods for a fiscal year
@@ -159,7 +160,7 @@ const registerContribution = async (req, res, next) => {
             memberId: parseInt(memberId),
             tractNumber: parseInt(tractNumber),
             amount: parseFloat(amount),
-            transactionDate: transactionDate ? new Date(transactionDate) : new Date(),
+            transactionDate: transactionDate ? toCostaRicaTime(transactionDate) : getNow(),
             description,
             createdBy: req.user.userId
         };

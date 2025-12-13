@@ -5,6 +5,7 @@
 
 const db = require('../../config/database');
 const logger = require('../../utils/logger');
+const { getNow } = require('../../utils/dateUtils');
 
 /**
  * Transform snake_case keys to camelCase
@@ -131,7 +132,7 @@ const createLiquidation = async (liquidationData, client = db) => {
             liquidationData.memberId,
             liquidationData.cooperativeId,
             liquidationData.liquidationType,
-            liquidationData.liquidationDate || new Date(),
+            liquidationData.liquidationDate || getNow(),
             liquidationData.totalSavings,
             liquidationData.totalContributions,
             liquidationData.totalSurplus,

@@ -7,6 +7,7 @@
 
 const PDFDocument = require('pdfkit');
 const logger = require('../../utils/logger');
+const { toCostaRicaTime, getNow } = require('../../utils/dateUtils');
 
 /**
  * Format currency
@@ -20,10 +21,10 @@ const formatCurrency = (amount) => {
 };
 
 /**
- * Format date
+ * Format date in Costa Rica timezone
  */
 const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('es-CR', {
+    return toCostaRicaTime(date).toLocaleDateString('es-CR', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -59,7 +60,7 @@ const generateFooter = (doc) => {
         .text('Firma del Tesorero/Autorizado', { align: 'center' })
         .moveDown(2)
         .fontSize(7)
-        .text(`Generado electrónicamente el ${formatDate(new Date())}`, { align: 'center' })
+        .text(`Generado electrónicamente el ${formatDate(getNow())}`, { align: 'center' })
         .text('Sistema de Gestión CoopeSuma', { align: 'center' });
 };
 

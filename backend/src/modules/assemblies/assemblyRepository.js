@@ -307,11 +307,11 @@ const update = async (assemblyId, updates) => {
 const activate = async (assemblyId) => {
     try {
         // The database trigger will automatically deactivate other assemblies
-        // Set start_time to current time when activating
+        // Set start_time to current time in Costa Rica timezone when activating
         const query = `
             UPDATE assemblies
             SET is_active = true,
-                start_time = CURRENT_TIME,
+                start_time = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Costa_Rica')::TIME,
                 updated_at = CURRENT_TIMESTAMP
             WHERE assembly_id = $1
             RETURNING
@@ -341,15 +341,32 @@ const activate = async (assemblyId) => {
  * @returns {Promise<Object>} Deactivated assembly object
  */
 const deactivate = async (assemblyId) => {
-    // Get current time for end_time (TIME type)
-    const now = new Date();
-    const endTime = now.toTimeString().substring(0, 8); // HH:MM:SS format
+    try {
+        // Use PostgreSQL to get Costa Rica timezone (UTC-6)
+        const query = `
+            UPDATE assemblies
+            SET is_active = false,
+                concluded_at = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Costa_Rica'),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE assembly_id = $1
+            RETURNING
+                assembly_id,
+                title,
+                scheduled_date,
+                start_time,
+                end_time,
+                is_active,
+                concluded_at,
+                created_by,
+                updated_at
+        `;
 
-    return update(assemblyId, {
-        is_active: false,
-        end_time: endTime,
-        concluded_at: now
-    });
+        const result = await db.query(query, [assemblyId]);
+        return result.rows[0];
+    } catch (error) {
+        logger.error('Error deactivating assembly:', error);
+        throw error;
+    }
 };
 
 /**
