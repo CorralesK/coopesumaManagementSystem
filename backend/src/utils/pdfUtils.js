@@ -523,6 +523,7 @@ const createLiquidationsReport = (liquidations, stats, dateRange) => {
                 { align: 'center' }
             );
 
+        doc.end();
         return doc;
     } catch (error) {
         logger.error('Error creating liquidations report PDF:', error);
@@ -685,6 +686,7 @@ const createAttendanceListReport = (attendees, assembly) => {
                 { align: 'center' }
             );
 
+        doc.end();
         return doc;
     } catch (error) {
         logger.error('Error creating attendance list report PDF:', error);
