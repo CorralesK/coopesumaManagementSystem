@@ -45,9 +45,9 @@ const MemberDashboardPage = () => {
             setLoading(true);
             setError(null);
             const response = await api.get('/members/me/dashboard');
-            setDashboardData(response.data.data);
+            setDashboardData(response.data);
         } catch (err) {
-            setError(err.response?.data?.message || 'Error al cargar el dashboard');
+            setError(err.message || 'Error al cargar el dashboard');
         } finally {
             setLoading(false);
         }

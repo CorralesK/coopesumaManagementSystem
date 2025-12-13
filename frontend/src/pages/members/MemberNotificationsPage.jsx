@@ -34,7 +34,7 @@ const MemberNotificationsPage = () => {
         try {
             setLoading(true);
             const response = await api.get('/notifications');
-            setNotifications(response.data.data || []);
+            setNotifications(response.data || []);
         } catch (err) {
             console.error('Error fetching notifications:', err);
             setError('Error al cargar notificaciones');
