@@ -22,18 +22,29 @@ const isMobileDevice = () => {
 const downloadPDFFromBackend = async (endpoint, filename) => {
     try {
         const response = await api.get(endpoint, {
-            responseType: 'blob'
+            responseType: 'arraybuffer',
+            headers: {
+                'Accept': 'application/pdf'
+            }
         });
 
         const blob = new Blob([response.data], { type: 'application/pdf' });
         const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+
+        // For iOS Safari, we need to open in a new window
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            window.open(url, '_blank');
+        } else {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Cleanup after a delay
+        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     } catch (error) {
         console.error('Error downloading PDF:', error);
         alert('Error al descargar el PDF. Por favor intenta de nuevo.');
