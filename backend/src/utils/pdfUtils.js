@@ -869,7 +869,7 @@ const createMemberCardsPDF = (members) => {
 
         // Card dimensions (credit card size approximately)
         const cardWidth = 255; // ~90mm
-        const cardHeight = 160; // ~56mm
+        const cardHeight = 120; // Reduced to eliminate white space before footer
         const cardGap = 15;
 
         // Calculate positions for 2x2 grid
