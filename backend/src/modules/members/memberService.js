@@ -948,11 +948,11 @@ const getMemberDashboard = async (userId) => {
                 wr.request_id,
                 wr.account_id,
                 a.account_type,
-                wr.amount,
-                wr.reason,
+                wr.requested_amount,
+                wr.request_type,
+                wr.request_notes,
                 wr.status,
-                wr.requested_at,
-                wr.transfer_to_account_type
+                wr.requested_at
             FROM withdrawal_requests wr
             JOIN accounts a ON wr.account_id = a.account_id
             WHERE a.member_id = $1
@@ -965,11 +965,11 @@ const getMemberDashboard = async (userId) => {
             requestId: req.requestId,
             accountType: req.accountType,
             accountDisplayName: getAccountDisplayName(req.accountType),
-            amount: parseFloat(req.amount),
-            reason: req.reason,
+            amount: parseFloat(req.requestedAmount),
+            requestType: req.requestType,
+            reason: req.requestNotes,
             status: req.status,
-            requestedAt: req.requestedAt,
-            transferTo: req.transferToAccountType ? getAccountDisplayName(req.transferToAccountType) : null
+            requestedAt: req.requestedAt
         }));
 
         // 6. Return dashboard data
