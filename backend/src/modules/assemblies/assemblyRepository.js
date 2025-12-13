@@ -456,6 +456,44 @@ const findActiveWithStats = async () => {
     }
 };
 
+/**
+ * Find active assembly or last concluded assembly with stats
+ * Returns the active assembly if exists, otherwise the most recently concluded one
+ *
+ * @returns {Promise<Object|null>} Assembly object with stats or null
+ */
+const findActiveOrLastConcluded = async () => {
+    try {
+        const query = `
+            SELECT
+                a.assembly_id,
+                a.title,
+                a.scheduled_date,
+                a.start_time,
+                a.end_time,
+                a.is_active,
+                a.concluded_at,
+                a.created_by,
+                a.created_at,
+                a.updated_at,
+                COUNT(ar.attendance_id) as attendance_count
+            FROM assemblies a
+            LEFT JOIN attendance_records ar ON a.assembly_id = ar.assembly_id
+            WHERE a.is_active = true
+               OR a.concluded_at IS NOT NULL
+            GROUP BY a.assembly_id
+            ORDER BY a.is_active DESC, a.concluded_at DESC NULLS LAST
+            LIMIT 1
+        `;
+
+        const result = await db.query(query);
+        return result.rows[0] || null;
+    } catch (error) {
+        logger.error('Error finding active or last concluded assembly:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     findById,
     findActive,
@@ -467,5 +505,6 @@ module.exports = {
     deactivate,
     deleteAssembly,
     findByIdWithStats,
+    findActiveOrLastConcluded,
     findActiveWithStats
 };

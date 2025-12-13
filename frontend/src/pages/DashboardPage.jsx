@@ -4,10 +4,9 @@
  * @module pages
  */
 
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useActiveAssembly } from '../hooks/useAssemblies';
+import { useActiveAssembly, useCurrentAssembly } from '../hooks/useAssemblies';
 import { useMembers } from '../hooks/useMembers';
 import { useAssemblyAttendance } from '../hooks/useAttendance';
 import { useDashboard } from '../hooks/useDashboard';
@@ -209,12 +208,14 @@ const DashboardPage = () => {
 
     // Fetch data using custom hooks
     const { activeAssembly, loading: loadingAssembly } = useActiveAssembly();
+    const { currentAssembly, loading: loadingCurrentAssembly } = useCurrentAssembly();
     const { members, pagination: totalMembersPagination, loading: loadingMembers } = useMembers({ page: 1, limit: 5 });
     const { pagination: activeMembersPagination } = useMembers({ isActive: 'true', page: 1, limit: 1 });
-    const { stats: attendanceStats } = useAssemblyAttendance(activeAssembly?.assemblyId);
+    // Use currentAssembly for attendance stats (active or last concluded)
+    const { stats: attendanceStats } = useAssemblyAttendance(currentAssembly?.assembly_id);
     const { savingsSummary, pendingWithdrawals, recentWithdrawals, loading: loadingDashboard } = useDashboard();
 
-    const isLoading = loadingAssembly || loadingMembers || loadingDashboard;
+    const isLoading = loadingAssembly || loadingCurrentAssembly || loadingMembers || loadingDashboard;
 
     if (isLoading) {
         return <Loading message="Cargando dashboard..." />;
@@ -227,6 +228,7 @@ const DashboardPage = () => {
     const totalSavings = savingsSummary?.summary?.totalSavings || 0;
     const pendingCount = pendingWithdrawals?.length || 0;
     const attendanceRate = attendanceStats?.attendancePercentage || 0;
+    const isCurrentAssemblyActive = currentAssembly?.is_active === true;
 
     return (
         <div className="space-y-8">
@@ -295,11 +297,13 @@ const DashboardPage = () => {
                     />
                     <StatCard
                         title="Asistencia"
-                        value={activeAssembly ? `${attendanceRate}%` : 'N/A'}
-                        subtitle={activeAssembly ? 'Última asamblea' : 'Sin asamblea activa'}
+                        value={currentAssembly ? `${attendanceRate}%` : 'N/A'}
+                        subtitle={currentAssembly
+                            ? (isCurrentAssemblyActive ? 'Asamblea activa' : 'Última asamblea')
+                            : 'Sin asambleas'}
                         icon={Icons.Chart}
                         color="purple"
-                        onClick={activeAssembly ? () => navigate(`/assemblies/${activeAssembly.assemblyId}`) : undefined}
+                        onClick={currentAssembly ? () => navigate(`/assemblies/${currentAssembly.assembly_id}`) : undefined}
                     />
                 </div>
             )}

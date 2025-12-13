@@ -46,6 +46,19 @@ router.get(
 );
 
 /**
+ * GET /api/assemblies/current
+ * Get active assembly or last concluded assembly for dashboard
+ * Returns active assembly if exists, otherwise the most recently concluded one
+ * Protected: Requires authentication
+ * Accessible by: All authenticated users
+ */
+router.get(
+    '/current',
+    authMiddleware,
+    assemblyController.getActiveOrLastConcludedAssembly
+);
+
+/**
  * GET /api/assemblies/:id
  * Get assembly by ID
  * Protected: Requires authentication

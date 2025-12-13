@@ -40,6 +40,16 @@ export const getActiveAssembly = async () => {
 };
 
 /**
+ * Get the active assembly or last concluded assembly for dashboard
+ * Returns active if exists, otherwise the most recently concluded one
+ * @returns {Promise<Object>} Assembly data or null
+ */
+export const getCurrentAssembly = async () => {
+    const response = await api.get('/assemblies/current');
+    return response;
+};
+
+/**
  * Create a new assembly
  * @param {Object} assemblyData - Assembly data
  * @param {string} assemblyData.title - Assembly title
