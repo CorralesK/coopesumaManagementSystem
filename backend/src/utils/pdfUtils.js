@@ -369,6 +369,7 @@ const formatCurrency = (amount) => {
 
 /**
  * Create liquidations report PDF
+ * Matches the HTML design used for desktop printing
  *
  * @param {Array} liquidations - List of liquidations
  * @param {Object} stats - Statistics object { total, periodic, exit, totalSavings }
@@ -380,146 +381,257 @@ const createLiquidationsReport = (liquidations, stats, dateRange) => {
         const doc = new PDFDocument({
             size: 'LETTER',
             margins: {
-                top: 50,
-                bottom: 50,
+                top: 40,
+                bottom: 40,
                 left: 50,
                 right: 50
             }
         });
 
-        // Header
+        const pageWidth = doc.page.width;
+        const contentWidth = pageWidth - 100; // 50 margin each side
+
+        // Header with border bottom
         doc
             .fontSize(18)
             .font('Helvetica-Bold')
             .text('COOPESUMA R.L.', { align: 'center' })
-            .moveDown(0.3);
+            .moveDown(0.2);
 
         doc
             .fontSize(14)
             .text('Reporte de Liquidaciones', { align: 'center' })
             .moveDown(0.5);
 
-        // Date range
+        // Header border
         doc
-            .fontSize(10)
+            .moveTo(50, doc.y)
+            .lineTo(pageWidth - 50, doc.y)
+            .lineWidth(2)
+            .stroke();
+
+        doc.moveDown(0.8);
+
+        // Period info
+        doc
+            .fontSize(11)
             .font('Helvetica')
             .text(`Periodo: ${formatDate(dateRange.startDate)} - ${formatDate(dateRange.endDate)}`, { align: 'center' })
             .moveDown(1);
 
-        // Statistics summary
-        doc
-            .fontSize(11)
-            .font('Helvetica-Bold')
-            .text('Resumen:')
-            .moveDown(0.3);
+        // Statistics box with border
+        const statsBoxY = doc.y;
+        const statsBoxHeight = 70;
 
+        // Draw stats box border
+        doc
+            .lineWidth(1)
+            .rect(50, statsBoxY, contentWidth, statsBoxHeight)
+            .stroke();
+
+        // Stats header
         doc
             .fontSize(10)
+            .font('Helvetica-Bold')
+            .text('RESUMEN', 60, statsBoxY + 8);
+
+        // Stats header line
+        doc
+            .moveTo(50, statsBoxY + 22)
+            .lineTo(pageWidth - 50, statsBoxY + 22)
+            .stroke();
+
+        // Stats values in a row
+        const statY = statsBoxY + 32;
+        const statWidth = contentWidth / 4;
+
+        // Total Liquidaciones
+        doc
+            .fontSize(8)
             .font('Helvetica')
-            .text(`Total de liquidaciones: ${stats.total}`)
-            .text(`Liquidaciones periódicas: ${stats.periodic}`)
-            .text(`Liquidaciones por retiro: ${stats.exit}`)
-            .text(`Total en ahorros liquidados: ${formatCurrency(stats.totalSavings)}`)
-            .moveDown(1);
+            .text('TOTAL LIQUIDACIONES', 55, statY, { width: statWidth - 10, align: 'center' })
+            .fontSize(11)
+            .font('Helvetica-Bold')
+            .text(stats.total.toString(), 55, statY + 15, { width: statWidth - 10, align: 'center' });
+
+        // Periodicas
+        doc
+            .fontSize(8)
+            .font('Helvetica')
+            .text('PERIODICAS', 55 + statWidth, statY, { width: statWidth - 10, align: 'center' })
+            .fontSize(11)
+            .font('Helvetica-Bold')
+            .text(stats.periodic.toString(), 55 + statWidth, statY + 15, { width: statWidth - 10, align: 'center' });
+
+        // Por Retiro
+        doc
+            .fontSize(8)
+            .font('Helvetica')
+            .text('POR RETIRO', 55 + statWidth * 2, statY, { width: statWidth - 10, align: 'center' })
+            .fontSize(11)
+            .font('Helvetica-Bold')
+            .text(stats.exit.toString(), 55 + statWidth * 2, statY + 15, { width: statWidth - 10, align: 'center' });
+
+        // Monto Total
+        doc
+            .fontSize(8)
+            .font('Helvetica')
+            .text('MONTO TOTAL', 55 + statWidth * 3, statY, { width: statWidth - 10, align: 'center' })
+            .fontSize(11)
+            .font('Helvetica-Bold')
+            .text(formatCurrency(stats.totalSavings), 55 + statWidth * 3, statY + 15, { width: statWidth - 10, align: 'center' });
+
+        doc.y = statsBoxY + statsBoxHeight + 15;
 
         if (liquidations.length === 0) {
+            doc.moveDown(2);
             doc
                 .fontSize(12)
                 .font('Helvetica-Oblique')
                 .text('No hay liquidaciones en el periodo seleccionado.', { align: 'center' });
         } else {
-            // Table Header
-            const tableTop = doc.y;
-            const col1X = 50;   // N°
-            const col2X = 80;   // Fecha
-            const col3X = 160;  // Asociado
-            const col4X = 380;  // Tipo
-            const col5X = 460;  // Monto
+            // Table with full borders
+            const colWidths = [35, 70, 220, 70, 95]; // N, Fecha, Miembro, Tipo, Monto
+            const tableX = 50;
+            const rowHeight = 18;
+            const headerHeight = 22;
 
-            doc
-                .fontSize(10)
-                .font('Helvetica-Bold')
-                .text('N°', col1X, tableTop)
-                .text('Fecha', col2X, tableTop)
-                .text('Asociado', col3X, tableTop)
-                .text('Tipo', col4X, tableTop)
-                .text('Ahorros', col5X, tableTop);
+            // Function to draw table header
+            const drawTableHeader = (y) => {
+                // Header background
+                doc
+                    .fillColor('#f5f5f5')
+                    .rect(tableX, y, contentWidth, headerHeight)
+                    .fill()
+                    .fillColor('#000000');
 
-            // Draw header line
-            doc
-                .moveTo(50, tableTop + 15)
-                .lineTo(doc.page.width - 50, tableTop + 15)
-                .stroke();
+                // Header border
+                doc
+                    .lineWidth(1)
+                    .rect(tableX, y, contentWidth, headerHeight)
+                    .stroke();
 
-            let currentY = tableTop + 25;
-            const rowHeight = 20;
+                // Bottom border thicker
+                doc
+                    .lineWidth(2)
+                    .moveTo(tableX, y + headerHeight)
+                    .lineTo(tableX + contentWidth, y + headerHeight)
+                    .stroke()
+                    .lineWidth(1);
 
-            // Table Rows
-            liquidations.forEach((liq, index) => {
-                // Check if we need a new page
-                if (currentY + rowHeight > doc.page.height - 70) {
-                    doc.addPage();
-                    currentY = 50;
-
-                    // Repeat header on new page
+                // Column separators
+                let colX = tableX;
+                for (let i = 0; i < colWidths.length - 1; i++) {
+                    colX += colWidths[i];
                     doc
-                        .fontSize(10)
-                        .font('Helvetica-Bold')
-                        .text('N°', col1X, currentY)
-                        .text('Fecha', col2X, currentY)
-                        .text('Asociado', col3X, currentY)
-                        .text('Tipo', col4X, currentY)
-                        .text('Ahorros', col5X, currentY);
-
-                    doc
-                        .moveTo(50, currentY + 15)
-                        .lineTo(doc.page.width - 50, currentY + 15)
+                        .moveTo(colX, y)
+                        .lineTo(colX, y + headerHeight)
                         .stroke();
-
-                    currentY += 25;
                 }
 
+                // Header text
+                doc.fontSize(9).font('Helvetica-Bold');
+                colX = tableX;
+                doc.text('N°', colX + 5, y + 6, { width: colWidths[0] - 10, align: 'center' });
+                colX += colWidths[0];
+                doc.text('FECHA', colX + 5, y + 6, { width: colWidths[1] - 10 });
+                colX += colWidths[1];
+                doc.text('MIEMBRO', colX + 5, y + 6, { width: colWidths[2] - 10 });
+                colX += colWidths[2];
+                doc.text('TIPO', colX + 5, y + 6, { width: colWidths[3] - 10, align: 'center' });
+                colX += colWidths[3];
+                doc.text('MONTO', colX + 5, y + 6, { width: colWidths[4] - 10, align: 'right' });
+
+                return y + headerHeight;
+            };
+
+            let currentY = drawTableHeader(doc.y);
+
+            // Table rows
+            liquidations.forEach((liq, index) => {
+                // Check if we need a new page (leave space for footer)
+                if (currentY + rowHeight > doc.page.height - 80) {
+                    doc.addPage();
+                    currentY = drawTableHeader(40);
+                }
+
+                // Alternate row background
+                if (index % 2 === 1) {
+                    doc
+                        .fillColor('#fafafa')
+                        .rect(tableX, currentY, contentWidth, rowHeight)
+                        .fill()
+                        .fillColor('#000000');
+                }
+
+                // Row border
+                doc.rect(tableX, currentY, contentWidth, rowHeight).stroke();
+
+                // Column separators
+                let colX = tableX;
+                for (let i = 0; i < colWidths.length - 1; i++) {
+                    colX += colWidths[i];
+                    doc
+                        .moveTo(colX, currentY)
+                        .lineTo(colX, currentY + rowHeight)
+                        .stroke();
+                }
+
+                // Row data
                 const liquidationDate = new Date(liq.liquidationDate || liq.liquidation_date || liq.createdAt || liq.created_at);
                 const dateStr = liquidationDate.toLocaleDateString('es-CR');
-                const memberName = (liq.memberName || liq.member_name || 'N/A').substring(0, 35);
-                const typeStr = (liq.liquidationType || liq.liquidation_type) === 'periodic' ? 'Periódica' : 'Retiro';
+                const memberName = (liq.memberName || liq.member_name || 'N/A').substring(0, 38);
+                const typeStr = (liq.liquidationType || liq.liquidation_type) === 'periodic' ? 'Periodica' : 'Retiro';
                 const savingsAmount = formatCurrency(liq.totalSavings || liq.total_savings);
 
-                doc
-                    .fontSize(9)
-                    .font('Helvetica')
-                    .text((index + 1).toString(), col1X, currentY)
-                    .text(dateStr, col2X, currentY)
-                    .text(memberName, col3X, currentY)
-                    .text(typeStr, col4X, currentY)
-                    .text(savingsAmount, col5X, currentY);
+                doc.fontSize(9).font('Helvetica');
+                colX = tableX;
+                doc.text((index + 1).toString(), colX + 5, currentY + 5, { width: colWidths[0] - 10, align: 'center' });
+                colX += colWidths[0];
+                doc.text(dateStr, colX + 5, currentY + 5, { width: colWidths[1] - 10 });
+                colX += colWidths[1];
+                doc.text(memberName, colX + 5, currentY + 5, { width: colWidths[2] - 10 });
+                colX += colWidths[2];
+                doc.text(typeStr, colX + 5, currentY + 5, { width: colWidths[3] - 10, align: 'center' });
+                colX += colWidths[3];
+                doc.text(savingsAmount, colX + 5, currentY + 5, { width: colWidths[4] - 10, align: 'right' });
 
                 currentY += rowHeight;
             });
 
-            // Total row
-            currentY += 10;
+            // Total footer row
             doc
-                .moveTo(50, currentY)
-                .lineTo(doc.page.width - 50, currentY)
-                .stroke();
+                .fillColor('#f0f0f0')
+                .rect(tableX, currentY, contentWidth, rowHeight + 2)
+                .fill()
+                .fillColor('#000000');
 
-            currentY += 10;
+            doc.rect(tableX, currentY, contentWidth, rowHeight + 2).stroke();
+
             doc
                 .fontSize(10)
                 .font('Helvetica-Bold')
-                .text('TOTAL:', col4X, currentY)
-                .text(formatCurrency(stats.totalSavings), col5X, currentY);
+                .text('TOTAL:', tableX + colWidths[0] + colWidths[1] + colWidths[2] + 5, currentY + 5, { width: colWidths[3] - 10, align: 'right' })
+                .text(formatCurrency(stats.totalSavings), tableX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 5, currentY + 5, { width: colWidths[4] - 10, align: 'right' });
+
+            currentY += rowHeight + 2;
+            doc.y = currentY;
         }
 
-        // Footer
+        // Footer - at end of content, not fixed position
+        doc.moveDown(2);
         doc
-            .fontSize(8)
+            .moveTo(50, doc.y)
+            .lineTo(pageWidth - 50, doc.y)
+            .lineWidth(1)
+            .stroke();
+
+        doc.moveDown(0.5);
+        doc
+            .fontSize(9)
             .font('Helvetica')
             .text(
                 `Documento generado el ${formatDate(new Date())} - COOPESUMA R.L.`,
-                50,
-                doc.page.height - 40,
                 { align: 'center' }
             );
 
@@ -533,6 +645,7 @@ const createLiquidationsReport = (liquidations, stats, dateRange) => {
 
 /**
  * Create simple attendance list report PDF (for reports page)
+ * Matches the HTML design used for desktop printing
  *
  * @param {Array} attendees - List of attendees
  * @param {Object} assembly - Assembly information
@@ -543,31 +656,43 @@ const createAttendanceListReport = (attendees, assembly) => {
         const doc = new PDFDocument({
             size: 'LETTER',
             margins: {
-                top: 50,
-                bottom: 50,
+                top: 40,
+                bottom: 40,
                 left: 50,
                 right: 50
             }
         });
 
-        // Header
+        const pageWidth = doc.page.width;
+        const contentWidth = pageWidth - 100; // 50 margin each side
+
+        // Header with border bottom
         doc
             .fontSize(18)
             .font('Helvetica-Bold')
             .text('COOPESUMA R.L.', { align: 'center' })
-            .moveDown(0.3);
+            .moveDown(0.2);
 
         doc
             .fontSize(14)
             .text('Lista de Asistencia', { align: 'center' })
-            .moveDown(1);
+            .moveDown(0.5);
 
-        // Assembly Information
+        // Header border
         doc
-            .fontSize(11)
+            .moveTo(50, doc.y)
+            .lineTo(pageWidth - 50, doc.y)
+            .lineWidth(2)
+            .stroke();
+
+        doc.moveDown(1);
+
+        // Assembly Information section
+        doc
+            .fontSize(12)
             .font('Helvetica-Bold')
-            .text('Información de la Asamblea')
-            .moveDown(0.3);
+            .text('INFORMACION DE LA ASAMBLEA')
+            .moveDown(0.4);
 
         doc
             .fontSize(10)
@@ -579,7 +704,7 @@ const createAttendanceListReport = (attendees, assembly) => {
 
         doc
             .font('Helvetica-Bold')
-            .text('Fecha: ', { continued: true })
+            .text('Fecha Programada: ', { continued: true })
             .font('Helvetica')
             .text(formatDate(assembly.scheduled_date || assembly.scheduledDate))
             .moveDown(0.2);
@@ -593,6 +718,15 @@ const createAttendanceListReport = (attendees, assembly) => {
                 .moveDown(0.2);
         }
 
+        if (assembly.end_time || assembly.endTime) {
+            doc
+                .font('Helvetica-Bold')
+                .text('Hora de Finalizacion: ', { continued: true })
+                .font('Helvetica')
+                .text(formatTime(assembly.end_time || assembly.endTime))
+                .moveDown(0.2);
+        }
+
         doc.moveDown(1);
 
         if (attendees.length === 0) {
@@ -601,88 +735,133 @@ const createAttendanceListReport = (attendees, assembly) => {
                 .font('Helvetica-Oblique')
                 .text('No hay asistentes registrados para esta asamblea.', { align: 'center' });
         } else {
-            // Table Header
-            const tableTop = doc.y;
-            const col1X = 50;   // N°
-            const col2X = 80;   // Nombre
-            const col3X = 320;  // Cédula
-            const col4X = 420;  // Firma
+            // Table with full borders
+            const colWidths = [40, 230, 100, 120]; // N, Nombre, Cedula, Firma
+            const tableX = 50;
+            const rowHeight = 22;
+            const headerHeight = 24;
 
-            doc
-                .fontSize(10)
-                .font('Helvetica-Bold')
-                .text('N°', col1X, tableTop)
-                .text('Nombre Completo', col2X, tableTop)
-                .text('Cédula', col3X, tableTop)
-                .text('Firma', col4X, tableTop);
+            // Function to draw table header
+            const drawTableHeader = (y) => {
+                // Header background
+                doc
+                    .fillColor('#f5f5f5')
+                    .rect(tableX, y, contentWidth, headerHeight)
+                    .fill()
+                    .fillColor('#000000');
 
-            // Draw header line
-            doc
-                .moveTo(50, tableTop + 15)
-                .lineTo(doc.page.width - 50, tableTop + 15)
-                .stroke();
+                // Header border
+                doc
+                    .lineWidth(1)
+                    .rect(tableX, y, contentWidth, headerHeight)
+                    .stroke();
 
-            let currentY = tableTop + 25;
-            const rowHeight = 25;
+                // Bottom border thicker
+                doc
+                    .lineWidth(2)
+                    .moveTo(tableX, y + headerHeight)
+                    .lineTo(tableX + contentWidth, y + headerHeight)
+                    .stroke()
+                    .lineWidth(1);
 
-            // Table Rows
-            attendees.forEach((attendee, index) => {
-                // Check if we need a new page
-                if (currentY + rowHeight > doc.page.height - 70) {
-                    doc.addPage();
-                    currentY = 50;
-
-                    // Repeat header on new page
+                // Column separators
+                let colX = tableX;
+                for (let i = 0; i < colWidths.length - 1; i++) {
+                    colX += colWidths[i];
                     doc
-                        .fontSize(10)
-                        .font('Helvetica-Bold')
-                        .text('N°', col1X, currentY)
-                        .text('Nombre Completo', col2X, currentY)
-                        .text('Cédula', col3X, currentY)
-                        .text('Firma', col4X, currentY);
-
-                    doc
-                        .moveTo(50, currentY + 15)
-                        .lineTo(doc.page.width - 50, currentY + 15)
+                        .moveTo(colX, y)
+                        .lineTo(colX, y + headerHeight)
                         .stroke();
-
-                    currentY += 25;
                 }
 
-                const fullName = (attendee.full_name || attendee.fullName || 'N/A').substring(0, 40);
+                // Header text
+                doc.fontSize(10).font('Helvetica-Bold');
+                colX = tableX;
+                doc.text('N°', colX + 5, y + 7, { width: colWidths[0] - 10, align: 'center' });
+                colX += colWidths[0];
+                doc.text('NOMBRE COMPLETO', colX + 5, y + 7, { width: colWidths[1] - 10 });
+                colX += colWidths[1];
+                doc.text('CEDULA', colX + 5, y + 7, { width: colWidths[2] - 10 });
+                colX += colWidths[2];
+                doc.text('FIRMA', colX + 5, y + 7, { width: colWidths[3] - 10, align: 'center' });
+
+                return y + headerHeight;
+            };
+
+            let currentY = drawTableHeader(doc.y);
+
+            // Table rows
+            attendees.forEach((attendee, index) => {
+                // Check if we need a new page (leave space for summary and footer)
+                if (currentY + rowHeight > doc.page.height - 100) {
+                    doc.addPage();
+                    currentY = drawTableHeader(40);
+                }
+
+                // Row border
+                doc.rect(tableX, currentY, contentWidth, rowHeight).stroke();
+
+                // Column separators
+                let colX = tableX;
+                for (let i = 0; i < colWidths.length - 1; i++) {
+                    colX += colWidths[i];
+                    doc
+                        .moveTo(colX, currentY)
+                        .lineTo(colX, currentY + rowHeight)
+                        .stroke();
+                }
+
+                // Row data
+                const fullName = (attendee.full_name || attendee.fullName || 'N/A').substring(0, 38);
                 const identification = attendee.identification || 'N/A';
 
-                doc
-                    .fontSize(9)
-                    .font('Helvetica')
-                    .text((index + 1).toString(), col1X, currentY)
-                    .text(fullName, col2X, currentY)
-                    .text(identification, col3X, currentY);
-
-                // Signature box
-                doc
-                    .rect(col4X, currentY - 3, 80, 18)
-                    .stroke();
+                doc.fontSize(9).font('Helvetica');
+                colX = tableX;
+                doc.text((index + 1).toString(), colX + 5, currentY + 6, { width: colWidths[0] - 10, align: 'center' });
+                colX += colWidths[0];
+                doc.text(fullName, colX + 5, currentY + 6, { width: colWidths[1] - 10 });
+                colX += colWidths[1];
+                doc.text(identification, colX + 5, currentY + 6, { width: colWidths[2] - 10 });
+                // Firma column is left empty for signatures
 
                 currentY += rowHeight;
             });
 
-            // Summary
-            doc.moveDown(2);
+            doc.y = currentY;
+
+            // Summary box
+            doc.moveDown(1);
+            const summaryY = doc.y;
+            doc
+                .fillColor('#f5f5f5')
+                .rect(tableX, summaryY, contentWidth, 25)
+                .fill()
+                .fillColor('#000000');
+
+            doc.rect(tableX, summaryY, contentWidth, 25).stroke();
+
             doc
                 .fontSize(11)
                 .font('Helvetica-Bold')
-                .text(`Total de Asistentes: ${attendees.length}`, { align: 'center' });
+                .text(`Total de Asistentes: ${attendees.length}`, tableX, summaryY + 7, { width: contentWidth, align: 'center' });
+
+            doc.y = summaryY + 25;
         }
 
-        // Footer
+        // Footer - at end of content, not fixed position
+        doc.moveDown(2);
         doc
-            .fontSize(8)
+            .moveTo(50, doc.y)
+            .lineTo(pageWidth - 50, doc.y)
+            .lineWidth(1)
+            .stroke();
+
+        doc.moveDown(0.5);
+        doc
+            .fontSize(9)
             .font('Helvetica')
             .text(
                 `Documento generado el ${formatDate(new Date())} - COOPESUMA R.L.`,
-                50,
-                doc.page.height - 40,
                 { align: 'center' }
             );
 
