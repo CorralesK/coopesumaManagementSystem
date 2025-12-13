@@ -21,8 +21,8 @@ export const printReceipt = ({ receiptData, receiptType }) => {
         receiptHTML = createLiquidationReceiptHTML(receiptData);
     }
 
-    // Create temporary window for printing
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    // Create temporary window for printing (opens as a new tab)
+    const printWindow = window.open('', '_blank');
 
     if (!printWindow) {
         alert('Por favor permite las ventanas emergentes para imprimir');
