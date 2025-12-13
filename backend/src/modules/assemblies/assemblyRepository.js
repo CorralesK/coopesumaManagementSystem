@@ -307,11 +307,11 @@ const update = async (assemblyId, updates) => {
 const activate = async (assemblyId) => {
     try {
         // The database trigger will automatically deactivate other assemblies
-        // Set start_time to current time when activating
+        // Set start_time to current time in Costa Rica timezone when activating
         const query = `
             UPDATE assemblies
             SET is_active = true,
-                start_time = CURRENT_TIME,
+                start_time = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Costa_Rica')::TIME,
                 updated_at = CURRENT_TIMESTAMP
             WHERE assembly_id = $1
             RETURNING
@@ -342,14 +342,11 @@ const activate = async (assemblyId) => {
  */
 const deactivate = async (assemblyId) => {
     try {
-        const now = new Date();
-
-        // Only update concluded_at, don't update end_time to avoid constraint violations
-        // when assembly spans across midnight or timezone differences
+        // Use PostgreSQL to get Costa Rica timezone (UTC-6)
         const query = `
             UPDATE assemblies
             SET is_active = false,
-                concluded_at = $2,
+                concluded_at = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Costa_Rica'),
                 updated_at = CURRENT_TIMESTAMP
             WHERE assembly_id = $1
             RETURNING
@@ -364,7 +361,7 @@ const deactivate = async (assemblyId) => {
                 updated_at
         `;
 
-        const result = await db.query(query, [assemblyId, now]);
+        const result = await db.query(query, [assemblyId]);
         return result.rows[0];
     } catch (error) {
         logger.error('Error deactivating assembly:', error);
