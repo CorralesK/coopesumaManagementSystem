@@ -13,8 +13,7 @@ import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Modal from '../../components/common/Modal';
-import PrintModal from '../../components/common/PrintModal';
-import AttendanceListPrint from '../../components/print/AttendanceListPrint';
+import { printAttendanceListReport } from '../../utils/printUtils';
 
 /**
  * AssemblyDetailPage Component
@@ -25,8 +24,6 @@ const AssemblyDetailPage = () => {
     const { id } = useParams();
     const [successMessage, setSuccessMessage] = useState('');
     const [showConcludeModal, setShowConcludeModal] = useState(false);
-    const [showPrintModal, setShowPrintModal] = useState(false);
-    const [attendeesForPrint, setAttendeesForPrint] = useState([]);
     const [loadingAttendees, setLoadingAttendees] = useState(false);
 
     // Use custom hooks
@@ -81,8 +78,15 @@ const AssemblyDetailPage = () => {
                 return;
             }
 
-            setAttendeesForPrint(attendees);
-            setShowPrintModal(true);
+            // Use printAttendanceListReport which handles mobile/desktop
+            await printAttendanceListReport({
+                attendees,
+                assembly: {
+                    ...assembly,
+                    assemblyId: assembly.assemblyId || assembly.assembly_id || id
+                },
+                title: 'Lista de Asistencia'
+            });
         } catch (err) {
             alert('Error al obtener la lista de asistencia: ' + (err.message || 'Error desconocido'));
         } finally {
@@ -382,23 +386,6 @@ const AssemblyDetailPage = () => {
                     </Card>
                 </div>
             </div>
-
-            {/* Print Attendance List Modal */}
-            <PrintModal
-                isOpen={showPrintModal}
-                onClose={() => setShowPrintModal(false)}
-                title="Lista de Asistencia"
-                printTitle={`Lista de Asistencia - ${assembly?.title || ''}`}
-                size="xl"
-                orientation="portrait"
-                paperSize="letter"
-            >
-                <AttendanceListPrint
-                    attendees={attendeesForPrint}
-                    assembly={assembly}
-                    title="Lista de Asistencia"
-                />
-            </PrintModal>
 
             {/* Conclude Assembly Confirmation Modal */}
             <Modal isOpen={showConcludeModal} onClose={handleConcludeCancel} title="Concluir Asamblea" size="lg">
