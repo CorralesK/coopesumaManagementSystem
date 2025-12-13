@@ -1286,7 +1286,7 @@ export const printMemberCards = ({ members = [], cooperativeName = 'Coopesuma' }
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
-                    gap: 1mm;
+                    gap: 0.5mm;
                     min-width: 0;
                 }
 

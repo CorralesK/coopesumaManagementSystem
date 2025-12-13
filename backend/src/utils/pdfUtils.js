@@ -6,7 +6,11 @@
  */
 
 const PDFDocument = require('pdfkit');
+const path = require('path');
 const logger = require('./logger');
+
+// Logo path for member cards
+const COOPESUMA_LOGO_PATH = path.join(__dirname, '../assets/logos/CoopesumaLogo.png');
 
 /**
  * Format date for display in PDF
@@ -894,7 +898,7 @@ const createMemberCardsPDF = (members) => {
                 .rect(x, y, cardWidth, cardHeight)
                 .stroke('#e5e7eb');
 
-            // Header section (white background with text)
+            // Header section (white background with logo and text)
             const headerHeight = 28;
             doc
                 .fillColor('#ffffff')
@@ -908,14 +912,31 @@ const createMemberCardsPDF = (members) => {
                 .lineWidth(1)
                 .stroke('#e5e7eb');
 
+            // Header with logo and text centered
+            const logoHeight = 18;
+            const logoWidth = 18;
+            const textWidth = 80;
+            const totalHeaderWidth = logoWidth + 5 + textWidth;
+            const headerStartX = x + (cardWidth - totalHeaderWidth) / 2;
+
+            // Logo
+            try {
+                doc.image(COOPESUMA_LOGO_PATH, headerStartX, y + 5, {
+                    height: logoHeight,
+                    width: logoWidth
+                });
+            } catch (err) {
+                // If logo fails to load, just show text
+                logger.warn('Could not load logo for member card:', err.message);
+            }
+
             // Header text (COOPESUMA)
             doc
                 .fontSize(14)
                 .font('Helvetica-Bold')
                 .fillColor('#2563eb')
-                .text('COOPESUMA', x, y + 8, {
-                    width: cardWidth,
-                    align: 'center'
+                .text('COOPESUMA', headerStartX + logoWidth + 5, y + 8, {
+                    width: textWidth
                 });
 
             // Body section
@@ -969,7 +990,7 @@ const createMemberCardsPDF = (members) => {
                     lineBreak: false
                 });
 
-            infoY += 14;
+            infoY += 12;
 
             // Cedula
             doc
@@ -981,7 +1002,7 @@ const createMemberCardsPDF = (members) => {
                 .fillColor('#4b5563')
                 .text(member.identification || 'N/A');
 
-            infoY += 11;
+            infoY += 9;
 
             // Member code (N° Asociado)
             if (member.memberCode) {
