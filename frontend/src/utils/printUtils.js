@@ -21,14 +21,33 @@ const isMobileDevice = () => {
  */
 const downloadPDFFromBackend = async (endpoint, filename) => {
     try {
-        const response = await api.get(endpoint, {
-            responseType: 'arraybuffer',
+        // Get the base URL from the api instance
+        const baseURL = api.defaults.baseURL;
+        const token = localStorage.getItem('token');
+
+        // Use fetch directly for better control over the response
+        const response = await fetch(`${baseURL}${endpoint}`, {
+            method: 'GET',
             headers: {
+                'Authorization': `Bearer ${token}`,
                 'Accept': 'application/pdf'
             }
         });
 
-        const blob = new Blob([response.data], { type: 'application/pdf' });
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('PDF generation failed:', errorText);
+            throw new Error('Error al generar el PDF');
+        }
+
+        const blob = await response.blob();
+
+        // Verify the blob is actually a PDF
+        if (blob.type !== 'application/pdf' && blob.size < 100) {
+            console.error('Invalid PDF response:', blob.type, blob.size);
+            throw new Error('El servidor no devolvió un PDF válido');
+        }
+
         const url = window.URL.createObjectURL(blob);
 
         // For iOS Safari, we need to open in a new window
@@ -44,7 +63,7 @@ const downloadPDFFromBackend = async (endpoint, filename) => {
         }
 
         // Cleanup after a delay
-        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+        setTimeout(() => window.URL.revokeObjectURL(url), 5000);
     } catch (error) {
         console.error('Error downloading PDF:', error);
         alert('Error al descargar el PDF. Por favor intenta de nuevo.');

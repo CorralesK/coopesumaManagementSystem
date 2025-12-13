@@ -185,9 +185,8 @@ const generateLiquidationsReportPDF = async (req, res) => {
             `attachment; filename="liquidaciones-${startDate}-${endDate}.pdf"`
         );
 
-        // Pipe PDF to response
+        // Pipe PDF to response (doc.end() is called inside the generator function)
         pdfDoc.pipe(res);
-        pdfDoc.end();
     } catch (error) {
         if (error.isOperational) {
             return errorResponse(
@@ -233,9 +232,8 @@ const generateAttendanceListReportPDF = async (req, res) => {
             `attachment; filename="lista-asistencia-${assemblyId}.pdf"`
         );
 
-        // Pipe PDF to response
+        // Pipe PDF to response (doc.end() is called inside the generator function)
         pdfDoc.pipe(res);
-        pdfDoc.end();
     } catch (error) {
         if (error.isOperational) {
             return errorResponse(
