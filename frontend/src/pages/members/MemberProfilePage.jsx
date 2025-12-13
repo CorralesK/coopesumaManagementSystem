@@ -6,7 +6,6 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -18,7 +17,6 @@ import Alert from '../../components/common/Alert';
  * Displays personal information for logged-in members (read-only)
  */
 const MemberProfilePage = () => {
-    const { user } = useAuth();
     const navigate = useNavigate();
     const [memberData, setMemberData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -36,7 +34,7 @@ const MemberProfilePage = () => {
             setMemberData(response.data.member);
         } catch (err) {
             console.error('Error fetching member data:', err);
-            setError(err.message || 'Error al cargar la informacion');
+            setError(err.message || 'Error al cargar la información');
         } finally {
             setLoading(false);
         }
@@ -52,14 +50,25 @@ const MemberProfilePage = () => {
     };
 
     if (loading) {
-        return <Loading message="Cargando tu informacion..." />;
+        return <Loading message="Cargando tu información..." />;
     }
 
     if (error) {
         return (
-            <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => navigate('/my-dashboard')}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                        <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Información</h1>
+                </div>
                 <Alert type="error" message={error} />
-                <div className="mt-4 text-center">
+                <div className="flex justify-center">
                     <Button onClick={fetchMemberData} variant="primary">
                         Reintentar
                     </Button>
@@ -70,26 +79,37 @@ const MemberProfilePage = () => {
 
     if (!memberData) {
         return (
-            <div className="max-w-4xl mx-auto px-4 py-8">
-                <Alert type="warning" message="No se pudo cargar tu informacion" />
+            <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => navigate('/my-dashboard')}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                        <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Información</h1>
+                </div>
+                <Alert type="warning" message="No se pudo cargar tu información" />
             </div>
         );
     }
 
     return (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        <div className="space-y-6">
             {/* Header with Back Button */}
             <div className="flex items-center gap-4">
                 <button
                     onClick={() => navigate('/my-dashboard')}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                 >
                     <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Informacion</h1>
+                <div className="flex-1 min-w-0">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mi Información</h1>
                     <p className="text-gray-600 mt-1">Tus datos personales</p>
                 </div>
             </div>
@@ -113,12 +133,12 @@ const MemberProfilePage = () => {
                     </div>
 
                     {/* Name */}
-                    <h2 className="text-xl font-bold text-gray-900">{memberData.fullName}</h2>
+                    <h2 className="text-xl font-bold text-gray-900 text-center">{memberData.fullName}</h2>
 
                     {/* Member Code */}
                     {memberData.memberCode && (
-                        <p className="text-sm text-gray-500 mt-1">
-                            Codigo de Asociado: <span className="font-medium">{memberData.memberCode}</span>
+                        <p className="text-sm text-gray-500 mt-1 text-center">
+                            Código de Asociado: <span className="font-medium">{memberData.memberCode}</span>
                         </p>
                     )}
 
@@ -140,7 +160,7 @@ const MemberProfilePage = () => {
                         {/* Identification */}
                         <div>
                             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                Identificacion
+                                Identificación
                             </label>
                             <p className="text-base text-gray-900">{memberData.identification || 'No disponible'}</p>
                         </div>
@@ -150,8 +170,20 @@ const MemberProfilePage = () => {
                             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
                                 Correo Institucional
                             </label>
-                            <p className="text-base text-gray-900">{memberData.institutionalEmail || 'No disponible'}</p>
+                            <p className="text-base text-gray-900 break-all">{memberData.institutionalEmail || 'No disponible'}</p>
                         </div>
+
+                        {/* Gender */}
+                        {memberData.gender && (
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                                    Género
+                                </label>
+                                <p className="text-base text-gray-900">
+                                    {memberData.gender === 'M' ? 'Masculino' : memberData.gender === 'F' ? 'Femenino' : memberData.gender}
+                                </p>
+                            </div>
+                        )}
 
                         {/* Quality */}
                         <div>
@@ -170,30 +202,18 @@ const MemberProfilePage = () => {
                                 <p className="text-base text-gray-900">{memberData.levelName}</p>
                             </div>
                         )}
-
-                        {/* Gender */}
-                        {memberData.gender && (
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                    Genero
-                                </label>
-                                <p className="text-base text-gray-900">
-                                    {memberData.gender === 'M' ? 'Masculino' : memberData.gender === 'F' ? 'Femenino' : memberData.gender}
-                                </p>
-                            </div>
-                        )}
                     </div>
                 </div>
 
                 {/* Affiliation Information */}
                 <div className="pt-6 mt-6 border-t border-gray-200 space-y-6">
-                    <h3 className="text-lg font-semibold text-gray-900">Informacion de Afiliacion</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Información de Afiliación</h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         {/* Affiliation Date */}
                         <div>
                             <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                Fecha de Afiliacion
+                                Fecha de Afiliación
                             </label>
                             <p className="text-base text-gray-900">{formatDate(memberData.affiliationDate)}</p>
                         </div>
@@ -202,7 +222,7 @@ const MemberProfilePage = () => {
                         {memberData.lastLiquidationDate && (
                             <div>
                                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                    Ultima Liquidacion
+                                    Última Liquidación
                                 </label>
                                 <p className="text-base text-gray-900">{formatDate(memberData.lastLiquidationDate)}</p>
                             </div>
@@ -212,18 +232,10 @@ const MemberProfilePage = () => {
             </Card>
 
             {/* Info Note */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex gap-3">
-                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                        <p className="text-sm text-blue-800">
-                            Si necesitas actualizar tu informacion personal, por favor contacta al administrador de la cooperativa.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <Alert
+                type="info"
+                message="Si necesitas actualizar tu información personal, por favor contacta al administrador de la cooperativa."
+            />
         </div>
     );
 };
