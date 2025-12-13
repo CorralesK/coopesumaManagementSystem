@@ -16,8 +16,7 @@ import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
 import Modal from '../../components/common/Modal';
-import PrintModal from '../../components/common/PrintModal';
-import AttendanceListPrint from '../../components/print/AttendanceListPrint';
+import { printAttendanceListReport } from '../../utils/printUtils';
 
 /**
  * AttendanceScanPage Component
@@ -31,7 +30,7 @@ const AttendanceScanPage = () => {
     const [verifying, setVerifying] = useState(false);
     const [verifyError, setVerifyError] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
-    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [printingList, setPrintingList] = useState(false);
 
     // Use custom hooks
     const { user } = useAuth();
@@ -119,13 +118,27 @@ const AttendanceScanPage = () => {
     };
 
     // Handle print attendance list
-    const handlePrintAttendanceList = () => {
+    const handlePrintAttendanceList = async () => {
         if (!attendance || attendance.length === 0) {
             alert('No hay asistentes registrados para imprimir.');
             return;
         }
 
-        setShowPrintModal(true);
+        try {
+            setPrintingList(true);
+            await printAttendanceListReport({
+                attendees: attendance,
+                assembly: {
+                    ...activeAssembly,
+                    assemblyId: activeAssembly.assemblyId || activeAssembly.assembly_id
+                },
+                title: 'Lista de Asistencia'
+            });
+        } catch (err) {
+            alert('Error al imprimir la lista: ' + (err.message || 'Error desconocido'));
+        } finally {
+            setPrintingList(false);
+        }
     };
 
     // QR Scanner hook
@@ -209,11 +222,16 @@ const AttendanceScanPage = () => {
                         <Button
                             onClick={handlePrintAttendanceList}
                             variant="outline"
+                            disabled={printingList}
                         >
-                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                            </svg>
-                            Imprimir Lista
+                            {printingList ? (
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
+                            ) : (
+                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                            )}
+                            {printingList ? 'Cargando...' : 'Imprimir Lista'}
                         </Button>
                     )}
                 </div>
@@ -408,22 +426,6 @@ const AttendanceScanPage = () => {
                 )}
             </Modal>
 
-            {/* Print Attendance List Modal */}
-            <PrintModal
-                isOpen={showPrintModal}
-                onClose={() => setShowPrintModal(false)}
-                title="Lista de Asistencia"
-                printTitle={`Lista de Asistencia - ${activeAssembly?.title || ''}`}
-                size="xl"
-                orientation="portrait"
-                paperSize="letter"
-            >
-                <AttendanceListPrint
-                    attendees={attendance || []}
-                    assembly={activeAssembly}
-                    title="Lista de Asistencia"
-                />
-            </PrintModal>
         </div>
     );
 };
