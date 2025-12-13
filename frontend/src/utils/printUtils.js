@@ -5,6 +5,49 @@
  */
 
 /**
+ * Check if the current device is mobile
+ * @returns {boolean} True if mobile device
+ */
+const isMobileDevice = () => {
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+};
+
+/**
+ * Generate PDF from HTML content and download it (for mobile devices)
+ * @param {string} htmlContent - HTML content to convert to PDF
+ * @param {string} filename - Filename for the PDF
+ */
+const generateAndDownloadPDF = async (htmlContent, filename) => {
+    try {
+        const html2pdf = (await import('html2pdf.js')).default;
+
+        // Create a temporary container
+        const container = document.createElement('div');
+        container.innerHTML = htmlContent;
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        document.body.appendChild(container);
+
+        const opt = {
+            margin: [10, 10, 10, 10],
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        await html2pdf().set(opt).from(container).save();
+
+        // Clean up
+        document.body.removeChild(container);
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Error al generar el PDF. Por favor intenta de nuevo.');
+    }
+};
+
+/**
  * Print attendance list with proper formatting
  * @param {Object} options - Print options
  * @param {Array} options.attendees - List of attendees
@@ -1345,18 +1388,11 @@ export const printMemberCards = ({ members = [], cooperativeName = 'Coopesuma' }
  * @param {Object} options.stats - Statistics object
  * @param {Object} options.dateRange - Date range { startDate, endDate }
  */
-export const printLiquidationsReport = ({
+export const printLiquidationsReport = async ({
     liquidations = [],
     stats = {},
     dateRange = {}
 }) => {
-    const printWindow = window.open('', '_blank');
-
-    if (!printWindow) {
-        alert('Por favor, permite las ventanas emergentes para imprimir.');
-        return;
-    }
-
     const formatDate = (date) => {
         if (!date) return 'N/A';
         return new Date(date).toLocaleDateString('es-CR', {
@@ -1611,7 +1647,22 @@ export const printLiquidationsReport = ({
             <div class="footer">
                 Documento generado el ${printDate} - COOPESUMA R.L.
             </div>
+        </body>
+        </html>
+    `;
 
+    // Check if mobile device - download PDF instead of printing
+    if (isMobileDevice()) {
+        await generateAndDownloadPDF(htmlContent, `liquidaciones_${dateRange.startDate}_${dateRange.endDate}.pdf`);
+    } else {
+        // Desktop: open print window
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permite las ventanas emergentes para imprimir.');
+            return;
+        }
+
+        const printHtml = htmlContent.replace('</body>', `
             <script>
                 window.onload = function() {
                     window.print();
@@ -1620,13 +1671,12 @@ export const printLiquidationsReport = ({
                     };
                 };
             </script>
-        </body>
-        </html>
-    `;
+        </body>`);
 
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+        printWindow.document.open();
+        printWindow.document.write(printHtml);
+        printWindow.document.close();
+    }
 };
 
 /**
@@ -1637,14 +1687,7 @@ export const printLiquidationsReport = ({
  * @param {Object} options.assembly - Assembly information
  * @param {string} options.title - Document title
  */
-export const printAttendanceListReport = ({ attendees = [], assembly = {}, title = 'Lista de Asistencia' }) => {
-    const printWindow = window.open('', '_blank');
-
-    if (!printWindow) {
-        alert('Por favor, permite las ventanas emergentes para imprimir.');
-        return;
-    }
-
+export const printAttendanceListReport = async ({ attendees = [], assembly = {}, title = 'Lista de Asistencia' }) => {
     const formatDate = (date) => {
         if (!date) return 'N/A';
         return new Date(date).toLocaleDateString('es-CR', {
@@ -1861,7 +1904,23 @@ export const printAttendanceListReport = ({ attendees = [], assembly = {}, title
             <div class="footer">
                 Documento generado el ${printDate} - COOPESUMA R.L.
             </div>
+        </body>
+        </html>
+    `;
 
+    // Check if mobile device - download PDF instead of printing
+    if (isMobileDevice()) {
+        const assemblyDate = assembly.scheduledDate ? new Date(assembly.scheduledDate).toISOString().split('T')[0] : 'asamblea';
+        await generateAndDownloadPDF(htmlContent, `asistencia_${assemblyDate}.pdf`);
+    } else {
+        // Desktop: open print window
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permite las ventanas emergentes para imprimir.');
+            return;
+        }
+
+        const printHtml = htmlContent.replace('</body>', `
             <script>
                 window.onload = function() {
                     window.print();
@@ -1870,13 +1929,12 @@ export const printAttendanceListReport = ({ attendees = [], assembly = {}, title
                     };
                 };
             </script>
-        </body>
-        </html>
-    `;
+        </body>`);
 
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+        printWindow.document.open();
+        printWindow.document.write(printHtml);
+        printWindow.document.close();
+    }
 };
 
 export const printLiquidationReceipt = ({
