@@ -98,9 +98,8 @@ const downloadPDFFromBackend = async (endpoint, filename) => {
         console.error('Error message:', error.message);
         console.error('Full error:', error);
 
-        // Show more detailed error to user
-        const errorDetails = `URL: ${fullURL}\nError: ${error.message}`;
-        alert(`Error al descargar el PDF:\n\n${errorDetails}\n\nRevisa la consola del navegador para más detalles.`);
+        // Re-throw the error so callers can handle it
+        throw new Error(error.message || 'Error al descargar el PDF');
     }
 };
 
