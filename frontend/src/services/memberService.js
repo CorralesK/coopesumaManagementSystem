@@ -34,19 +34,21 @@ export const getMemberById = async (memberId) => {
 
 /**
  * Affiliate a new member (includes ₡500 affiliation fee + receipt generation)
- * @param {Object} memberData - Member data
- * @param {string} memberData.fullName - Full name
- * @param {string} memberData.identification - Identification number
- * @param {string} memberData.institutionalEmail - Institutional email
- * @param {number} memberData.qualityId - Quality ID (1=Student, 2=Employee)
- * @param {number} memberData.levelId - Level ID (optional for employees)
- * @param {string} memberData.gender - Gender (M/F) (optional)
- * @param {string} memberData.memberCode - Member code (optional)
- * @param {string} memberData.photoUrl - Photo URL (optional)
+ * Supports both JSON and FormData (for file uploads)
+ * @param {Object|FormData} memberData - Member data (Object or FormData with photo file)
  * @returns {Promise<Object>} Created member data with receipt info
  */
 export const affiliateMember = async (memberData) => {
-    const response = await api.post('/members/affiliate', memberData);
+    // Check if memberData is FormData (for file uploads)
+    const isFormData = memberData instanceof FormData;
+
+    const config = isFormData ? {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    } : {};
+
+    const response = await api.post('/members/affiliate', memberData, config);
     return response;
 };
 
@@ -70,12 +72,22 @@ export const createMember = async (memberData) => {
 
 /**
  * Update an existing member
+ * Supports both JSON and FormData (for file uploads)
  * @param {string} memberId - Member ID
- * @param {Object} memberData - Updated member data
+ * @param {Object|FormData} memberData - Updated member data (Object or FormData with photo file)
  * @returns {Promise<Object>} Updated member data
  */
 export const updateMember = async (memberId, memberData) => {
-    const response = await api.put(`/members/${memberId}`, memberData);
+    // Check if memberData is FormData (for file uploads)
+    const isFormData = memberData instanceof FormData;
+
+    const config = isFormData ? {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    } : {};
+
+    const response = await api.put(`/members/${memberId}`, memberData, config);
     return response;
 };
 

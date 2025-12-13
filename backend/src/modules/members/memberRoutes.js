@@ -14,6 +14,7 @@ const { validate } = require('../../middlewares/validationMiddleware');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const { requireRole } = require('../../middlewares/roleMiddleware');
 const { USER_ROLES } = require('../../constants/roles');
+const { handleUpload } = require('../../middlewares/uploadMiddleware');
 
 // ============================================================================
 // Member CRUD Routes
@@ -62,11 +63,13 @@ router.get(
  * This is the recommended way to create new members
  * Protected: Requires authentication
  * Accessible by: Administrator only
+ * Supports multipart/form-data for photo upload
  */
 router.post(
     '/affiliate',
     authMiddleware,
     requireRole([USER_ROLES.ADMINISTRATOR]),
+    handleUpload,
     validate(createMemberSchema),
     memberController.affiliateMember
 );
@@ -76,11 +79,13 @@ router.post(
  * Create new member
  * Protected: Requires authentication
  * Accessible by: Administrator only
+ * Supports multipart/form-data for photo upload
  */
 router.post(
     '/',
     authMiddleware,
     requireRole([USER_ROLES.ADMINISTRATOR]),
+    handleUpload,
     validate(createMemberSchema),
     memberController.createMember
 );
@@ -90,11 +95,13 @@ router.post(
  * Update member
  * Protected: Requires authentication
  * Accessible by: Administrator only
+ * Supports multipart/form-data for photo upload
  */
 router.put(
     '/:id',
     authMiddleware,
     requireRole([USER_ROLES.ADMINISTRATOR]),
+    handleUpload,
     validate(updateMemberSchema),
     memberController.updateMember
 );
