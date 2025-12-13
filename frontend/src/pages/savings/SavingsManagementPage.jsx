@@ -776,6 +776,8 @@ const SavingsManagementPage = () => {
                 printTitle={`Recibo - ${receiptData?.member?.full_name || ''}`}
                 size="md"
                 paperSize="80mm 200mm"
+                receiptData={receiptData}
+                receiptType="savings"
             >
                 {receiptData && (
                     <SavingsReceiptPrint

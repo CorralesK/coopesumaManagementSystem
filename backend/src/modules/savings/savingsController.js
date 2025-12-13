@@ -8,6 +8,7 @@
 const savingsService = require('./savingsService');
 const logger = require('../../utils/logger');
 const { getNow, toCostaRicaTime } = require('../../utils/dateUtils');
+const { createSavingsReceiptPDF } = require('../../utils/pdfUtils');
 
 /**
  * Get savings for a specific member
@@ -254,6 +255,38 @@ const getMemberSavingsTransactions = async (req, res, next) => {
     }
 };
 
+/**
+ * Download savings receipt as PDF
+ * POST /api/savings/receipt/pdf
+ */
+const downloadReceiptPDF = async (req, res, next) => {
+    try {
+        const receiptData = req.body;
+
+        // Validate required fields
+        if (!receiptData.transactionType || !receiptData.member) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required receipt data'
+            });
+        }
+
+        // Create PDF
+        const pdfDoc = createSavingsReceiptPDF(receiptData);
+
+        // Set headers for PDF download
+        const filename = `recibo-${receiptData.transactionType}-${Date.now()}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        // Pipe the PDF to response
+        pdfDoc.pipe(res);
+    } catch (error) {
+        logger.error('Controller error - downloadReceiptPDF:', error);
+        next(error);
+    }
+};
+
 module.exports = {
     getMemberSavings,
     registerDeposit,
@@ -262,5 +295,6 @@ module.exports = {
     getSavingsSummary,
     getSavingsInventoryByYear,
     getSavingsInventoryByMonth,
-    getMemberSavingsTransactions
+    getMemberSavingsTransactions,
+    downloadReceiptPDF
 };

@@ -421,6 +421,8 @@ const MemberLiquidationSection = forwardRef(({ member, onLiquidationComplete, on
                 printTitle={`Recibo Liquidación - ${member?.fullName || ''}`}
                 size="md"
                 paperSize="80mm 200mm"
+                receiptData={receiptData}
+                receiptType="liquidation"
             >
                 {receiptData && (
                     <LiquidationReceiptPrint

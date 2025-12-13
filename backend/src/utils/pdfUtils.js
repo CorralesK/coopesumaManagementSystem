@@ -1083,12 +1083,393 @@ const createMemberCardsPDF = (members) => {
     }
 };
 
+/**
+ * Create savings receipt PDF (deposit or withdrawal)
+ * Matches the HTML design for consistent mobile/desktop experience
+ *
+ * @param {Object} receiptData - Receipt information
+ * @returns {PDFDocument} PDF document stream
+ */
+const createSavingsReceiptPDF = (receiptData) => {
+    try {
+        const {
+            transactionType = 'deposit',
+            member = {},
+            amount = 0,
+            previousBalance = 0,
+            newBalance = 0,
+            description = '',
+            transactionDate = new Date(),
+            transactionId = ''
+        } = receiptData;
+
+        const isDeposit = transactionType === 'deposit';
+        const transactionLabel = isDeposit ? 'DEPOSITO' : 'RETIRO';
+        const transactionColor = isDeposit ? '#16a34a' : '#dc2626';
+
+        const doc = new PDFDocument({
+            size: [226.77, 566.93], // 80mm x 200mm in points
+            margins: { top: 10, bottom: 10, left: 10, right: 10 }
+        });
+
+        let y = 20;
+
+        // Header
+        doc.fontSize(12).font('Helvetica-Bold').text('COOPESUMA R.L.', { align: 'center' });
+        y += 15;
+        doc.fontSize(8).font('Helvetica').text('Cooperativa de Ahorro', y, { align: 'center' });
+        y += 12;
+        doc.fontSize(8).text('Sistema de Gestión', y, { align: 'center' });
+        y += 15;
+
+        // Line separator
+        doc.moveTo(15, y).lineTo(211.77, y).dash(2, { space: 2 }).stroke().undash();
+        y += 15;
+
+        // Transaction type banner
+        doc.rect(15, y, 196.77, 20).fillAndStroke(transactionColor, transactionColor);
+        doc.fillColor('#ffffff').fontSize(10).font('Helvetica-Bold')
+            .text(`RECIBO DE ${transactionLabel}`, 15, y + 6, { width: 196.77, align: 'center' });
+        y += 30;
+        doc.fillColor('#000000');
+
+        // Receipt details
+        doc.fontSize(8).font('Helvetica-Bold').text('Fecha:', 15, y);
+        doc.fontSize(8).font('Helvetica').text(formatDate(transactionDate), 100, y, { align: 'right', width: 111.77 });
+        y += 12;
+
+        doc.fontSize(8).font('Helvetica-Bold').text('Hora:', 15, y);
+        const time = new Date(transactionDate).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+        doc.fontSize(8).font('Helvetica').text(time, 100, y, { align: 'right', width: 111.77 });
+        y += 12;
+
+        if (transactionId) {
+            doc.fontSize(8).font('Helvetica-Bold').text('N° Trans:', 15, y);
+            doc.fontSize(8).font('Helvetica').text(String(transactionId), 100, y, { align: 'right', width: 111.77 });
+            y += 12;
+        }
+
+        doc.fontSize(8).font('Helvetica-Bold').text('Asociado:', 15, y);
+        doc.fontSize(8).font('Helvetica').text(member.member_code || member.memberCode || 'N/A', 100, y, { align: 'right', width: 111.77 });
+        y += 12;
+
+        doc.fontSize(8).font('Helvetica-Bold').text('Nombre:', 15, y);
+        doc.fontSize(8).font('Helvetica').text(member.full_name || member.fullName || 'N/A', 100, y, { align: 'right', width: 111.77 });
+        y += 15;
+
+        // Amount section
+        doc.rect(15, y, 196.77, 50).fillAndStroke('#f5f5f5', '#e5e5e5');
+        y += 8;
+        doc.fillColor('#000000').fontSize(8).font('Helvetica').text('Saldo Anterior:', 20, y);
+        doc.text(formatCurrency(previousBalance), 120, y, { align: 'right', width: 86.77 });
+        y += 12;
+
+        doc.fontSize(8).font('Helvetica').text(isDeposit ? 'Depósito:' : 'Retiro:', 20, y);
+        doc.fillColor(isDeposit ? '#16a34a' : '#dc2626')
+            .text(`${isDeposit ? '+' : '-'}${formatCurrency(amount)}`, 120, y, { align: 'right', width: 86.77 });
+        y += 15;
+
+        // Separator line for total
+        doc.moveTo(20, y).lineTo(206.77, y).lineWidth(1).stroke('#000000');
+        y += 8;
+
+        doc.fillColor('#000000').fontSize(9).font('Helvetica-Bold').text('Nuevo Saldo:', 20, y);
+        doc.text(formatCurrency(newBalance), 120, y, { align: 'right', width: 86.77 });
+        y += 20;
+
+        // Description if present
+        if (description) {
+            doc.rect(15, y, 196.77, 25).fillAndStroke('#fafafa', '#666666');
+            y += 5;
+            doc.fillColor('#000000').fontSize(7).font('Helvetica-Bold').text('Nota:', 20, y);
+            y += 9;
+            doc.fontSize(7).font('Helvetica').text(description, 20, y, { width: 186.77 });
+            y += 16;
+        }
+
+        // Signature section
+        y += 20;
+        doc.moveTo(30, y).lineTo(196.77, y).stroke('#000000');
+        y += 5;
+        doc.fontSize(7).font('Helvetica').text('Firma del Asociado', { align: 'center' });
+        y += 20;
+
+        // Footer
+        doc.moveTo(15, y).lineTo(211.77, y).dash(2, { space: 2 }).stroke().undash();
+        y += 10;
+        doc.fontSize(8).font('Helvetica-Bold').text('¡Gracias por su confianza!', { align: 'center' });
+        y += 10;
+        const printDate = new Date().toLocaleString('es-CR');
+        doc.fontSize(7).font('Helvetica').text(`Documento generado el ${printDate}`, { align: 'center' });
+        y += 10;
+        doc.fontSize(7).text('COOPESUMA R.L.', { align: 'center' });
+
+        doc.end();
+        return doc;
+    } catch (error) {
+        logger.error('Error creating savings receipt PDF:', error);
+        throw error;
+    }
+};
+
+/**
+ * Create affiliation receipt PDF
+ *
+ * @param {Object} receiptData - Receipt information
+ * @returns {PDFDocument} PDF document stream
+ */
+const createAffiliationReceiptPDF = (receiptData) => {
+    try {
+        const {
+            member = {},
+            amount = 500,
+            receiptNumber = '',
+            date = new Date(),
+            fiscalYear = new Date().getFullYear()
+        } = receiptData;
+
+        const doc = new PDFDocument({
+            size: [226.77, 566.93], // 80mm x 200mm
+            margins: { top: 10, bottom: 10, left: 10, right: 10 }
+        });
+
+        let y = 20;
+
+        // Header
+        doc.fontSize(12).font('Helvetica-Bold').text('COOPESUMA R.L.', { align: 'center' });
+        y += 15;
+        doc.fontSize(8).font('Helvetica').text('Escuela Los Chiles, Aguas Zarcas', y, { align: 'center' });
+        y += 12;
+        doc.fontSize(8).text('Cooperativa Estudiantil', y, { align: 'center' });
+        y += 15;
+
+        doc.moveTo(15, y).lineTo(211.77, y).dash(2, { space: 2 }).stroke().undash();
+        y += 15;
+
+        // Transaction type
+        doc.rect(15, y, 196.77, 20).fillAndStroke('#2563eb', '#2563eb');
+        doc.fillColor('#ffffff').fontSize(10).font('Helvetica-Bold')
+            .text('RECIBO DE AFILIACION', 15, y + 6, { width: 196.77, align: 'center' });
+        y += 30;
+        doc.fillColor('#000000');
+
+        // Receipt details
+        if (receiptNumber) {
+            doc.fontSize(8).font('Helvetica-Bold').text('Recibo No:', 15, y);
+            doc.fontSize(8).font('Helvetica').text(receiptNumber, 100, y, { align: 'right', width: 111.77 });
+            y += 12;
+        }
+
+        doc.fontSize(8).font('Helvetica-Bold').text('Fecha:', 15, y);
+        doc.fontSize(8).font('Helvetica').text(formatDate(date), 100, y, { align: 'right', width: 111.77 });
+        y += 12;
+
+        const time = new Date(date).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+        doc.fontSize(8).font('Helvetica-Bold').text('Hora:', 15, y);
+        doc.fontSize(8).font('Helvetica').text(time, 100, y, { align: 'right', width: 111.77 });
+        y += 20;
+
+        // Member info section
+        doc.rect(15, y, 196.77, 40).fillAndStroke('#f5f5f5', '#e5e5e5');
+        y += 8;
+        doc.fillColor('#000000').fontSize(8).font('Helvetica-Bold').text('Nombre:', 20, y);
+        doc.fontSize(8).font('Helvetica').text(member.full_name || member.fullName || '', 80, y, { width: 126.77 });
+        y += 12;
+
+        doc.fontSize(8).font('Helvetica-Bold').text('Cédula:', 20, y);
+        doc.fontSize(8).font('Helvetica').text(member.identification || '', 80, y);
+        y += 12;
+
+        doc.fontSize(8).font('Helvetica-Bold').text('Código:', 20, y);
+        doc.fontSize(8).font('Helvetica').text(member.member_code || member.memberCode || '', 80, y);
+        y += 18;
+
+        // Amount section
+        doc.rect(15, y, 196.77, 35).fillAndStroke('#f5f5f5', '#e5e5e5');
+        y += 8;
+        doc.fillColor('#000000').fontSize(8).font('Helvetica-Bold').text('Concepto:', 20, y);
+        doc.fontSize(8).font('Helvetica').text('Cuota de Afiliación', 100, y, { align: 'right', width: 106.77 });
+        y += 15;
+
+        doc.moveTo(20, y).lineTo(206.77, y).lineWidth(1).stroke('#000000');
+        y += 8;
+
+        doc.fontSize(9).font('Helvetica-Bold').text('TOTAL:', 20, y);
+        doc.text(formatCurrency(amount), 120, y, { align: 'right', width: 86.77 });
+        y += 20;
+
+        doc.fontSize(8).font('Helvetica-Bold').text('Año Fiscal:', 15, y);
+        doc.fontSize(8).font('Helvetica').text(String(fiscalYear), 100, y, { align: 'right', width: 111.77 });
+        y += 25;
+
+        // Signature
+        doc.moveTo(30, y).lineTo(196.77, y).stroke('#000000');
+        y += 5;
+        doc.fontSize(7).font('Helvetica').text('Firma del Tesorero/Autorizado', { align: 'center' });
+        y += 20;
+
+        // Footer
+        doc.moveTo(15, y).lineTo(211.77, y).dash(2, { space: 2 }).stroke().undash();
+        y += 10;
+        const printDate = new Date().toLocaleString('es-CR');
+        doc.fontSize(7).font('Helvetica').text(`Impreso: ${printDate}`, { align: 'center' });
+        y += 10;
+        doc.fontSize(7).text('Sistema de Gestión CoopeSuma', { align: 'center' });
+        y += 10;
+        doc.fontSize(7).text('¡Bienvenido a la familia CoopeSuma!', { align: 'center' });
+
+        doc.end();
+        return doc;
+    } catch (error) {
+        logger.error('Error creating affiliation receipt PDF:', error);
+        throw error;
+    }
+};
+
+/**
+ * Create liquidation receipt PDF
+ *
+ * @param {Object} receiptData - Receipt information
+ * @returns {PDFDocument} PDF document stream
+ */
+const createLiquidationReceiptPDF = (receiptData) => {
+    try {
+        const {
+            member = {},
+            liquidationType = 'periodic',
+            totalAmount = 0,
+            notes = '',
+            liquidationDate = new Date(),
+            liquidationId = '',
+            receiptNumber = ''
+        } = receiptData;
+
+        const typeLabel = liquidationType === 'periodic' ? 'PERIODICA' : 'POR RETIRO';
+        const typeColor = liquidationType === 'periodic' ? '#2563eb' : '#dc2626';
+
+        const doc = new PDFDocument({
+            size: [226.77, 566.93], // 80mm x 200mm
+            margins: { top: 10, bottom: 10, left: 10, right: 10 }
+        });
+
+        let y = 20;
+
+        // Header
+        doc.fontSize(12).font('Helvetica-Bold').text('COOPESUMA R.L.', { align: 'center' });
+        y += 15;
+        doc.fontSize(8).font('Helvetica').text('Cooperativa de Ahorro', y, { align: 'center' });
+        y += 12;
+        doc.fontSize(8).text('Sistema de Gestión', y, { align: 'center' });
+        y += 15;
+
+        doc.moveTo(15, y).lineTo(211.77, y).dash(2, { space: 2 }).stroke().undash();
+        y += 15;
+
+        // Transaction type
+        doc.rect(15, y, 196.77, 24).fillAndStroke(typeColor, typeColor);
+        doc.fillColor('#ffffff').fontSize(9).font('Helvetica-Bold')
+            .text(`RECIBO DE LIQUIDACION`, 15, y + 4, { width: 196.77, align: 'center' });
+        doc.fontSize(9).text(typeLabel, 15, y + 14, { width: 196.77, align: 'center' });
+        y += 34;
+        doc.fillColor('#000000');
+
+        // Receipt details
+        doc.fontSize(8).font('Helvetica-Bold').text('Fecha:', 15, y);
+        doc.fontSize(8).font('Helvetica').text(formatDate(liquidationDate), 100, y, { align: 'right', width: 111.77 });
+        y += 12;
+
+        const time = new Date(liquidationDate).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+        doc.fontSize(8).font('Helvetica-Bold').text('Hora:', 15, y);
+        doc.fontSize(8).font('Helvetica').text(time, 100, y, { align: 'right', width: 111.77 });
+        y += 12;
+
+        if (receiptNumber) {
+            doc.fontSize(8).font('Helvetica-Bold').text('Recibo No:', 15, y);
+            doc.fontSize(8).font('Helvetica').text(receiptNumber, 100, y, { align: 'right', width: 111.77 });
+            y += 12;
+        }
+
+        if (liquidationId) {
+            doc.fontSize(8).font('Helvetica-Bold').text('Liquidación:', 15, y);
+            doc.fontSize(8).font('Helvetica').text(`#${liquidationId}`, 100, y, { align: 'right', width: 111.77 });
+            y += 12;
+        }
+
+        doc.fontSize(8).font('Helvetica-Bold').text('Asociado:', 15, y);
+        doc.fontSize(8).font('Helvetica').text(member.memberCode || 'N/A', 100, y, { align: 'right', width: 111.77 });
+        y += 12;
+
+        doc.fontSize(8).font('Helvetica-Bold').text('Nombre:', 15, y);
+        doc.fontSize(8).font('Helvetica').text(member.fullName || 'N/A', 100, y, { align: 'right', width: 111.77 });
+        y += 20;
+
+        // Amount section
+        doc.rect(15, y, 196.77, 35).fillAndStroke('#f5f5f5', '#e5e5e5');
+        y += 12;
+
+        doc.moveTo(20, y).lineTo(206.77, y).lineWidth(1).stroke('#000000');
+        y += 8;
+
+        doc.fillColor('#000000').fontSize(9).font('Helvetica-Bold').text('Total Liquidado:', 20, y);
+        doc.fillColor('#16a34a').text(formatCurrency(totalAmount), 120, y, { align: 'right', width: 86.77 });
+        y += 12;
+        doc.fillColor('#666666').fontSize(7).font('Helvetica').text('(Cuenta de Ahorros)', { align: 'center' });
+        y += 18;
+
+        // Notes
+        if (notes) {
+            doc.rect(15, y, 196.77, 25).fillAndStroke('#fafafa', '#666666');
+            y += 5;
+            doc.fillColor('#000000').fontSize(7).font('Helvetica-Bold').text('Notas:', 20, y);
+            y += 9;
+            doc.fontSize(7).font('Helvetica').text(notes, 20, y, { width: 186.77 });
+            y += 16;
+        }
+
+        // Info banner
+        y += 10;
+        doc.rect(15, y, 196.77, 30).fillAndStroke('#fff3cd', '#ffc107');
+        y += 6;
+        doc.fillColor('#000000').fontSize(8).font('Helvetica-Bold')
+            .text(liquidationType === 'periodic' ? 'Liquidación Periódica' : 'Liquidación por Retiro', { align: 'center' });
+        y += 12;
+        doc.fontSize(7).font('Helvetica')
+            .text(liquidationType === 'periodic' ? 'El asociado continúa activo en la cooperativa' : 'El asociado se retira de la cooperativa', { align: 'center' });
+        y += 20;
+
+        // Signature
+        doc.moveTo(30, y).lineTo(196.77, y).stroke('#000000');
+        y += 5;
+        doc.fontSize(7).font('Helvetica').text('Firma del Asociado', { align: 'center' });
+        y += 20;
+
+        // Footer
+        doc.moveTo(15, y).lineTo(211.77, y).dash(2, { space: 2 }).stroke().undash();
+        y += 10;
+        doc.fontSize(8).font('Helvetica-Bold').text('¡Gracias por su confianza!', { align: 'center' });
+        y += 10;
+        const printDate = new Date().toLocaleString('es-CR');
+        doc.fontSize(7).font('Helvetica').text(`Documento generado el ${printDate}`, { align: 'center' });
+        y += 10;
+        doc.fontSize(7).text('COOPESUMA R.L.', { align: 'center' });
+
+        doc.end();
+        return doc;
+    } catch (error) {
+        logger.error('Error creating liquidation receipt PDF:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     createAttendanceReport,
     createAttendanceStatsReport,
     createLiquidationsReport,
     createAttendanceListReport,
     createMemberCardsPDF,
+    createSavingsReceiptPDF,
+    createAffiliationReceiptPDF,
+    createLiquidationReceiptPDF,
     formatDate,
     formatTime,
     formatCurrency

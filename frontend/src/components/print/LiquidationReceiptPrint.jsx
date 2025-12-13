@@ -184,9 +184,13 @@ const LiquidationReceiptPrint = ({
                 @media print {
                     .liquidation-receipt-print {
                         padding: 0 !important;
+                        page-break-after: avoid !important;
+                        page-break-before: avoid !important;
+                        page-break-inside: avoid !important;
                     }
                     .liquidation-receipt-print .receipt {
                         border: none !important;
+                        page-break-inside: avoid !important;
                     }
                     .liquidation-receipt-print .amount-section,
                     .liquidation-receipt-print .transaction-type,

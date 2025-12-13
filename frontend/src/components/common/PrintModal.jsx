@@ -4,9 +4,10 @@
  * Usa CSS @media print en lugar de window.open() para evitar bloqueo de popups
  */
 
-import { useEffect, useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from './Button';
+import { isMobileDevice, downloadSavingsReceiptPDF, downloadAffiliationReceiptPDF, downloadLiquidationReceiptPDF } from '../../utils/receiptUtils';
 
 const PrintModal = ({
     isOpen,
@@ -16,9 +17,12 @@ const PrintModal = ({
     size = 'xl',
     printTitle = '',
     orientation = 'portrait',
-    paperSize = 'letter'
+    paperSize = 'letter',
+    receiptData = null,
+    receiptType = null
 }) => {
     const printableId = useId();
+    const [isDownloading, setIsDownloading] = useState(false);
 
     // Close modal on ESC key
     useEffect(() => {
@@ -82,6 +86,9 @@ const PrintModal = ({
                     margin: 0 !important;
                     padding: 0 !important;
                     background: white !important;
+                    page-break-after: avoid !important;
+                    page-break-before: avoid !important;
+                    page-break-inside: avoid !important;
                 }
 
                 /* Page settings */
@@ -115,8 +122,38 @@ const PrintModal = ({
         };
     }, [isOpen, printableId, orientation, paperSize]);
 
-    const handlePrint = () => {
-        // Set document title for print
+    const handlePrint = async () => {
+        // If mobile and receipt data is provided, download PDF
+        if (isMobileDevice() && receiptData && receiptType) {
+            try {
+                setIsDownloading(true);
+
+                switch (receiptType) {
+                    case 'savings':
+                        await downloadSavingsReceiptPDF(receiptData);
+                        break;
+                    case 'affiliation':
+                        await downloadAffiliationReceiptPDF(receiptData);
+                        break;
+                    case 'liquidation':
+                        await downloadLiquidationReceiptPDF(receiptData);
+                        break;
+                    default:
+                        throw new Error('Unknown receipt type');
+                }
+
+                // Close modal after successful download
+                onClose();
+            } catch (error) {
+                console.error('Error downloading PDF:', error);
+                alert('Error al descargar el PDF. Por favor intente de nuevo.');
+            } finally {
+                setIsDownloading(false);
+            }
+            return;
+        }
+
+        // Desktop: Use regular print
         const originalTitle = document.title;
         if (printTitle) {
             document.title = printTitle;
@@ -169,14 +206,23 @@ const PrintModal = ({
 
                 {/* Actions - Hidden when printing */}
                 <div className="print-modal-actions flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 p-3 sm:p-4 border-t border-gray-200 flex-shrink-0">
-                    <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+                    <Button variant="outline" onClick={onClose} className="w-full sm:w-auto" disabled={isDownloading}>
                         Cerrar
                     </Button>
-                    <Button variant="primary" onClick={handlePrint} className="w-full sm:w-auto">
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                        </svg>
-                        Imprimir
+                    <Button variant="primary" onClick={handlePrint} className="w-full sm:w-auto" disabled={isDownloading}>
+                        {isDownloading ? (
+                            <>
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                Descargando...
+                            </>
+                        ) : (
+                            <>
+                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                                {isMobileDevice() && receiptData && receiptType ? 'Descargar PDF' : 'Imprimir'}
+                            </>
+                        )}
                     </Button>
                 </div>
             </div>
@@ -192,7 +238,9 @@ PrintModal.propTypes = {
     size: PropTypes.oneOf(['sm', 'md', 'lg', 'xl', '2xl', 'full']),
     printTitle: PropTypes.string,
     orientation: PropTypes.oneOf(['portrait', 'landscape']),
-    paperSize: PropTypes.oneOf(['letter', 'legal', 'a4', '80mm 200mm'])
+    paperSize: PropTypes.oneOf(['letter', 'legal', 'a4', '80mm 200mm']),
+    receiptData: PropTypes.object,
+    receiptType: PropTypes.oneOf(['savings', 'affiliation', 'liquidation'])
 };
 
 export default PrintModal;
