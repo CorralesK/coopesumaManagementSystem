@@ -591,6 +591,70 @@ const getMemberDashboard = async (req, res) => {
     }
 };
 
+/**
+ * Generate member cards PDF
+ * Generates PDF with member cards for batch printing
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const generateMemberCardsPDF = async (req, res) => {
+    try {
+        const { memberIds } = req.body;
+
+        if (!memberIds || !Array.isArray(memberIds) || memberIds.length === 0) {
+            return errorResponse(
+                res,
+                'Se requiere un array de IDs de miembros',
+                ERROR_CODES.VALIDATION_ERROR,
+                400
+            );
+        }
+
+        if (memberIds.length > 100) {
+            return errorResponse(
+                res,
+                'El limite maximo es de 100 carnets por lote',
+                ERROR_CODES.VALIDATION_ERROR,
+                400
+            );
+        }
+
+        const pdfDoc = await memberService.generateMemberCardsPDF(memberIds);
+
+        // Set response headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="carnets-${Date.now()}.pdf"`
+        );
+
+        // Pipe PDF to response
+        pdfDoc.pipe(res);
+    } catch (error) {
+        if (error.isOperational) {
+            return errorResponse(
+                res,
+                error.message,
+                error.errorCode,
+                error.statusCode
+            );
+        }
+
+        logger.error('Unexpected error in generateMemberCardsPDF controller', {
+            error: error.message,
+            stack: error.stack
+        });
+
+        return errorResponse(
+            res,
+            MESSAGES.INTERNAL_ERROR,
+            ERROR_CODES.INTERNAL_ERROR,
+            500
+        );
+    }
+};
+
 module.exports = {
     getAllMembers,
     getMemberById,
@@ -601,6 +665,7 @@ module.exports = {
     generateQrCode,
     regenerateQrCode,
     generateBatchQrCodes,
+    generateMemberCardsPDF,
     verifyMemberByQr,
     publicVerifyMember,
     getMemberDashboard

@@ -128,3 +128,65 @@ export const verifyMemberByQR = async (qrHash) => {
     const response = await api.post('/members/qr/verify', { qrHash });
     return response;
 };
+
+/**
+ * Download member cards PDF for batch printing (mobile devices)
+ * @param {Array<number>} memberIds - Array of member IDs
+ * @returns {Promise<void>}
+ */
+export const downloadMemberCardsPDF = async (memberIds) => {
+    const baseURL = api.defaults.baseURL;
+    const token = sessionStorage.getItem('token');
+    const fullURL = `${baseURL}/members/cards/pdf`;
+
+    try {
+        const response = await fetch(fullURL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/pdf'
+            },
+            body: JSON.stringify({ memberIds })
+        });
+
+        if (!response.ok) {
+            let errorMessage = `Error ${response.status}: ${response.statusText}`;
+            try {
+                const errorData = await response.text();
+                const jsonError = JSON.parse(errorData);
+                errorMessage = jsonError.message || jsonError.error || errorMessage;
+            } catch {
+                // Ignore parse error
+            }
+            throw new Error(errorMessage);
+        }
+
+        const blob = await response.blob();
+
+        if (blob.size < 100) {
+            throw new Error('El servidor devolvio un PDF vacio o invalido');
+        }
+
+        const url = window.URL.createObjectURL(blob);
+
+        // For iOS Safari, open in new window
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            window.open(url, '_blank');
+        } else {
+            // Android/other - trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `carnets-${Date.now()}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Cleanup after delay
+        setTimeout(() => window.URL.revokeObjectURL(url), 5000);
+    } catch (error) {
+        console.error('Error downloading member cards PDF:', error);
+        throw error;
+    }
+};

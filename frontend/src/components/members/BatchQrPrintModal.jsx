@@ -10,7 +10,7 @@ import Button from '../common/Button';
 import Loading from '../common/Loading';
 import Alert from '../common/Alert';
 import Select from '../common/Select';
-import { batchGenerateQRCodes } from '../../services/memberService';
+import { batchGenerateQRCodes, downloadMemberCardsPDF } from '../../services/memberService';
 import { getAllQualities, getAllLevels } from '../../services/catalogService';
 import { printMemberCards } from '../../utils/printUtils';
 
@@ -98,6 +98,11 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterQualityId, filterLe
         );
     };
 
+    // Check if device is mobile
+    const isMobileDevice = () => {
+        return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    };
+
     // Generate QR codes and show print modal
     const handleGenerateAndPrint = async () => {
         if (selectedMembers.length === 0) {
@@ -106,7 +111,7 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterQualityId, filterLe
         }
 
         if (selectedMembers.length > 100) {
-            setError('El límite máximo es de 100 carnets por lote. Por favor, reduce la selección.');
+            setError('El limite maximo es de 100 carnets por lote. Por favor, reduce la seleccion.');
             return;
         }
 
@@ -114,6 +119,14 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterQualityId, filterLe
             setLoading(true);
             setError(null);
 
+            // Check if mobile - download PDF from backend
+            if (isMobileDevice()) {
+                await downloadMemberCardsPDF(selectedMembers);
+                onClose();
+                return;
+            }
+
+            // Desktop - generate QR codes and print HTML
             const response = await batchGenerateQRCodes(selectedMembers);
             const qrData = response.data;
 
@@ -121,7 +134,7 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterQualityId, filterLe
             const successfulQRs = qrData.filter(qr => !qr.error);
 
             if (successfulQRs.length === 0) {
-                setError('No se pudo generar ningún código QR');
+                setError('No se pudo generar ningun codigo QR');
                 return;
             }
 
@@ -145,7 +158,7 @@ const BatchQrPrintModal = ({ isOpen, onClose, members, filterQualityId, filterLe
             // Close modal after opening print window
             onClose();
         } catch (err) {
-            setError(err.message || 'Error al generar códigos QR');
+            setError(err.message || 'Error al generar codigos QR');
         } finally {
             setLoading(false);
         }

@@ -157,6 +157,23 @@ router.post(
 );
 
 /**
+ * POST /api/members/cards/pdf
+ * Generate member cards PDF for batch printing
+ * Protected: Requires authentication
+ * Accessible by: Administrator only
+ *
+ * Body: { memberIds: number[] }
+ * Response: PDF file download
+ */
+router.post(
+    '/cards/pdf',
+    authMiddleware,
+    requireRole([USER_ROLES.ADMINISTRATOR]),
+    validate(batchQrSchema),
+    memberController.generateMemberCardsPDF
+);
+
+/**
  * POST /api/members/qr/verify
  * Verify member by QR hash
  * Used during attendance scanning
