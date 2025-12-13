@@ -665,10 +665,12 @@ const MemberDetailPage = () => {
 
             {/* Card Modal - Shows Member Card */}
             {qrModalOpen && (
-                <Modal isOpen={qrModalOpen} onClose={() => setQrModalOpen(false)} title={`Carnet - ${member.fullName}`} size="lg">
+                <Modal isOpen={qrModalOpen} onClose={() => setQrModalOpen(false)} title={`Carnet - ${member.fullName}`} size="xl">
                     <div className="flex flex-col items-center">
-                        <div id="printable-card" className="member-card-display">
-                            <MemberCard member={member} showCutLines={true} />
+                        <div id="printable-card" className="member-card-preview-container">
+                            <div className="member-card-preview-wrapper">
+                                <MemberCard member={member} showCutLines={false} />
+                            </div>
                         </div>
                         <div className="mt-6 flex space-x-3 print-hide">
                             <Button onClick={() => setQrModalOpen(false)} variant="outline">Cerrar</Button>
@@ -897,11 +899,46 @@ const MemberDetailPage = () => {
 
             {/* Print Styles */}
             <style>{`
-                .member-card-display {
+                /* Preview Container - Responsive */
+                .member-card-preview-container {
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    padding: 20px;
+                    width: 100%;
+                    padding: 10px;
+                    overflow: hidden;
+                }
+
+                .member-card-preview-wrapper {
+                    transform-origin: center center;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+
+                /* Scale down on smaller screens */
+                @media (max-width: 480px) {
+                    .member-card-preview-wrapper {
+                        transform: scale(0.75);
+                    }
+                }
+
+                @media (min-width: 481px) and (max-width: 640px) {
+                    .member-card-preview-wrapper {
+                        transform: scale(0.85);
+                    }
+                }
+
+                @media (min-width: 641px) and (max-width: 768px) {
+                    .member-card-preview-wrapper {
+                        transform: scale(0.9);
+                    }
+                }
+
+                @media (min-width: 769px) {
+                    .member-card-preview-wrapper {
+                        transform: scale(1);
+                    }
                 }
 
                 @media print {
@@ -938,11 +975,15 @@ const MemberDetailPage = () => {
                         padding: 0;
                     }
 
+                    .member-card-preview-wrapper {
+                        transform: none !important;
+                    }
+
                     .print-hide {
                         display: none !important;
                     }
 
-                    .member-card-display {
+                    .member-card-preview-container {
                         padding: 0;
                     }
                 }
