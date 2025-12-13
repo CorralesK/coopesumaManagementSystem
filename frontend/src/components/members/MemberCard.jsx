@@ -57,11 +57,11 @@ const MemberCard = ({ member, cooperativeName = 'Coopesuma', showCutLines = fals
                     <div className="card-info">
                         <p className="member-name">{member.fullName}</p>
                         <p className="member-detail">
-                            <span className="detail-label">Cedula:</span> {member.identification}
+                            <span className="detail-label">Cedula:</span> <span className="detail-value">{member.identification}</span>
                         </p>
                         {member.memberCode && (
                             <p className="member-detail">
-                                <span className="detail-label">N° Asociado:</span> {member.memberCode}
+                                <span className="detail-label">N° Asociado:</span> <span className="detail-value">{member.memberCode}</span>
                             </p>
                         )}
                     </div>
@@ -214,6 +214,10 @@ const MemberCard = ({ member, cooperativeName = 'Coopesuma', showCutLines = fals
                 .detail-label {
                     font-weight: 600;
                     color: #374151;
+                }
+
+                .detail-value {
+                    color: #2563eb;
                 }
 
                 /* QR Code */

@@ -1133,11 +1133,11 @@ export const printMemberCards = ({ members = [], cooperativeName = 'Coopesuma' }
                     <div class="card-info">
                         <p class="member-name">${member.fullName}</p>
                         <p class="member-detail">
-                            <span class="detail-label">Cedula:</span> ${member.identification}
+                            <span class="detail-label">Cedula:</span> <span class="detail-value">${member.identification}</span>
                         </p>
                         ${member.memberCode ? `
                         <p class="member-detail">
-                            <span class="detail-label">N° Asociado:</span> ${member.memberCode}
+                            <span class="detail-label">N° Asociado:</span> <span class="detail-value">${member.memberCode}</span>
                         </p>
                         ` : ''}
                     </div>
@@ -1315,6 +1315,10 @@ export const printMemberCards = ({ members = [], cooperativeName = 'Coopesuma' }
                 .detail-label {
                     font-weight: 600;
                     color: #374151;
+                }
+
+                .detail-value {
+                    color: #2563eb;
                 }
 
                 /* QR Code */

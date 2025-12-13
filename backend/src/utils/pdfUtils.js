@@ -979,18 +979,21 @@ const createMemberCardsPDF = (members) => {
             const infoWidth = cardWidth - photoSize - 85;
             let infoY = bodyY + 5;
 
-            // Full name (truncate if too long)
-            const fullName = (member.fullName || 'N/A').substring(0, 25);
+            // Full name (allow line break for long names)
+            const fullName = member.fullName || 'N/A';
             doc
                 .fontSize(9)
                 .font('Helvetica-Bold')
                 .fillColor('#1f2937')
                 .text(fullName, infoX, infoY, {
                     width: infoWidth,
-                    lineBreak: false
+                    lineBreak: true,
+                    lineGap: 1
                 });
 
-            infoY += 12;
+            // Calculate height used by name (approximately 11pt per line)
+            const nameLines = Math.ceil(fullName.length / 15);
+            infoY += Math.min(nameLines, 2) * 11;
 
             // Cedula
             doc
@@ -999,10 +1002,10 @@ const createMemberCardsPDF = (members) => {
                 .fillColor('#374151')
                 .text('Cedula: ', infoX, infoY, { continued: true })
                 .font('Helvetica')
-                .fillColor('#4b5563')
+                .fillColor('#2563eb')
                 .text(member.identification || 'N/A');
 
-            infoY += 9;
+            infoY += 10;
 
             // Member code (N° Asociado)
             if (member.memberCode) {
@@ -1012,7 +1015,7 @@ const createMemberCardsPDF = (members) => {
                     .fillColor('#374151')
                     .text('N° Asociado: ', infoX, infoY, { continued: true })
                     .font('Helvetica')
-                    .fillColor('#4b5563')
+                    .fillColor('#2563eb')
                     .text(member.memberCode);
             }
 
