@@ -360,11 +360,13 @@ const createAttendanceStatsReport = (assemblyData, stats, statsByQualityLevel) =
  * @returns {string} Formatted currency string
  */
 const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-CR', {
-        style: 'currency',
-        currency: 'CRC',
-        minimumFractionDigits: 2
-    }).format(amount || 0);
+    // Format number with thousands separator and 2 decimals, then add CRC prefix
+    // Using manual formatting to avoid encoding issues with colon symbol in PDFs
+    const num = Number(amount || 0).toLocaleString('es-CR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    return `CRC ${num}`;
 };
 
 /**
@@ -618,23 +620,6 @@ const createLiquidationsReport = (liquidations, stats, dateRange) => {
             doc.y = currentY;
         }
 
-        // Footer - at end of content, not fixed position
-        doc.moveDown(2);
-        doc
-            .moveTo(50, doc.y)
-            .lineTo(pageWidth - 50, doc.y)
-            .lineWidth(1)
-            .stroke();
-
-        doc.moveDown(0.5);
-        doc
-            .fontSize(9)
-            .font('Helvetica')
-            .text(
-                `Documento generado el ${formatDate(new Date())} - COOPESUMA R.L.`,
-                { align: 'center' }
-            );
-
         doc.end();
         return doc;
     } catch (error) {
@@ -847,23 +832,6 @@ const createAttendanceListReport = (attendees, assembly) => {
 
             doc.y = summaryY + 25;
         }
-
-        // Footer - at end of content, not fixed position
-        doc.moveDown(2);
-        doc
-            .moveTo(50, doc.y)
-            .lineTo(pageWidth - 50, doc.y)
-            .lineWidth(1)
-            .stroke();
-
-        doc.moveDown(0.5);
-        doc
-            .fontSize(9)
-            .font('Helvetica')
-            .text(
-                `Documento generado el ${formatDate(new Date())} - COOPESUMA R.L.`,
-                { align: 'center' }
-            );
 
         doc.end();
         return doc;
