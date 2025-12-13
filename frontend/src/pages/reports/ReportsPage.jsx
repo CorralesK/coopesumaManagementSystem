@@ -167,7 +167,6 @@ const ReportsPage = () => {
             {/* Header */}
             <div className="pb-2">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reportes</h1>
-                <p className="text-gray-600 mt-1 text-sm sm:text-base">Genera e imprime reportes del sistema</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -256,10 +255,10 @@ const ReportsPage = () => {
                                     Mes Pasado
                                 </Button>
                                 <Button onClick={() => handleQuickFilter('thisYear')} variant="outline" size="sm">
-                                    Este Ano
+                                    Este Año
                                 </Button>
                                 <Button onClick={() => handleQuickFilter('lastYear')} variant="outline" size="sm">
-                                    Ano Pasado
+                                    Año Pasado
                                 </Button>
                             </div>
                         </div>
