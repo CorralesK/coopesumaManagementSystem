@@ -4,6 +4,8 @@
  * @module utils/printUtils
  */
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
 /**
  * Check if the current device is mobile
  * @returns {boolean} True if mobile device
@@ -13,64 +15,36 @@ const isMobileDevice = () => {
 };
 
 /**
- * Generate PDF from HTML content and download it (for mobile devices)
- * @param {string} htmlContent - HTML content to convert to PDF
+ * Download PDF from backend endpoint
+ * @param {string} endpoint - API endpoint path
  * @param {string} filename - Filename for the PDF
  */
-const generateAndDownloadPDF = async (htmlContent, filename) => {
+const downloadPDFFromBackend = async (endpoint, filename) => {
     try {
-        const html2pdf = (await import('html2pdf.js')).default;
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}${endpoint}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
 
-        // Parse HTML and extract body content
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlContent, 'text/html');
-        const bodyContent = doc.body.innerHTML;
-        const styleContent = doc.head.querySelector('style')?.innerHTML || '';
+        if (!response.ok) {
+            throw new Error('Error al generar el PDF');
+        }
 
-        // Create a visible container for html2canvas to capture
-        const container = document.createElement('div');
-        container.innerHTML = bodyContent;
-        container.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 215.9mm;
-            background: white;
-            z-index: -9999;
-            padding: 20px;
-            font-family: 'Times New Roman', Times, serif;
-            color: #000;
-            line-height: 1.4;
-        `;
-
-        // Add styles
-        const style = document.createElement('style');
-        style.textContent = styleContent;
-        container.prepend(style);
-
-        document.body.appendChild(container);
-
-        const opt = {
-            margin: [10, 10, 10, 10],
-            filename: filename,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                logging: false,
-                windowWidth: 816 // Letter width in pixels at 96dpi
-            },
-            jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-
-        await html2pdf().set(opt).from(container).save();
-
-        // Clean up
-        document.body.removeChild(container);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
     } catch (error) {
-        console.error('Error generating PDF:', error);
-        alert('Error al generar el PDF. Por favor intenta de nuevo.');
+        console.error('Error downloading PDF:', error);
+        alert('Error al descargar el PDF. Por favor intenta de nuevo.');
     }
 };
 
@@ -1678,9 +1652,12 @@ export const printLiquidationsReport = async ({
         </html>
     `;
 
-    // Check if mobile device - download PDF instead of printing
+    // Check if mobile device - download PDF from backend instead of printing
     if (isMobileDevice()) {
-        await generateAndDownloadPDF(htmlContent, `liquidaciones_${dateRange.startDate}_${dateRange.endDate}.pdf`);
+        await downloadPDFFromBackend(
+            `/reports/liquidations/pdf?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`,
+            `liquidaciones_${dateRange.startDate}_${dateRange.endDate}.pdf`
+        );
     } else {
         // Desktop: open print window
         const printWindow = window.open('', '_blank');
@@ -1935,10 +1912,14 @@ export const printAttendanceListReport = async ({ attendees = [], assembly = {},
         </html>
     `;
 
-    // Check if mobile device - download PDF instead of printing
+    // Check if mobile device - download PDF from backend instead of printing
     if (isMobileDevice()) {
+        const assemblyId = assembly.assemblyId || assembly.assembly_id;
         const assemblyDate = assembly.scheduledDate ? new Date(assembly.scheduledDate).toISOString().split('T')[0] : 'asamblea';
-        await generateAndDownloadPDF(htmlContent, `asistencia_${assemblyDate}.pdf`);
+        await downloadPDFFromBackend(
+            `/reports/attendance-list/${assemblyId}/pdf`,
+            `asistencia_${assemblyDate}.pdf`
+        );
     } else {
         // Desktop: open print window
         const printWindow = window.open('', '_blank');
