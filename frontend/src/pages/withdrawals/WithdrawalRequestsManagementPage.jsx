@@ -282,60 +282,63 @@ const WithdrawalRequestsManagementPage = () => {
             {error && <Alert type="error" message={error} onClose={() => {}} />}
             {operationError && <Alert type="error" message={operationError} onClose={clearState} />}
 
-            {/* Filters */}
-            <Card title="Filtros de Búsqueda">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Input
-                        label="Buscar"
-                        name="search"
-                        type="text"
-                        value={filters.memberId}
-                        onChange={(e) => handleFilterChange('memberId', e.target.value)}
-                        onClear={() => handleFilterChange('memberId', '')}
-                        placeholder="Nombre o código de miembro..."
-                    />
-                    <Select
-                        label="Estado"
-                        name="status"
-                        value={filters.status}
-                        onChange={(e) => handleFilterChange('status', e.target.value)}
-                        options={statusOptions}
-                        placeholder="Todos los estados"
-                    />
-                </div>
-                <div className="mt-6 flex flex-wrap gap-3">
-                    <ClearFiltersButton
-                        show={filters.memberId || filters.status}
-                        onClick={() => resetFilters()}
-                    />
-                </div>
-            </Card>
-
-            {/* Requests Table */}
-            <Card padding="none">
-                {loading ? (
-                    <div className="py-8">
-                        <Loading message="Cargando..." />
-                    </div>
-                ) : (
-                    <>
-                        <Table
-                            columns={tableColumns}
-                            data={paginatedRequests}
-                            emptyMessage="No se encontraron solicitudes"
+            {/* Filters and Table Container */}
+            <div className="space-y-0">
+                {/* Filters */}
+                <Card title="Filtros de Búsqueda">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <Input
+                            label="Buscar"
+                            name="search"
+                            type="text"
+                            value={filters.memberId}
+                            onChange={(e) => handleFilterChange('memberId', e.target.value)}
+                            onClear={() => handleFilterChange('memberId', '')}
+                            placeholder="Nombre o código de miembro..."
                         />
-                        {totalPages > 1 && (
-                            <div className="px-6 py-4">
+                        <Select
+                            label="Estado"
+                            name="status"
+                            value={filters.status}
+                            onChange={(e) => handleFilterChange('status', e.target.value)}
+                            options={statusOptions}
+                            placeholder="Todos los estados"
+                        />
+                    </div>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                        <ClearFiltersButton
+                            show={filters.memberId || filters.status}
+                            onClick={() => resetFilters()}
+                        />
+                    </div>
+                </Card>
+
+                {/* Requests Table */}
+                <Card padding="none">
+                    {loading ? (
+                        <div className="py-8">
+                            <Loading message="Cargando..." />
+                        </div>
+                    ) : (
+                        <>
+                            <div className="overflow-x-auto">
+                                <Table
+                                    columns={tableColumns}
+                                    data={paginatedRequests}
+                                    emptyMessage="No se encontraron solicitudes"
+                                />
+                            </div>
+                            <div className="px-4 py-3">
                                 <Pagination
                                     currentPage={currentPage}
                                     totalPages={totalPages}
                                     onPageChange={setCurrentPage}
                                 />
                             </div>
-                        )}
-                    </>
-                )}
-            </Card>
+                        </>
+                    )}
+                </Card>
+            </div>
 
             {/* Approve Modal */}
             <Modal
