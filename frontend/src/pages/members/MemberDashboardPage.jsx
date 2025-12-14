@@ -237,28 +237,30 @@ const MemberDashboardPage = () => {
             {/* Pending Requests */}
             {pendingRequests && pendingRequests.length > 0 && (
                 <Card title="Solicitudes Pendientes">
-                    <div className="space-y-3">
+                    <div className="space-y-1">
                         {pendingRequests.map((request) => (
                             <div
                                 key={request.requestId}
-                                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
+                                className="flex items-center justify-between py-3 px-3 bg-yellow-50 rounded-lg"
                             >
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-yellow-800">
-                                        Retiro de Ahorros
-                                    </p>
-                                    <p className="text-xs text-yellow-600 mt-1">
-                                        {formatDate(request.requestedAt)}
-                                    </p>
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-yellow-100">
+                                        <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 truncate">
+                                            Retiro de Ahorros
+                                        </p>
+                                        <p className="text-xs text-gray-500 truncate">
+                                            {formatDate(request.requestedAt)}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="text-left sm:text-right">
-                                    <p className="text-lg font-bold text-yellow-900">
-                                        {formatCurrency(request.amount)}
-                                    </p>
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mt-1">
-                                        Pendiente
-                                    </span>
-                                </div>
+                                <p className="text-base font-semibold flex-shrink-0 text-yellow-600">
+                                    {formatCurrency(request.amount)}
+                                </p>
                             </div>
                         ))}
                     </div>
