@@ -57,7 +57,8 @@ const MemberTransactionsPage = () => {
             const response = await api.get(`/savings/${memberId}/transactions`);
 
             // The API returns: { success, message, data: [transactions array] }
-            setTransactions(response.data.data || []);
+            // Note: axios interceptor already returns response.data
+            setTransactions(response.data || []);
         } catch (err) {
             console.error('Error fetching transactions:', err);
             setError(err.message || 'Error al cargar las transacciones');
