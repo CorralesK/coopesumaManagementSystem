@@ -6,7 +6,6 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -19,7 +18,6 @@ import Modal from '../../components/common/Modal';
  * Displays personal financial information for logged-in members
  */
 const MemberDashboardPage = () => {
-    const { user } = useAuth();
     const navigate = useNavigate();
     const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -117,7 +115,7 @@ const MemberDashboardPage = () => {
         try {
             setSubmitting(true);
             await api.post('/withdrawal-requests', {
-                memberId: user.memberId,
+                memberId: dashboardData.member.memberId,
                 accountType: 'savings',
                 requestedAmount: parseFloat(withdrawalData.requestedAmount),
                 requestNotes: withdrawalData.requestNotes || null
