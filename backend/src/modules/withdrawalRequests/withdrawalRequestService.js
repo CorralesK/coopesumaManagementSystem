@@ -33,7 +33,7 @@ const createWithdrawalRequest = async (requestData) => {
 
         // Verify member
         const member = await memberRepository.findById(requestData.memberId);
-        if (!member || !member.is_active) {
+        if (!member || !member.isActive) {
             throw new WithdrawalRequestError(MESSAGES.MEMBER_NOT_FOUND, ERROR_CODES.MEMBER_NOT_FOUND, 404);
         }
 
@@ -78,7 +78,7 @@ const createWithdrawalRequest = async (requestData) => {
             await notificationService.notifyWithdrawalRequest({
                 requestId: request.request_id,
                 memberId: requestData.memberId,
-                memberName: member.full_name,
+                memberName: member.fullName,
                 amount: requestData.requestedAmount,
                 accountType: requestData.accountType
             });
