@@ -116,7 +116,7 @@ const MemberDashboardPage = () => {
 
         try {
             setSubmitting(true);
-            await api.post('/withdrawals', {
+            await api.post('/withdrawal-requests', {
                 memberId: user.memberId,
                 accountType: 'savings',
                 requestedAmount: parseFloat(withdrawalData.requestedAmount),

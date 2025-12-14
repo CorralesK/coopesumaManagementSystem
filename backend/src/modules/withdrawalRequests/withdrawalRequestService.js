@@ -73,6 +73,19 @@ const createWithdrawalRequest = async (requestData) => {
 
         logger.info('Withdrawal request created', { requestId: request.request_id });
 
+        // Notify admins about the new withdrawal request
+        try {
+            await notificationService.notifyWithdrawalRequest({
+                requestId: request.request_id,
+                memberId: requestData.memberId,
+                memberName: member.full_name,
+                amount: requestData.requestedAmount,
+                accountType: requestData.accountType
+            });
+        } catch (notifError) {
+            logger.error('Error sending withdrawal request notification (non-critical):', notifError);
+        }
+
         return request;
     } catch (error) {
         await client.query('ROLLBACK');
