@@ -42,16 +42,22 @@ const MemberTransactionsPage = () => {
             setLoading(true);
             setError(null);
 
-            // First get the member ID from dashboard
+            // First get the member ID and current balance from dashboard
             const dashboardResponse = await api.get('/members/me/dashboard');
             const memberId = dashboardResponse.data.member.memberId;
 
+            // Get current balance from dashboard accounts
+            const savingsAccount = dashboardResponse.data.accounts?.find(
+                account => account.accountType === 'savings'
+            );
+            const balance = savingsAccount?.currentBalance || 0;
+            setCurrentBalance(balance);
+
             // Then get the savings transactions
             const response = await api.get(`/savings/${memberId}/transactions`);
-            const data = response.data;
 
-            setTransactions(data.transactions || []);
-            setCurrentBalance(data.currentBalance || 0);
+            // The API returns: { success, message, data: [transactions array] }
+            setTransactions(response.data.data || []);
         } catch (err) {
             console.error('Error fetching transactions:', err);
             setError(err.message || 'Error al cargar las transacciones');
