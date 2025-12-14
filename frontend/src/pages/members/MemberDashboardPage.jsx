@@ -192,7 +192,6 @@ const MemberDashboardPage = () => {
             {/* Header */}
             <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Saldo de Ahorros</h1>
-                <p className="text-gray-500 mt-1">Bienvenido, {dashboardData.member?.fullName}</p>
             </div>
 
             {/* Account Balance Card */}
@@ -208,7 +207,7 @@ const MemberDashboardPage = () => {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
-                        Ver historial completo
+                        Ver movimientos
                     </p>
                 </div>
             </Card>
