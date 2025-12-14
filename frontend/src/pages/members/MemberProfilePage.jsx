@@ -153,7 +153,7 @@ const MemberProfilePage = () => {
                 </div>
 
                 {/* Personal Information */}
-                <div className="pt-8 space-y-6">
+                <div className="pt-10 space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900">Datos Personales</h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -206,7 +206,7 @@ const MemberProfilePage = () => {
                 </div>
 
                 {/* Affiliation Information */}
-                <div className="pt-8 mt-6 border-t border-gray-200 space-y-6">
+                <div className="pt-10 mt-8 border-t border-gray-200 space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900">Información de Afiliación</h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

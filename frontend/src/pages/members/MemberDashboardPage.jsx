@@ -12,7 +12,6 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import Alert from '../../components/common/Alert';
-import Input from '../../components/common/Input';
 import Modal from '../../components/common/Modal';
 
 /**
@@ -192,7 +191,6 @@ const MemberDashboardPage = () => {
             {/* Header */}
             <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Saldo de Ahorros</h1>
-                <p className="text-gray-500 mt-1">Bienvenido, {dashboardData.member?.fullName}</p>
             </div>
 
             {/* Account Balance Card */}
@@ -208,7 +206,7 @@ const MemberDashboardPage = () => {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
-                        Ver historial completo
+                        Ver movimientos
                     </p>
                 </div>
             </Card>
@@ -362,19 +360,27 @@ const MemberDashboardPage = () => {
                     )}
 
                     {/* Amount Input */}
-                    <Input
-                        label="Monto a retirar"
-                        name="requestedAmount"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max={savingsBalance}
-                        value={withdrawalData.requestedAmount}
-                        onChange={handleWithdrawalInputChange}
-                        error={withdrawalErrors.requestedAmount}
-                        required
-                        placeholder="0.00"
-                    />
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Monto a retirar *</label>
+                        <div className={`flex items-center border rounded-lg focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-primary-500 bg-white ${withdrawalErrors.requestedAmount ? 'border-red-500' : 'border-gray-300'}`}>
+                            <span className="pl-3 text-gray-500">₡</span>
+                            <input
+                                type="number"
+                                name="requestedAmount"
+                                step="0.01"
+                                min="0"
+                                max={savingsBalance}
+                                value={withdrawalData.requestedAmount}
+                                onChange={handleWithdrawalInputChange}
+                                placeholder="0.00"
+                                className="flex-1 px-2 py-2 border-0 focus:ring-0 focus:outline-none bg-transparent"
+                                required
+                            />
+                        </div>
+                        {withdrawalErrors.requestedAmount && (
+                            <p className="mt-1 text-sm text-red-600">{withdrawalErrors.requestedAmount}</p>
+                        )}
+                    </div>
 
                     {/* Notes Input */}
                     <div>
