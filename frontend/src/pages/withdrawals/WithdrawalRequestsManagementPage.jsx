@@ -41,7 +41,19 @@ const WithdrawalRequestsManagementPage = () => {
     } = useWithdrawalRequests();
 
     // TEMPORARILY HIDDEN - Filter to show only savings withdrawal requests
-    const requests = allRequests.filter(req => req.accountType === 'savings');
+    // Sort: pending first (oldest first), then approved, then rejected
+    const requests = allRequests
+        .filter(req => req.accountType === 'savings')
+        .sort((a, b) => {
+            const statusOrder = { pending: 0, approved: 1, rejected: 2 };
+            const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+            if (statusDiff !== 0) return statusDiff;
+            // Within same status, sort by date (oldest first for pending, newest first for others)
+            if (a.status === 'pending') {
+                return new Date(a.createdAt) - new Date(b.createdAt);
+            }
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
 
     const {
         approveRequest,
@@ -261,11 +273,8 @@ const WithdrawalRequestsManagementPage = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Solicitudes de Retiro de Ahorros</h1>
-                    <p className="text-gray-600 mt-1">Aprueba o rechaza las solicitudes de retiro de fondos de ahorro de los miembros</p>
-                </div>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Solicitudes de Retiro</h1>
             </div>
 
             {/* Alerts */}
@@ -275,7 +284,7 @@ const WithdrawalRequestsManagementPage = () => {
 
             {/* Filters */}
             <Card title="Filtros de Búsqueda">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <Input
                         label="Buscar"
                         name="search"
@@ -293,15 +302,6 @@ const WithdrawalRequestsManagementPage = () => {
                         options={statusOptions}
                         placeholder="Todos los estados"
                     />
-                    {/* TEMPORARILY HIDDEN - Account type filter (only savings shown)
-                    <Select
-                        label="Tipo de Cuenta"
-                        name="accountType"
-                        value={filters.accountType}
-                        onChange={(e) => handleFilterChange('accountType', e.target.value)}
-                        options={accountTypeOptions}
-                    />
-                    */}
                 </div>
                 <div className="mt-6 flex flex-wrap gap-3">
                     <ClearFiltersButton
