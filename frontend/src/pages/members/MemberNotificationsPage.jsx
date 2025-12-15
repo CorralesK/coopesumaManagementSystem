@@ -11,6 +11,7 @@ import Button from '../../components/common/Button';
 import Alert from '../../components/common/Alert';
 import Loading from '../../components/common/Loading';
 import Pagination from '../../components/common/Pagination';
+import Modal from '../../components/common/Modal';
 import usePushNotifications from '../../hooks/usePushNotifications';
 
 const ITEMS_PER_PAGE = 10;
@@ -23,6 +24,8 @@ const MemberNotificationsPage = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [filter, setFilter] = useState('all'); // all, read, unread
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedNotification, setSelectedNotification] = useState(null);
+    const [showDetailModal, setShowDetailModal] = useState(false);
 
     useEffect(() => {
         fetchNotifications();
@@ -63,17 +66,45 @@ const MemberNotificationsPage = () => {
         }
     };
 
+    const handleOpenNotification = async (notification) => {
+        setSelectedNotification(notification);
+        setShowDetailModal(true);
+
+        // Mark as read if unread
+        if (!notification.isRead) {
+            try {
+                await api.patch(`/notifications/${notification.notificationId}/read`);
+                fetchNotifications();
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+    };
+
+    const handleCloseDetailModal = () => {
+        setShowDetailModal(false);
+        setSelectedNotification(null);
+    };
+
     // Reset page when filter changes
     useEffect(() => {
         setCurrentPage(1);
     }, [filter]);
 
-    // Filter notifications
-    const filteredNotifications = notifications.filter(notification => {
-        if (filter === 'read') return notification.isRead;
-        if (filter === 'unread') return !notification.isRead;
-        return true;
-    });
+    // Filter and sort notifications (unread first, then by date newest first)
+    const filteredNotifications = notifications
+        .filter(notification => {
+            if (filter === 'read') return notification.isRead;
+            if (filter === 'unread') return !notification.isRead;
+            return true;
+        })
+        .sort((a, b) => {
+            // Unread first
+            if (!a.isRead && b.isRead) return -1;
+            if (a.isRead && !b.isRead) return 1;
+            // Then by date (newest first)
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
 
     // Pagination
     const totalPages = Math.ceil(filteredNotifications.length / ITEMS_PER_PAGE);
@@ -234,8 +265,9 @@ const MemberNotificationsPage = () => {
                         {paginatedNotifications.map((notification) => (
                             <div
                                 key={notification.notificationId}
-                                className={`p-4 transition-colors ${
-                                    !notification.isRead ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'
+                                onClick={() => handleOpenNotification(notification)}
+                                className={`p-4 transition-colors cursor-pointer ${
+                                    !notification.isRead ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-100'
                                 }`}
                             >
                                 <div className="flex items-start gap-4">
@@ -249,24 +281,18 @@ const MemberNotificationsPage = () => {
                                                 {notification.title}
                                             </h3>
                                             {!notification.isRead && (
-                                                <span className="flex-shrink-0 inline-block w-2 h-2 bg-blue-600 rounded-full"></span>
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    Nueva
+                                                </span>
                                             )}
                                         </div>
 
-                                        <p className="text-sm text-gray-600 mb-2 break-words">
+                                        <p className="text-sm text-gray-600 mb-2 break-words line-clamp-2">
                                             {notification.message}
                                         </p>
 
                                         <div className="flex items-center gap-4 text-xs text-gray-500">
                                             <span>{formatDate(notification.createdAt)}</span>
-                                            {!notification.isRead && (
-                                                <button
-                                                    onClick={() => handleMarkAsRead(notification.notificationId)}
-                                                    className="text-primary-600 hover:text-primary-700 font-medium"
-                                                >
-                                                    Marcar como leída
-                                                </button>
-                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -286,6 +312,43 @@ const MemberNotificationsPage = () => {
                     </div>
                 )}
             </Card>
+
+            {/* Notification Detail Modal */}
+            <Modal
+                isOpen={showDetailModal}
+                onClose={handleCloseDetailModal}
+                title={selectedNotification?.title || 'Notificación'}
+                size="md"
+            >
+                {selectedNotification && (
+                    <div className="space-y-4">
+                        {/* Icon and type indicator */}
+                        <div className="flex items-center gap-3">
+                            {getNotificationIcon(selectedNotification.notificationType)}
+                            <span className="text-sm text-gray-500">
+                                {formatDate(selectedNotification.createdAt)}
+                            </span>
+                        </div>
+
+                        {/* Message */}
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                            <p className="text-gray-700 whitespace-pre-wrap">
+                                {selectedNotification.message}
+                            </p>
+                        </div>
+
+                        {/* Close button */}
+                        <div className="flex justify-center pt-2">
+                            <Button
+                                onClick={handleCloseDetailModal}
+                                variant="outline"
+                            >
+                                Cerrar
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 };

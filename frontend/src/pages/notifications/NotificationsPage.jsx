@@ -36,6 +36,8 @@ const NotificationsPage = () => {
     const [filter, setFilter] = useState('all'); // all, read, unread
     const [withdrawalStatuses, setWithdrawalStatuses] = useState({});
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedNotification, setSelectedNotification] = useState(null);
+    const [showDetailModal, setShowDetailModal] = useState(false);
 
     useEffect(() => {
         fetchNotifications();
@@ -92,6 +94,26 @@ const NotificationsPage = () => {
         }
     };
 
+    const handleOpenNotification = async (notification) => {
+        setSelectedNotification(notification);
+        setShowDetailModal(true);
+
+        // Mark as read if unread
+        if (!notification.is_read) {
+            try {
+                await api.patch(`/notifications/${notification.notification_id}/read`);
+                fetchNotifications();
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+    };
+
+    const handleCloseDetailModal = () => {
+        setShowDetailModal(false);
+        setSelectedNotification(null);
+    };
+
     const handleBroadcast = async (e) => {
         e.preventDefault();
 
@@ -115,11 +137,19 @@ const NotificationsPage = () => {
         }
     };
 
-    const filteredNotifications = notifications.filter(notification => {
-        if (filter === 'read') return notification.is_read;
-        if (filter === 'unread') return !notification.is_read;
-        return true;
-    });
+    const filteredNotifications = notifications
+        .filter(notification => {
+            if (filter === 'read') return notification.is_read;
+            if (filter === 'unread') return !notification.is_read;
+            return true;
+        })
+        .sort((a, b) => {
+            // Unread first
+            if (!a.is_read && b.is_read) return -1;
+            if (a.is_read && !b.is_read) return 1;
+            // Then by date (newest first)
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
 
     // Pagination
     const totalPages = Math.ceil(filteredNotifications.length / ITEMS_PER_PAGE);
@@ -312,7 +342,8 @@ const NotificationsPage = () => {
                                 return (
                                     <div
                                         key={notification.notification_id}
-                                        className={`p-4 hover:bg-gray-50 transition-colors ${
+                                        onClick={() => handleOpenNotification(notification)}
+                                        className={`p-4 hover:bg-gray-100 transition-colors cursor-pointer ${
                                             !notification.is_read ? 'bg-blue-50/50' : ''
                                         }`}
                                     >
@@ -332,47 +363,25 @@ const NotificationsPage = () => {
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <p className="text-sm text-gray-600 mt-1">
+                                                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                                                             {notification.message}
                                                         </p>
 
                                                         {/* Show withdrawal request status */}
                                                         {notification.notification_type === 'withdrawal_request' && withdrawalStatus && (
-                                                            <div className="mt-3">
+                                                            <div className="mt-2">
                                                                 {isProcessed ? (
                                                                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                                                                         withdrawalStatus.status === 'approved'
                                                                             ? 'bg-green-100 text-green-800'
                                                                             : 'bg-red-100 text-red-800'
                                                                     }`}>
-                                                                        {withdrawalStatus.status === 'approved' ? (
-                                                                            <>
-                                                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                                                </svg>
-                                                                                Aprobada
-                                                                            </>
-                                                                        ) : (
-                                                                            <>
-                                                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                                                                </svg>
-                                                                                Rechazada
-                                                                            </>
-                                                                        )}
-                                                                        {withdrawalStatus.reviewedByName && ` por ${withdrawalStatus.reviewedByName}`}
+                                                                        {withdrawalStatus.status === 'approved' ? 'Aprobada' : 'Rechazada'}
                                                                     </span>
                                                                 ) : (
-                                                                    <Button
-                                                                        onClick={() => navigate('/withdrawals')}
-                                                                        variant="primary"
-                                                                        className="text-xs py-1 px-3"
-                                                                    >
-                                                                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                                        </svg>
-                                                                        Gestionar Solicitud
-                                                                    </Button>
+                                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                                        Pendiente
+                                                                    </span>
                                                                 )}
                                                             </div>
                                                         )}
@@ -381,14 +390,6 @@ const NotificationsPage = () => {
                                                         <span className="text-xs text-gray-500 whitespace-nowrap">
                                                             {formatDate(notification.created_at)}
                                                         </span>
-                                                        {!notification.is_read && (
-                                                            <button
-                                                                onClick={() => handleMarkAsRead(notification.notification_id)}
-                                                                className="text-primary-600 hover:text-primary-700 text-xs font-medium whitespace-nowrap hover:underline"
-                                                            >
-                                                                Marcar leída
-                                                            </button>
-                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -484,6 +485,82 @@ const NotificationsPage = () => {
                         </Button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Notification Detail Modal */}
+            <Modal
+                isOpen={showDetailModal}
+                onClose={handleCloseDetailModal}
+                title={selectedNotification?.title || 'Notificación'}
+                size="md"
+            >
+                {selectedNotification && (
+                    <div className="space-y-4">
+                        {/* Icon and type indicator */}
+                        <div className="flex items-center gap-3">
+                            {getNotificationIcon(selectedNotification.notification_type)}
+                            <span className="text-sm text-gray-500">
+                                {formatDate(selectedNotification.created_at)}
+                            </span>
+                        </div>
+
+                        {/* Message */}
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                            <p className="text-gray-700 whitespace-pre-wrap">
+                                {selectedNotification.message}
+                            </p>
+                        </div>
+
+                        {/* Withdrawal request specific content */}
+                        {selectedNotification.notification_type === 'withdrawal_request' && (
+                            <div className="space-y-3">
+                                {withdrawalStatuses[selectedNotification.related_entity_id]?.isProcessed ? (
+                                    <div className={`p-3 rounded-lg ${
+                                        withdrawalStatuses[selectedNotification.related_entity_id]?.status === 'approved'
+                                            ? 'bg-green-50 border border-green-200'
+                                            : 'bg-red-50 border border-red-200'
+                                    }`}>
+                                        <p className={`text-sm font-medium ${
+                                            withdrawalStatuses[selectedNotification.related_entity_id]?.status === 'approved'
+                                                ? 'text-green-800'
+                                                : 'text-red-800'
+                                        }`}>
+                                            {withdrawalStatuses[selectedNotification.related_entity_id]?.status === 'approved'
+                                                ? '✓ Esta solicitud ya fue aprobada'
+                                                : '✗ Esta solicitud fue rechazada'}
+                                            {withdrawalStatuses[selectedNotification.related_entity_id]?.reviewedByName &&
+                                                ` por ${withdrawalStatuses[selectedNotification.related_entity_id].reviewedByName}`}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <Button
+                                        onClick={() => {
+                                            handleCloseDetailModal();
+                                            navigate('/withdrawals');
+                                        }}
+                                        variant="primary"
+                                        className="w-full"
+                                    >
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                        Ir a Gestionar Solicitudes
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Close button */}
+                        <div className="flex justify-center pt-2">
+                            <Button
+                                onClick={handleCloseDetailModal}
+                                variant="outline"
+                            >
+                                Cerrar
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </div>
     );
