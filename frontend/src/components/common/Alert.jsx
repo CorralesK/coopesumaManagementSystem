@@ -11,6 +11,7 @@ const Alert = ({
     message,
     title,
     onClose,
+    onClick,
     className = '',
     autoClose = true,
     autoCloseDuration = 5000
@@ -75,7 +76,13 @@ const Alert = ({
     const config = typeConfig[type];
 
     return (
-        <div className={`${config.bgColor} border-l-4 ${config.borderColor} p-6 mb-6 rounded-r-lg ${className}`}>
+        <div
+            className={`${config.bgColor} border-l-4 ${config.borderColor} p-6 mb-6 rounded-r-lg ${onClick ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''} ${className}`}
+            onClick={onClick}
+            role={onClick ? 'button' : undefined}
+            tabIndex={onClick ? 0 : undefined}
+            onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
+        >
             <div className="flex">
                 <div className={`flex-shrink-0 ${config.iconColor}`}>
                     {config.icon}
@@ -112,6 +119,7 @@ Alert.propTypes = {
     message: PropTypes.string.isRequired,
     title: PropTypes.string,
     onClose: PropTypes.func,
+    onClick: PropTypes.func,
     className: PropTypes.string,
     autoClose: PropTypes.bool,
     autoCloseDuration: PropTypes.number

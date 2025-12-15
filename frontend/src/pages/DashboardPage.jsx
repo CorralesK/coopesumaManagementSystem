@@ -252,19 +252,12 @@ const DashboardPage = () => {
                     />
                 )}
                 {pendingCount > 0 && (
-                    <div
-                        className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-200 rounded-lg cursor-pointer hover:bg-orange-100 transition-colors"
+                    <Alert
+                        type="warning"
+                        title={`${pendingCount} solicitud${pendingCount !== 1 ? 'es' : ''} de retiro pendiente${pendingCount !== 1 ? 's' : ''}`}
+                        message="Haz clic para revisar las solicitudes"
                         onClick={() => navigate('/withdrawals')}
-                    >
-                        <div className="text-orange-500">{Icons.Warning}</div>
-                        <div className="flex-1">
-                            <p className="font-medium text-orange-800">
-                                {pendingCount} solicitud{pendingCount !== 1 ? 'es' : ''} de retiro pendiente{pendingCount !== 1 ? 's' : ''}
-                            </p>
-                            <p className="text-sm text-orange-600">Haz clic para revisar</p>
-                        </div>
-                        <div className="text-orange-500">{Icons.ArrowRight}</div>
-                    </div>
+                    />
                 )}
             </div>
 
