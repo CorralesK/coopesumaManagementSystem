@@ -58,6 +58,12 @@ export const printReceipt = ({ receiptData, receiptType }) => {
                         size: auto;
                         margin: 0.5cm;
                     }
+
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                        color-adjust: exact !important;
+                    }
                 }
             </style>
         </head>
