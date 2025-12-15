@@ -30,6 +30,7 @@ const WithdrawalRequestsManagementPage = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [modalNotes, setModalNotes] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+    const [modalError, setModalError] = useState('');
 
     // Print modal state
     const [showPrintModal, setShowPrintModal] = useState(false);
@@ -89,6 +90,7 @@ const WithdrawalRequestsManagementPage = () => {
     const handleApprove = (request) => {
         setSelectedRequest(request);
         setModalNotes('');
+        setModalError('');
         setShowApproveModal(true);
     };
 
@@ -96,11 +98,13 @@ const WithdrawalRequestsManagementPage = () => {
     const handleReject = (request) => {
         setSelectedRequest(request);
         setModalNotes('');
+        setModalError('');
         setShowRejectModal(true);
     };
 
     // Confirm approve
     const confirmApprove = async () => {
+        setModalError('');
         try {
             const previousBalance = parseFloat(selectedRequest.currentBalance) || 0;
             const amount = parseFloat(selectedRequest.requestedAmount);
@@ -139,7 +143,7 @@ const WithdrawalRequestsManagementPage = () => {
                 clearState();
             }, 3000);
         } catch (err) {
-            // Error handled by hook
+            setModalError(err.response?.data?.message || err.message || 'Error al aprobar la solicitud');
         }
     };
 
@@ -149,6 +153,7 @@ const WithdrawalRequestsManagementPage = () => {
             return;
         }
 
+        setModalError('');
         try {
             await rejectRequest(selectedRequest.requestId, {
                 adminNotes: modalNotes
@@ -164,7 +169,7 @@ const WithdrawalRequestsManagementPage = () => {
                 clearState();
             }, 3000);
         } catch (err) {
-            // Error handled by hook
+            setModalError(err.response?.data?.message || err.message || 'Error al rechazar la solicitud');
         }
     };
 
@@ -395,6 +400,15 @@ const WithdrawalRequestsManagementPage = () => {
             >
                 {selectedRequest && (
                     <div className="space-y-6">
+                        {modalError && (
+                            <Alert
+                                type="error"
+                                message={modalError}
+                                onClose={() => setModalError('')}
+                                autoClose={false}
+                            />
+                        )}
+
                         <div className="p-4 bg-blue-50 rounded-lg">
                             <p className="text-sm text-gray-700"><strong>Miembro:</strong> {selectedRequest.memberName} ({selectedRequest.memberCode})</p>
                             <p className="text-sm text-gray-700 mt-1"><strong>Saldo actual:</strong> ₡{Number(selectedRequest.currentBalance).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</p>
@@ -452,6 +466,15 @@ const WithdrawalRequestsManagementPage = () => {
             >
                 {selectedRequest && (
                     <div className="space-y-4">
+                        {modalError && (
+                            <Alert
+                                type="error"
+                                message={modalError}
+                                onClose={() => setModalError('')}
+                                autoClose={false}
+                            />
+                        )}
+
                         <div className="p-4 bg-gray-50 rounded-lg">
                             <p className="text-sm text-gray-600">Miembro</p>
                             <p className="font-semibold">{selectedRequest.memberName}</p>

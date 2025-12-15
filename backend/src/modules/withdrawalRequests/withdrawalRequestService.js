@@ -22,6 +22,19 @@ class WithdrawalRequestError extends Error {
 }
 
 /**
+ * Get current fiscal year from database
+ */
+const getCurrentFiscalYear = async (client = db) => {
+    try {
+        const result = await client.query('SELECT get_fiscal_year(CURRENT_DATE) AS fiscal_year');
+        return result.rows[0].fiscal_year;
+    } catch (error) {
+        logger.warn('get_fiscal_year function not available, using current year');
+        return new Date().getFullYear();
+    }
+};
+
+/**
  * Create a withdrawal request
  * Note: Members can only request withdrawals from their savings account
  */
@@ -115,17 +128,21 @@ const approveWithdrawalRequest = async (requestId, approvalData) => {
             throw new WithdrawalRequestError('Only pending requests can be approved', ERROR_CODES.INVALID_STATUS, 400);
         }
 
+        // Get fiscal year safely
+        const fiscalYear = await getCurrentFiscalYear(client);
+
         // Create withdrawal transaction
         const transactionQuery = `
             INSERT INTO transactions (account_id, transaction_type, amount, transaction_date, fiscal_year, description, status, created_by)
-            VALUES ($1, 'withdrawal', $2, CURRENT_DATE, get_fiscal_year(CURRENT_DATE), $3, 'completed', $4)
+            VALUES ($1, 'withdrawal', $2, CURRENT_DATE, $3, $4, 'completed', $5)
             RETURNING transaction_id
         `;
 
         const transactionResult = await client.query(transactionQuery, [
             request.account_id,
             request.requested_amount,
-            `Approved withdrawal - ${request.member_name}`,
+            fiscalYear,
+            `Retiro aprobado - ${request.member_name}`,
             approvalData.reviewedBy
         ]);
 
