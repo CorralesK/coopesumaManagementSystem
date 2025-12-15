@@ -17,6 +17,8 @@ import Pagination from '../../components/common/Pagination';
 import Modal from '../../components/common/Modal';
 import Alert from '../../components/common/Alert';
 import Loading from '../../components/common/Loading';
+import PrintModal from '../../components/common/PrintModal';
+import SavingsReceiptPrint from '../../components/print/SavingsReceiptPrint';
 
 /**
  * WithdrawalRequestsManagementPage Component
@@ -28,6 +30,10 @@ const WithdrawalRequestsManagementPage = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [modalNotes, setModalNotes] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+
+    // Print modal state
+    const [showPrintModal, setShowPrintModal] = useState(false);
+    const [receiptData, setReceiptData] = useState(null);
 
     // Use hooks - TEMPORARILY filter only savings (contributions and surplus hidden)
     const {
@@ -66,7 +72,7 @@ const WithdrawalRequestsManagementPage = () => {
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 50;
+    const itemsPerPage = 10;
     const totalPages = Math.ceil(requests.length / itemsPerPage);
     const paginatedRequests = requests.slice(
         (currentPage - 1) * itemsPerPage,
@@ -96,13 +102,36 @@ const WithdrawalRequestsManagementPage = () => {
     // Confirm approve
     const confirmApprove = async () => {
         try {
-            await approveRequest(selectedRequest.requestId, {
+            const previousBalance = parseFloat(selectedRequest.currentBalance) || 0;
+            const amount = parseFloat(selectedRequest.requestedAmount);
+            const newBalance = previousBalance - amount;
+
+            const response = await approveRequest(selectedRequest.requestId, {
                 adminNotes: modalNotes || null
             });
+
+            // Prepare receipt data for printing
+            setReceiptData({
+                transactionType: 'withdrawal',
+                member: {
+                    member_id: selectedRequest.memberId,
+                    full_name: selectedRequest.memberName,
+                    member_code: selectedRequest.memberCode,
+                    current_balance: previousBalance
+                },
+                amount: amount,
+                previousBalance: previousBalance,
+                newBalance: newBalance,
+                description: selectedRequest.requestNotes || `Retiro de ahorros aprobado`,
+                transactionDate: new Date(),
+                transactionId: response?.data?.transactionId || response?.transactionId || ''
+            });
+
             setSuccessMessage('Solicitud aprobada exitosamente');
             setShowApproveModal(false);
             setSelectedRequest(null);
             setModalNotes('');
+            setShowPrintModal(true);
             refetch();
 
             setTimeout(() => {
@@ -139,45 +168,59 @@ const WithdrawalRequestsManagementPage = () => {
         }
     };
 
+    // Handle view receipt for approved requests
+    const handleViewReceipt = (req) => {
+        // Prepare receipt data from the request
+        const previousBalance = parseFloat(req.currentBalance) + parseFloat(req.requestedAmount);
+        const amount = parseFloat(req.requestedAmount);
+        const newBalance = parseFloat(req.currentBalance);
+
+        setReceiptData({
+            transactionType: 'withdrawal',
+            member: {
+                member_id: req.memberId,
+                full_name: req.memberName,
+                member_code: req.memberCode,
+                current_balance: previousBalance
+            },
+            amount: amount,
+            previousBalance: previousBalance,
+            newBalance: newBalance,
+            description: req.requestNotes || `Retiro de ahorros aprobado`,
+            transactionDate: req.reviewedAt || req.createdAt,
+            transactionId: req.completedTransactionId || ''
+        });
+
+        setShowPrintModal(true);
+    };
+
     // Table columns
     const tableColumns = [
         {
-            key: 'createdAt',
-            label: 'Fecha',
-            render: (req) => new Date(req.createdAt).toLocaleDateString('es-CR')
+            key: 'memberCode',
+            label: 'Código',
+            render: (req) => (
+                <div className="text-center">
+                    <span className="text-sm font-medium text-gray-900">
+                        {req.memberCode || '-'}
+                    </span>
+                </div>
+            )
         },
         {
             key: 'memberName',
             label: 'Miembro',
             render: (req) => (
-                <div>
-                    <p className="font-medium text-gray-900">{req.memberName || 'N/A'}</p>
-                    <p className="text-xs text-gray-500">{req.memberCode || ''}</p>
+                <div className="text-left">
+                    <span className="font-medium text-gray-900">{req.memberName || 'N/A'}</span>
                 </div>
             )
         },
-        // TEMPORARILY HIDDEN - Account type column (only savings shown)
-        // {
-        //     key: 'accountType',
-        //     label: 'Cuenta',
-        //     render: (req) => {
-        //         const accountLabels = {
-        //             savings: 'Ahorro',
-        //             contributions: 'Aportaciones',
-        //             surplus: 'Excedentes'
-        //         };
-        //         const accountColors = {
-        //             savings: 'bg-green-100 text-green-800',
-        //             contributions: 'bg-blue-100 text-blue-800',
-        //             surplus: 'bg-purple-100 text-purple-800'
-        //         };
-        //         return (
-        //             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${accountColors[req.accountType] || 'bg-gray-100 text-gray-800'}`}>
-        //                 {accountLabels[req.accountType] || req.accountType}
-        //             </span>
-        //         );
-        //     }
-        // },
+        {
+            key: 'createdAt',
+            label: 'Fecha',
+            render: (req) => new Date(req.createdAt).toLocaleDateString('es-CR')
+        },
         {
             key: 'requestedAmount',
             label: 'Monto',
@@ -206,15 +249,6 @@ const WithdrawalRequestsManagementPage = () => {
             }
         },
         {
-            key: 'requestNotes',
-            label: 'Notas',
-            render: (req) => (
-                <div className="max-w-xs">
-                    <p className="text-sm text-gray-600 truncate">{req.requestNotes || '-'}</p>
-                </div>
-            )
-        },
-        {
             key: 'actions',
             label: 'Acciones',
             render: (req) => (
@@ -223,27 +257,39 @@ const WithdrawalRequestsManagementPage = () => {
                         <>
                             <Button
                                 onClick={() => handleApprove(req)}
-                                variant="success"
+                                variant="primary"
                                 size="sm"
+                                className="!px-2 sm:!px-3"
                             >
-                                Aprobar
+                                <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span className="hidden sm:inline">Aprobar</span>
                             </Button>
                             <Button
                                 onClick={() => handleReject(req)}
-                                variant="danger"
+                                variant="outline"
                                 size="sm"
+                                className="!px-2 sm:!px-3"
                             >
-                                Rechazar
+                                <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                <span className="hidden sm:inline">Rechazar</span>
                             </Button>
                         </>
                     )}
-                    {req.status === 'approved' && req.receiptId && (
+                    {req.status === 'approved' && (
                         <Button
-                            onClick={() => window.open(`/receipts/${req.receiptId}/download`, '_blank')}
+                            onClick={() => handleViewReceipt(req)}
                             variant="outline"
                             size="sm"
+                            className="!px-2 sm:!px-3"
                         >
-                            Ver Recibo
+                            <svg className="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            <span className="hidden sm:inline">Ver Recibo</span>
                         </Button>
                     )}
                 </div>
@@ -442,6 +488,34 @@ const WithdrawalRequestsManagementPage = () => {
                     </div>
                 )}
             </Modal>
+
+            {/* Print Receipt Modal */}
+            <PrintModal
+                isOpen={showPrintModal}
+                onClose={() => {
+                    setShowPrintModal(false);
+                    setReceiptData(null);
+                }}
+                title="Recibo de Retiro"
+                printTitle="Recibo de Retiro"
+                size="md"
+                paperSize="80mm 200mm"
+                receiptData={receiptData}
+                receiptType="savings"
+            >
+                {receiptData && (
+                    <SavingsReceiptPrint
+                        transactionType={receiptData.transactionType}
+                        member={receiptData.member}
+                        amount={receiptData.amount}
+                        previousBalance={receiptData.previousBalance}
+                        newBalance={receiptData.newBalance}
+                        description={receiptData.description}
+                        transactionDate={receiptData.transactionDate}
+                        transactionId={receiptData.transactionId}
+                    />
+                )}
+            </PrintModal>
         </div>
     );
 };
