@@ -57,13 +57,11 @@ const findById = async (receiptId) => {
                 m.identification,
                 m.member_code,
                 mq.quality_name,
-                ml.level_name,
-                u.full_name as created_by_name
+                ml.level_name
             FROM receipts r
             JOIN members m ON r.member_id = m.member_id
             JOIN member_qualities mq ON m.quality_id = mq.quality_id
             LEFT JOIN member_levels ml ON m.level_id = ml.level_id
-            LEFT JOIN users u ON r.created_by = u.user_id
             WHERE r.receipt_id = $1
         `;
 
