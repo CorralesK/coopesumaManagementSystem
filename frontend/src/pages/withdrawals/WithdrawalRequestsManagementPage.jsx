@@ -391,34 +391,42 @@ const WithdrawalRequestsManagementPage = () => {
                 isOpen={showApproveModal}
                 onClose={() => setShowApproveModal(false)}
                 title="Aprobar Solicitud de Retiro"
-                size="md"
+                size="lg"
             >
                 {selectedRequest && (
-                    <div className="space-y-4">
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                            <p className="text-sm text-gray-600">Miembro</p>
-                            <p className="font-semibold">{selectedRequest.memberName}</p>
+                    <div className="space-y-6">
+                        <div className="p-4 bg-blue-50 rounded-lg">
+                            <p className="text-sm text-gray-700"><strong>Miembro:</strong> {selectedRequest.memberName} ({selectedRequest.memberCode})</p>
+                            <p className="text-sm text-gray-700 mt-1"><strong>Saldo actual:</strong> ₡{Number(selectedRequest.currentBalance).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</p>
                         </div>
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                            <p className="text-sm text-gray-600">Monto</p>
-                            <p className="text-2xl font-bold text-green-600">
-                                ₡{Number(selectedRequest.requestedAmount).toLocaleString('es-CR', { minimumFractionDigits: 2 })}
-                            </p>
-                        </div>
+
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Notas Administrativas (opcional)
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Monto a Retirar</label>
+                            <div className="flex items-center border border-gray-300 rounded-lg bg-gray-100">
+                                <span className="pl-3 text-gray-500">₡</span>
+                                <input
+                                    type="text"
+                                    value={Number(selectedRequest.requestedAmount).toLocaleString('es-CR', { minimumFractionDigits: 2 })}
+                                    className="flex-1 py-2 pl-1 pr-3 border-0 bg-transparent focus:outline-none focus:ring-0 font-semibold text-gray-700"
+                                    disabled
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Nota (Opcional)</label>
                             <textarea
                                 value={modalNotes}
                                 onChange={(e) => setModalNotes(e.target.value)}
                                 rows={3}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                placeholder="Notas sobre la aprobación..."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                placeholder="Notas administrativas..."
                             />
                         </div>
-                        <div className="flex justify-end gap-3">
+
+                        <div className="flex justify-center space-x-3">
                             <Button
+                                type="button"
                                 onClick={() => setShowApproveModal(false)}
                                 variant="outline"
                                 disabled={operationLoading}
@@ -427,10 +435,10 @@ const WithdrawalRequestsManagementPage = () => {
                             </Button>
                             <Button
                                 onClick={confirmApprove}
-                                variant="success"
+                                variant="primary"
                                 disabled={operationLoading}
                             >
-                                {operationLoading ? 'Aprobando...' : 'Confirmar Aprobación'}
+                                {operationLoading ? 'Procesando...' : 'Aprobar Retiro'}
                             </Button>
                         </div>
                     </div>
