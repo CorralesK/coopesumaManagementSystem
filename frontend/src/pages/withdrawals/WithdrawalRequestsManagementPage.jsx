@@ -268,7 +268,7 @@ const WithdrawalRequestsManagementPage = () => {
                             </Button>
                             <Button
                                 onClick={() => handleReject(req)}
-                                variant="outline"
+                                variant="danger"
                                 size="sm"
                                 className="!px-2 sm:!px-3"
                             >
