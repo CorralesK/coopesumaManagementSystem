@@ -121,11 +121,16 @@ const approveWithdrawalRequest = async (requestId, approvalData) => {
 
         const request = await withdrawalRequestRepository.findById(requestId);
         if (!request) {
-            throw new WithdrawalRequestError('Request not found', ERROR_CODES.NOT_FOUND, 404);
+            throw new WithdrawalRequestError('Solicitud no encontrada', ERROR_CODES.NOT_FOUND, 404);
+        }
+
+        if (!request.accountId) {
+            logger.error('Withdrawal request has no accountId', { requestId, request });
+            throw new WithdrawalRequestError('La solicitud no tiene una cuenta asociada válida', ERROR_CODES.VALIDATION_ERROR, 400);
         }
 
         if (request.status !== 'pending') {
-            throw new WithdrawalRequestError('Only pending requests can be approved', ERROR_CODES.INVALID_STATUS, 400);
+            throw new WithdrawalRequestError('Solo se pueden aprobar solicitudes pendientes', ERROR_CODES.INVALID_STATUS, 400);
         }
 
         // Get fiscal year safely
@@ -139,10 +144,10 @@ const approveWithdrawalRequest = async (requestId, approvalData) => {
         `;
 
         const transactionResult = await client.query(transactionQuery, [
-            request.account_id,
-            request.requested_amount,
+            request.accountId,
+            request.requestedAmount,
             fiscalYear,
-            `Retiro aprobado - ${request.member_name}`,
+            `Retiro aprobado - ${request.memberName}`,
             approvalData.reviewedBy
         ]);
 
@@ -151,15 +156,15 @@ const approveWithdrawalRequest = async (requestId, approvalData) => {
         // Update account balance
         await client.query(
             'UPDATE accounts SET current_balance = current_balance - $1, updated_at = CURRENT_TIMESTAMP WHERE account_id = $2',
-            [request.requested_amount, request.account_id]
+            [request.requestedAmount, request.accountId]
         );
 
         let receiptInfo = null;
         try {
             const receipt = await receiptService.generateReceiptForTransaction({
                 transactionId,
-                previousBalance: parseFloat(request.current_balance),
-                accountType: request.account_type,
+                previousBalance: parseFloat(request.currentBalance),
+                accountType: request.accountType,
                 client: client
             });
 
