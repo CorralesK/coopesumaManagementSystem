@@ -142,7 +142,8 @@ const approveWithdrawalRequest = async (requestId, approvalData) => {
             const receipt = await receiptService.generateReceiptForTransaction({
                 transactionId,
                 previousBalance: parseFloat(request.current_balance),
-                accountType: request.account_type
+                accountType: request.account_type,
+                client: client
             });
 
             receiptInfo = {

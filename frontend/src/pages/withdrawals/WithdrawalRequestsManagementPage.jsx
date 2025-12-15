@@ -413,16 +413,14 @@ const WithdrawalRequestsManagementPage = () => {
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Nota (Opcional)</label>
-                            <textarea
-                                value={modalNotes}
-                                onChange={(e) => setModalNotes(e.target.value)}
-                                rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                placeholder="Notas administrativas..."
-                            />
-                        </div>
+                        {selectedRequest.requestNotes && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Nota del Miembro</label>
+                                <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
+                                    {selectedRequest.requestNotes}
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex justify-center space-x-3">
                             <Button
