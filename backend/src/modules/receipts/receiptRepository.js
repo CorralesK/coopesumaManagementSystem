@@ -9,7 +9,7 @@ const logger = require('../../utils/logger');
 /**
  * Create a receipt record
  * Tabla real: receipts (cooperative_id, transaction_id, liquidation_id, receipt_number,
- *             receipt_type, member_id, amount, pdf_url)
+ *             receipt_type, member_id, amount)
  */
 const createReceipt = async (receiptData, client = db) => {
     try {
@@ -21,10 +21,9 @@ const createReceipt = async (receiptData, client = db) => {
                 receipt_number,
                 receipt_type,
                 member_id,
-                amount,
-                pdf_url
+                amount
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *
         `;
 
@@ -35,8 +34,7 @@ const createReceipt = async (receiptData, client = db) => {
             receiptData.receiptNumber,
             receiptData.receiptType,
             receiptData.memberId,
-            receiptData.amount,
-            receiptData.pdfUrl || null
+            receiptData.amount
         ];
 
         const result = await client.query(query, values);
@@ -115,29 +113,8 @@ const findByMember = async (memberId, filters = {}) => {
     }
 };
 
-/**
- * Update receipt PDF URL
- */
-const updatePdfUrl = async (receiptId, pdfUrl, client = db) => {
-    try {
-        const query = `
-            UPDATE receipts
-            SET pdf_url = $2
-            WHERE receipt_id = $1
-            RETURNING *
-        `;
-
-        const result = await client.query(query, [receiptId, pdfUrl]);
-        return result.rows[0];
-    } catch (error) {
-        logger.error('Error updating receipt PDF URL:', error);
-        throw error;
-    }
-};
-
 module.exports = {
     createReceipt,
     findById,
-    findByMember,
-    updatePdfUrl
+    findByMember
 };

@@ -148,8 +148,7 @@ const approveWithdrawalRequest = async (requestId, approvalData) => {
 
             receiptInfo = {
                 receiptId: receipt.receipt_id,
-                receiptNumber: receipt.receipt_number,
-                pdfUrl: receipt.pdf_url
+                receiptNumber: receipt.receipt_number
             };
 
             logger.info('Receipt generated for withdrawal', {
