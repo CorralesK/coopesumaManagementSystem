@@ -5,6 +5,7 @@
 
 const db = require('../../config/database');
 const logger = require('../../utils/logger');
+const { keysToCamel } = require('../../utils/caseConverter');
 
 /**
  * Create a receipt record
@@ -38,7 +39,9 @@ const createReceipt = async (receiptData, client = db) => {
         ];
 
         const result = await client.query(query, values);
-        return result.rows[0];
+        // Convert to camelCase if using transaction client (db.query does it automatically)
+        const row = result.rows[0];
+        return client === db ? row : keysToCamel(row);
     } catch (error) {
         logger.error('Error creating receipt:', error);
         throw error;

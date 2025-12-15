@@ -7,6 +7,7 @@
 
 const db = require('../../config/database');
 const logger = require('../../utils/logger');
+const { keysToCamel } = require('../../utils/caseConverter');
 
 /**
  * Create a withdrawal request
@@ -39,7 +40,8 @@ const createRequest = async (requestData, client = db) => {
         ];
 
         const result = await client.query(query, values);
-        return result.rows[0];
+        const row = result.rows[0];
+        return client === db ? row : keysToCamel(row);
     } catch (error) {
         logger.error('Error creating withdrawal request:', error);
         throw error;
@@ -176,7 +178,8 @@ const updateStatus = async (requestId, updateData, client = db) => {
         ];
 
         const result = await client.query(query, values);
-        return result.rows[0];
+        const row = result.rows[0];
+        return client === db ? row : keysToCamel(row);
     } catch (error) {
         logger.error('Error updating withdrawal request status:', error);
         throw error;

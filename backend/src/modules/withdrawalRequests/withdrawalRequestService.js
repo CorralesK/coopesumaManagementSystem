@@ -169,14 +169,14 @@ const approveWithdrawalRequest = async (requestId, approvalData) => {
             });
 
             receiptInfo = {
-                receiptId: receipt.receipt_id,
-                receiptNumber: receipt.receipt_number
+                receiptId: receipt.receiptId,
+                receiptNumber: receipt.receiptNumber
             };
 
             logger.info('Receipt generated for withdrawal', {
                 requestId,
                 transactionId,
-                receiptNumber: receipt.receipt_number
+                receiptNumber: receipt.receiptNumber
             });
         } catch (receiptError) {
             logger.error('Error generating receipt for withdrawal (non-critical):', receiptError);
