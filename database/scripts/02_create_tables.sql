@@ -155,7 +155,7 @@ CREATE TABLE members (
     CONSTRAINT chk_identification_format CHECK (identification ~ '^[0-9-]+$'),
     CONSTRAINT chk_institutional_email_format CHECK (
         institutional_email IS NULL OR
-        institutional_email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]*mep\.go\.cr$'
+        institutional_email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
     ),
     CONSTRAINT chk_qr_hash_not_empty CHECK (TRIM(qr_hash) != '')
 );
