@@ -27,12 +27,14 @@ const verifyInstitutionalEmail = async (email) => {
             };
         }
 
-        // Check format - must end with mep.go.cr
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]*mep\.go\.cr$/;
+        // Check format - accept any valid email for testing
+        // TODO: In production, uncomment the MEP-only validation below
+        // const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]*mep\.go\.cr$/;
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (!emailRegex.test(email.toLowerCase())) {
             return {
                 isValid: false,
-                error: 'Email must be a valid MEP institutional email (must end with mep.go.cr)'
+                error: 'El correo electrónico no tiene un formato válido'
             };
         }
 
