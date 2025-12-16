@@ -175,34 +175,8 @@ const executeLiquidation = async (liquidationData) => {
                         [savingsData.accountId]
                     );
                 } else {
-                    // Create a zero-amount liquidation transaction as documentation
-                    const txQuery = `
-                        INSERT INTO transactions (
-                            account_id,
-                            transaction_type,
-                            amount,
-                            transaction_date,
-                            fiscal_year,
-                            description,
-                            status,
-                            created_by
-                        )
-                        VALUES ($1, 'liquidation', $2, CURRENT_DATE, $3, $4, 'completed', $5)
-                        RETURNING transaction_id
-                    `;
-
-                    const txValues = [
-                        savingsData.accountId,
-                        0,
-                        fiscalYear,
-                        `Liquidación ${liquidationType === 'periodic' ? 'periódica' : 'por retiro'} (saldo ₡0.00 - formalidad) - ${member.fullName}`,
-                        processedBy
-                    ];
-
-                    const txResult = await client.query(txQuery, txValues);
-                    liquidationTransactions.push(txResult.rows[0].transaction_id);
-
-                    logger.info(`Zero balance liquidation created for member ${memberId}`);
+                    // Skip transaction creation for zero balance - constraint doesn't allow amount = 0
+                    logger.info(`Skipping transaction for zero balance liquidation - member ${memberId}`);
                 }
             }
             // Note: If no savings account exists, we still proceed with the liquidation record
