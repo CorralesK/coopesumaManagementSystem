@@ -151,9 +151,9 @@ const ImageUpload = ({
                         )}
                     </div>
                 ) : (
-                    <div className="py-6 text-center w-full">
+                    <div className="py-6 text-center w-full flex flex-col items-center justify-center">
                         <svg
-                            className="h-12 w-12 text-gray-400 mx-auto"
+                            className="h-12 w-12 text-gray-400"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"

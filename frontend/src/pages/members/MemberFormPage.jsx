@@ -166,8 +166,6 @@ const MemberFormPage = () => {
             newErrors.institutionalEmail = 'El correo institucional es requerido';
         } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.institutionalEmail)) {
             newErrors.institutionalEmail = 'El formato del correo no es válido';
-        } else if (!formData.institutionalEmail.toLowerCase().endsWith('mep.go.cr')) {
-            newErrors.institutionalEmail = 'Debe ser un correo institucional del MEP';
         }
 
         setErrors(newErrors);
