@@ -151,7 +151,7 @@ const ImageUpload = ({
                         )}
                     </div>
                 ) : (
-                    <div className="py-6 text-center">
+                    <div className="py-6 text-center w-full">
                         <svg
                             className="h-12 w-12 text-gray-400 mx-auto"
                             fill="none"
