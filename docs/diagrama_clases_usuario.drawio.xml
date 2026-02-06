@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-01-01T00:00:00.000Z" agent="draw.io" version="21.0.0" type="device">
+  <diagram id="CoopLink-CR-Clases" name="Diagrama de Clases - Vista Usuario">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Título -->
+        <mxCell id="title" value="Diagrama de Clases UML - CoopLink CR&#xa;Sistema de Gestión para Cooperativas Estudiantiles (Vista Usuario)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="500" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- MÓDULO DE ORGANIZACIÓN -->
+        <!-- ============================================ -->
+
+        <!-- Package: Módulo de Organización -->
+        <mxCell id="pkg-org" value="Módulo de Organización" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;fillColor=#DDDDDD;verticalAlign=top;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="300" height="220" as="geometry" />
+        </mxCell>
+
+        <!-- Clase: School -->
+        <mxCell id="school" value="&lt;b&gt;School&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="60" y="120" width="260" height="74" as="geometry" />
+        </mxCell>
+        <mxCell id="school-attr" value="- school_id : Integer &lt;&lt;PK&gt;&gt;&#xa;- name : String&#xa;- created_at : Timestamp&#xa;- updated_at : Timestamp" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="school">
+          <mxGeometry y="26" width="260" height="48" as="geometry" />
+        </mxCell>
+
+        <!-- Clase: Cooperative -->
+        <mxCell id="cooperative" value="&lt;b&gt;Cooperative&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="60" y="210" width="260" height="82" as="geometry" />
+        </mxCell>
+        <mxCell id="coop-attr" value="- cooperative_id : Integer &lt;&lt;PK&gt;&gt;&#xa;- school_id : Integer &lt;&lt;FK&gt;&gt;&#xa;- trade_name : String&#xa;- legal_name : String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="cooperative">
+          <mxGeometry y="26" width="260" height="56" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- MÓDULO DE USUARIOS Y AUTENTICACIÓN -->
+        <!-- ============================================ -->
+
+        <!-- Package: Módulo de Usuarios -->
+        <mxCell id="pkg-users" value="Módulo de Usuarios y Autenticación" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;fillColor=#E8F4F8;verticalAlign=top;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="360" y="80" width="320" height="270" as="geometry" />
+        </mxCell>
+
+        <!-- Clase: User -->
+        <mxCell id="user" value="&lt;b&gt;User&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="380" y="120" width="280" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="user-attr" value="- user_id : Integer &lt;&lt;PK&gt;&gt;&#xa;- cooperative_id : Integer &lt;&lt;FK&gt;&gt;&#xa;- full_name : String&#xa;- email : String &lt;&lt;unique&gt;&gt;&#xa;- microsoft_id : String &lt;&lt;unique&gt;&gt;&#xa;- role : Enum&#xa;- is_active : Boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="user">
+          <mxGeometry y="26" width="280" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="user-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="user">
+          <mxGeometry y="122" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="user-methods" value="+ authenticate() : Boolean&#xa;+ hasPermission(permission) : Boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="user">
+          <mxGeometry y="130" width="280" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Enum: UserRole -->
+        <mxCell id="userrole" value="&lt;b&gt;&lt;&lt;enumeration&gt;&gt;&#xa;UserRole&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFCC;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="380" y="280" width="140" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="userrole-vals" value="ADMINISTRATOR&#xa;REGISTRAR&#xa;MANAGER&#xa;MEMBER" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="userrole">
+          <mxGeometry y="40" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- MÓDULO DE MIEMBROS -->
+        <!-- ============================================ -->
+
+        <!-- Package: Módulo de Miembros -->
+        <mxCell id="pkg-members" value="Módulo de Miembros" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;fillColor=#FFF4E6;verticalAlign=top;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="700" y="80" width="440" height="420" as="geometry" />
+        </mxCell>
+
+        <!-- Clase: Member -->
+        <mxCell id="member" value="&lt;b&gt;Member&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="720" y="120" width="280" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="member-attr" value="- member_id : Integer &lt;&lt;PK&gt;&gt;&#xa;- cooperative_id : Integer &lt;&lt;FK&gt;&gt;&#xa;- user_id : Integer &lt;&lt;FK, nullable&gt;&gt;&#xa;- full_name : String&#xa;- identification : String &lt;&lt;unique&gt;&gt;&#xa;- gender : Char&#xa;- member_code : String &lt;&lt;unique&gt;&gt;&#xa;- quality_id : Integer &lt;&lt;FK&gt;&gt;&#xa;- level_id : Integer &lt;&lt;FK, nullable&gt;&gt;&#xa;- institutional_email : String&#xa;- photo_url : String&#xa;- qr_hash : String &lt;&lt;unique&gt;&gt;&#xa;- affiliation_date : Date&#xa;- is_active : Boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="member">
+          <mxGeometry y="26" width="280" height="176" as="geometry" />
+        </mxCell>
+        <mxCell id="member-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="member">
+          <mxGeometry y="202" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="member-methods" value="+ getAccounts() : List&lt;Account&gt;&#xa;+ getTotalSavings() : Decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="member">
+          <mxGeometry y="210" width="280" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Clase: MemberQuality -->
+        <mxCell id="quality" value="&lt;b&gt;MemberQuality&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="720" y="370" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="quality-attr" value="- quality_id : Integer &lt;&lt;PK&gt;&gt;&#xa;- quality_code : String &lt;&lt;unique&gt;&gt;&#xa;- quality_name : String&#xa;- description : Text&#xa;__&#xa;{static} STUDENT : &quot;student&quot;&#xa;{static} STAFF : &quot;staff&quot;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="quality">
+          <mxGeometry y="26" width="200" height="84" as="geometry" />
+        </mxCell>
+
+        <!-- Clase: MemberLevel -->
+        <mxCell id="level" value="&lt;b&gt;MemberLevel&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="940" y="370" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="level-attr" value="- level_id : Integer &lt;&lt;PK&gt;&gt;&#xa;- level_code : String &lt;&lt;unique&gt;&gt;&#xa;- level_name : String&#xa;- applies_to_quality_code : String&#xa;- display_order : Integer&#xa;__&#xa;{static} GRADE_1..6, etc." style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="level">
+          <mxGeometry y="26" width="200" height="84" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- MÓDULO DE ASAMBLEAS Y ASISTENCIA -->
+        <!-- ============================================ -->
+
+        <!-- Package: Módulo de Asambleas -->
+        <mxCell id="pkg-assembly" value="Módulo de Asambleas y Asistencia" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;fillColor=#E8F5E9;verticalAlign=top;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="320" width="330" height="340" as="geometry" />
+        </mxCell>
+
+        <!-- Clase: Assembly -->
+        <mxCell id="assembly" value="&lt;b&gt;Assembly&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="60" y="360" width="280" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="assembly-attr" value="- assembly_id : Integer &lt;&lt;PK&gt;&gt;&#xa;- cooperative_id : Integer &lt;&lt;FK&gt;&gt;&#xa;- title : String&#xa;- scheduled_date : Date&#xa;- start_time : Time&#xa;- end_time : Time&#xa;- is_active : Boolean&#xa;- concluded_at : Timestamp&#xa;- created_by : Integer &lt;&lt;FK&gt;&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="assembly">
+          <mxGeometry y="26" width="280" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="assembly-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="assembly">
+          <mxGeometry y="122" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="assembly-methods" value="+ activate() : void&#xa;+ conclude() : void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="assembly">
+          <mxGeometry y="130" width="280" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Clase: AttendanceRecord -->
+        <mxCell id="attendance" value="&lt;b&gt;AttendanceRecord&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="60" y="530" width="280" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="attendance-attr" value="- attendance_id : Integer &lt;&lt;PK&gt;&gt;&#xa;- member_id : Integer &lt;&lt;FK&gt;&gt;&#xa;- assembly_id : Integer &lt;&lt;FK&gt;&gt;&#xa;- registered_at : Timestamp&#xa;- registered_by : Integer &lt;&lt;FK&gt;&gt;&#xa;- registration_method : Enum" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="attendance">
+          <mxGeometry y="26" width="280" height="84" as="geometry" />
+        </mxCell>
+
+        <!-- Enum: RegistrationMethod -->
+        <mxCell id="regmethod" value="&lt;b&gt;&lt;&lt;enumeration&gt;&gt;&#xa;RegistrationMethod&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFCC;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="240" y="650" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="regmethod-vals" value="QR_SCAN&#xa;MANUAL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="regmethod">
+          <mxGeometry y="40" width="140" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- MÓDULO FINANCIERO (SIN APORTACIONES/EXCEDENTES) -->
+        <!-- ============================================ -->
+
+        <!-- Package: Módulo Financiero -->
+        <mxCell id="pkg-finance" value="Módulo Financiero" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;fillColor=#FFF3E0;verticalAlign=top;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="400" y="400" width="280" height="330" as="geometry" />
+        </mxCell>
+
+        <!-- Clase: Account -->
+        <mxCell id="account" value="&lt;b&gt;Account&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="420" y="440" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="account-attr" value="- account_id : Integer &lt;&lt;PK&gt;&gt;&#xa;- member_id : Integer &lt;&lt;FK&gt;&gt;&#xa;- cooperative_id : Integer &lt;&lt;FK&gt;&gt;&#xa;- account_type : String &lt;&lt;FK&gt;&gt;&#xa;- current_balance : Decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="account">
+          <mxGeometry y="26" width="240" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="account-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="account">
+          <mxGeometry y="102" width="240" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="account-methods" value="+ deposit(amount) : Transaction&#xa;+ withdraw(amount) : Transaction" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="account">
+          <mxGeometry y="110" width="240" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Clase: AccountType -->
+        <mxCell id="accounttype" value="&lt;b&gt;AccountType&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="420" y="590" width="240" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="accounttype-attr" value="- account_type_code : String &lt;&lt;PK&gt;&gt;&#xa;- display_name : String&#xa;- description : Text&#xa;- is_visible_to_member : Boolean&#xa;__&#xa;{static} SAVINGS : &quot;savings&quot;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="accounttype">
+          <mxGeometry y="26" width="240" height="94" as="geometry" />
+        </mxCell>
+
+        <!-- Clase: Transaction -->
+        <mxCell id="transaction" value="&lt;b&gt;Transaction&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="700" y="520" width="260" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="transaction-attr" value="- transaction_id : Integer &lt;&lt;PK&gt;&gt;&#xa;- account_id : Integer &lt;&lt;FK&gt;&gt;&#xa;- transaction_type : Enum&#xa;- amount : Decimal&#xa;- transaction_date : Date&#xa;- receipt_number : String&#xa;- description : Text&#xa;- status : Enum&#xa;- created_by : Integer &lt;&lt;FK&gt;&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="transaction">
+          <mxGeometry y="26" width="260" height="116" as="geometry" />
+        </mxCell>
+        <mxCell id="transaction-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="transaction">
+          <mxGeometry y="142" width="260" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="transaction-methods" value="+ approve() : void&#xa;+ cancel() : void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="transaction">
+          <mxGeometry y="150" width="260" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Enum: TransactionType -->
+        <mxCell id="transtype" value="&lt;b&gt;&lt;&lt;enumeration&gt;&gt;&#xa;TransactionType&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFCC;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="700" y="710" width="120" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="transtype-vals" value="DEPOSIT&#xa;WITHDRAWAL&#xa;ADJUSTMENT" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="transtype">
+          <mxGeometry y="40" width="120" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Enum: TransactionStatus -->
+        <mxCell id="transstatus" value="&lt;b&gt;&lt;&lt;enumeration&gt;&gt;&#xa;TransactionStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFCC;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="840" y="710" width="120" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="transstatus-vals" value="PENDING&#xa;COMPLETED&#xa;CANCELLED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="transstatus">
+          <mxGeometry y="40" width="120" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- MÓDULO DE RETIROS (SIMPLIFICADO) -->
+        <!-- ============================================ -->
+
+        <!-- Package: Módulo de Retiros -->
+        <mxCell id="pkg-withdraw" value="Módulo de Retiros" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=40;tabHeight=14;tabPosition=left;html=1;fillColor=#E0F2F1;verticalAlign=top;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="980" y="520" width="290" height="290" as="geometry" />
+        </mxCell>
+
+        <!-- Clase: WithdrawalRequest -->
+        <mxCell id="withdrawal" value="&lt;b&gt;WithdrawalRequest&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFFF;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="560" width="250" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="withdrawal-attr" value="- request_id : Integer &lt;&lt;PK&gt;&gt;&#xa;- member_id : Integer &lt;&lt;FK&gt;&gt;&#xa;- account_id : Integer &lt;&lt;FK&gt;&gt;&#xa;- requested_amount : Decimal&#xa;- request_type : Enum&#xa;- status : Enum&#xa;- requested_at : Timestamp&#xa;- reviewed_by : Integer &lt;&lt;FK&gt;&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="withdrawal">
+          <mxGeometry y="26" width="250" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="withdrawal-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="withdrawal">
+          <mxGeometry y="122" width="250" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="withdrawal-methods" value="+ approve() : Transaction&#xa;+ reject(reason) : void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="withdrawal">
+          <mxGeometry y="130" width="250" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Enum: WithdrawalStatus -->
+        <mxCell id="withdrawstatus" value="&lt;b&gt;&lt;&lt;enumeration&gt;&gt;&#xa;WithdrawalStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#FFFFCC;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="720" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="withdrawstatus-vals" value="PENDING&#xa;APPROVED&#xa;REJECTED&#xa;COMPLETED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="withdrawstatus">
+          <mxGeometry y="40" width="140" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- RELACIONES -->
+        <!-- ============================================ -->
+
+        <!-- School - Cooperative -->
+        <mxCell id="rel1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;startArrow=diamondThin;startFill=1;strokeColor=#000000;" edge="1" parent="1" source="school" target="cooperative">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel1-label" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel1">
+          <mxGeometry x="-0.8" y="-10" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel1-label2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel1">
+          <mxGeometry x="0.8" y="-10" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Cooperative - User -->
+        <mxCell id="rel2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;strokeColor=#000000;" edge="1" parent="1" source="cooperative" target="user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel2-label" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel2">
+          <mxGeometry x="-0.8" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel2-label2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel2">
+          <mxGeometry x="0.8" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- User - UserRole -->
+        <mxCell id="rel3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#000000;" edge="1" parent="1" source="user" target="userrole">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Cooperative - Member -->
+        <mxCell id="rel4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;strokeColor=#000000;" edge="1" parent="1" source="cooperative" target="member">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="251" />
+              <mxPoint x="350" y="235" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel4-label" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel4">
+          <mxGeometry x="-0.8" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel4-label2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel4">
+          <mxGeometry x="0.8" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Member - MemberQuality -->
+        <mxCell id="rel5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;strokeColor=#000000;" edge="1" parent="1" source="member" target="quality">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel5-label" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel5">
+          <mxGeometry x="-0.8" relative="1" as="geometry">
+            <mxPoint x="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel5-label2" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel5">
+          <mxGeometry x="0.8" relative="1" as="geometry">
+            <mxPoint x="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- MemberQuality - MemberLevel -->
+        <mxCell id="rel6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;strokeColor=#000000;" edge="1" parent="1" source="quality" target="level">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel6-label" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel6">
+          <mxGeometry x="-0.8" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel6-label2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel6">
+          <mxGeometry x="0.8" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Cooperative - Assembly -->
+        <mxCell id="rel7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;strokeColor=#000000;" edge="1" parent="1" source="cooperative" target="assembly">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="190" y="310" />
+              <mxPoint x="200" y="310" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel7-label" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel7">
+          <mxGeometry x="-0.7" relative="1" as="geometry">
+            <mxPoint x="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel7-label2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel7">
+          <mxGeometry x="0.7" relative="1" as="geometry">
+            <mxPoint x="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Assembly - AttendanceRecord -->
+        <mxCell id="rel8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;strokeColor=#000000;" edge="1" parent="1" source="assembly" target="attendance">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel8-label" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel8">
+          <mxGeometry x="-0.8" relative="1" as="geometry">
+            <mxPoint x="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel8-label2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel8">
+          <mxGeometry x="0.8" relative="1" as="geometry">
+            <mxPoint x="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- AttendanceRecord - RegistrationMethod -->
+        <mxCell id="rel9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#000000;" edge="1" parent="1" source="attendance" target="regmethod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Member - Account -->
+        <mxCell id="rel10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;strokeColor=#000000;" edge="1" parent="1" source="member" target="account">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="350" />
+              <mxPoint x="680" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel10-label" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel10">
+          <mxGeometry x="-0.8" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel10-label2" value="1..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel10">
+          <mxGeometry x="0.8" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Account - AccountType -->
+        <mxCell id="rel11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;strokeColor=#000000;" edge="1" parent="1" source="account" target="accounttype">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel11-label" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel11">
+          <mxGeometry x="-0.8" relative="1" as="geometry">
+            <mxPoint x="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel11-label2" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel11">
+          <mxGeometry x="0.8" relative="1" as="geometry">
+            <mxPoint x="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Account - Transaction -->
+        <mxCell id="rel12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;strokeColor=#000000;" edge="1" parent="1" source="account" target="transaction">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel12-label" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel12">
+          <mxGeometry x="-0.8" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel12-label2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel12">
+          <mxGeometry x="0.8" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Transaction - TransactionType -->
+        <mxCell id="rel13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#000000;" edge="1" parent="1" source="transaction" target="transtype">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Transaction - TransactionStatus -->
+        <mxCell id="rel14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#000000;" edge="1" parent="1" source="transaction" target="transstatus">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Member - WithdrawalRequest -->
+        <mxCell id="rel15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;strokeColor=#000000;" edge="1" parent="1" source="member" target="withdrawal">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1070" y="350" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel15-label" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel15">
+          <mxGeometry x="-0.8" relative="1" as="geometry">
+            <mxPoint x="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel15-label2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel15">
+          <mxGeometry x="0.8" relative="1" as="geometry">
+            <mxPoint x="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- WithdrawalRequest - WithdrawalStatus -->
+        <mxCell id="rel16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#000000;" edge="1" parent="1" source="withdrawal" target="withdrawstatus">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Member - User (opcional) -->
+        <mxCell id="rel17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;dashed=1;strokeColor=#000000;" edge="1" parent="1" source="user" target="member">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="195" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel17-label" value="0..1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel17">
+          <mxGeometry x="-0.8" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel17-label2" value="0..1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="rel17">
+          <mxGeometry x="0.8" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Notas -->
+        <mxCell id="note1" value="&lt;b&gt;Miembro de la Cooperativa&lt;/b&gt;&#xa;- Puede ser estudiante o funcionario&#xa;- Cada miembro tiene cuentas automáticas&#xa;- QR único para asistencia" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#FFFFC0;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="120" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="note2" value="&lt;b&gt;Restricción importante:&lt;/b&gt;&#xa;Solo una asamblea puede&#xa;estar activa a la vez" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#FFFFC0;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="60" y="650" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="note3" value="&lt;b&gt;Cuenta Individual&lt;/b&gt;&#xa;- Tipo principal: Ahorros (savings)&#xa;- Balance actualizado automáticamente" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#FFFFC0;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="220" width="200" height="60" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

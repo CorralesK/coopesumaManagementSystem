@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-01-01T00:00:00.000Z" agent="draw.io" version="21.0.0" type="device">
+  <diagram id="Frontend-Classes" name="Diagrama de Clases - Frontend">
+    <mxGraphModel dx="1800" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Titulo -->
+        <mxCell id="title" value="Diagrama de Clases UML - Frontend (React + Vite)&#10;CoopLink CR" style="text;html=0;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="450" y="20" width="500" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- CONTEXT (Estado Global) -->
+        <!-- ============================================ -->
+
+        <mxCell id="auth-context" value="AuthContext&#10;---------------------------&#10;- user : User | null&#10;- isAuthenticated : boolean&#10;- isLoading : boolean&#10;- cooperativeId : number&#10;---------------------------&#10;+ login() : void&#10;+ logout() : void&#10;+ checkAuth() : Promise" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=160;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="200" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="notification-context" value="NotificationContext&#10;---------------------------&#10;- notifications : Notification[]&#10;- unreadCount : number&#10;---------------------------&#10;+ fetchNotifications() : void&#10;+ markAsRead(id) : void&#10;+ clearAll() : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=140;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="260" y="100" width="200" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- SERVICES (API Calls) -->
+        <!-- ============================================ -->
+
+        <mxCell id="api-service" value="api (axios instance)&#10;---------------------------&#10;- baseURL : string&#10;- interceptors : Object&#10;---------------------------&#10;+ get(url, config) : Promise&#10;+ post(url, data) : Promise&#10;+ put(url, data) : Promise&#10;+ delete(url) : Promise" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=160;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="480" y="100" width="200" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="member-service" value="memberService&#10;---------------------------&#10;---------------------------&#10;+ getAll() : Promise&#10;+ getById(id) : Promise&#10;+ create(data) : Promise&#10;+ update(id, data) : Promise&#10;+ delete(id) : Promise&#10;+ getCards() : Promise" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=160;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="700" y="100" width="180" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="assembly-service" value="assemblyService&#10;---------------------------&#10;---------------------------&#10;+ getAll() : Promise&#10;+ create(data) : Promise&#10;+ activate(id) : Promise&#10;+ conclude(id) : Promise" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=130;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="900" y="100" width="180" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- HOOKS -->
+        <!-- ============================================ -->
+
+        <mxCell id="use-auth" value="useAuth&#10;---------------------------&#10;---------------------------&#10;+ returns: AuthContextValue" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=70;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="100" width="160" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="use-members" value="useMembers&#10;---------------------------&#10;---------------------------&#10;+ returns: { members, loading, error }" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=70;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="100" width="220" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="use-notifications" value="useNotifications&#10;---------------------------&#10;---------------------------&#10;+ returns: NotificationContextValue" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=70;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="190" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- PAGES -->
+        <!-- ============================================ -->
+
+        <mxCell id="login-page" value="LoginPage&#10;---------------------------&#10;---------------------------&#10;+ handleLogin() : void&#10;+ redirectToMicrosoft() : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=90;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="40" y="300" width="180" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="dashboard-page" value="DashboardPage&#10;---------------------------&#10;- stats : DashboardStats&#10;- recentActivity : Activity[]&#10;---------------------------&#10;+ fetchStats() : void&#10;+ renderWidgets() : JSX" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=120;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="240" y="300" width="180" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="members-page" value="MembersPage&#10;---------------------------&#10;- members : Member[]&#10;- filters : FilterState&#10;- selectedMember : Member&#10;---------------------------&#10;+ handleCreate() : void&#10;+ handleEdit(id) : void&#10;+ handleDelete(id) : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=150;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="440" y="300" width="200" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="assemblies-page" value="AssembliesPage&#10;---------------------------&#10;- assemblies : Assembly[]&#10;- activeAssembly : Assembly&#10;---------------------------&#10;+ handleActivate(id) : void&#10;+ handleConclude(id) : void&#10;+ handleCreate() : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=140;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="660" y="300" width="200" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="attendance-page" value="AttendancePage&#10;---------------------------&#10;- records : AttendanceRecord[]&#10;- scanner : QRScanner&#10;---------------------------&#10;+ handleScan(qrHash) : void&#10;+ handleManualRegister() : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=130;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="880" y="300" width="200" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="savings-page" value="SavingsPage&#10;---------------------------&#10;- transactions : Transaction[]&#10;- selectedMember : Member&#10;- balance : number&#10;---------------------------&#10;+ handleDeposit() : void&#10;+ handleWithdraw() : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=140;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="300" width="200" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- COMPONENTS -->
+        <!-- ============================================ -->
+
+        <mxCell id="navbar" value="Navbar&#10;---------------------------&#10;- user : User&#10;- notifications : Notification[]&#10;---------------------------&#10;+ onLogout() : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=110;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="480" width="160" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sidebar" value="Sidebar&#10;---------------------------&#10;- menuItems : MenuItem[]&#10;- isCollapsed : boolean&#10;---------------------------&#10;+ toggleCollapse() : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=110;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="220" y="480" width="160" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="modal" value="Modal&#10;---------------------------&#10;- isOpen : boolean&#10;- title : string&#10;- children : ReactNode&#10;---------------------------&#10;+ onClose() : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=120;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="400" y="480" width="160" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="data-table" value="DataTable&#10;---------------------------&#10;- columns : Column[]&#10;- data : any[]&#10;- pagination : PaginationState&#10;---------------------------&#10;+ onSort(column) : void&#10;+ onFilter(filters) : void&#10;+ onPageChange(page) : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=150;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="580" y="480" width="200" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="member-form" value="MemberForm&#10;---------------------------&#10;- member : Member&#10;- errors : FormErrors&#10;---------------------------&#10;+ onSubmit(data) : void&#10;+ onCancel() : void&#10;+ validate() : boolean" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=140;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="800" y="480" width="180" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="member-card" value="MemberCard&#10;---------------------------&#10;- member : Member&#10;- showQR : boolean&#10;---------------------------&#10;+ onPrint() : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=110;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="480" width="160" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="qr-scanner" value="QRScanner&#10;---------------------------&#10;- isActive : boolean&#10;---------------------------&#10;+ onScan(result) : void&#10;+ onError(error) : void&#10;+ start() : void&#10;+ stop() : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=140;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="480" width="160" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="transaction-form" value="TransactionForm&#10;---------------------------&#10;- type : 'deposit' | 'withdraw'&#10;- amount : number&#10;- memberId : number&#10;---------------------------&#10;+ onSubmit() : void&#10;+ validate() : boolean" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=140;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="480" width="180" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- TYPES / INTERFACES -->
+        <!-- ============================================ -->
+
+        <mxCell id="user-interface" value="&lt;&lt;interface&gt;&gt;&#10;User&#10;---------------------------&#10;+ userId : number&#10;+ fullName : string&#10;+ email : string&#10;+ role : UserRole&#10;+ cooperativeId : number&#10;+ isActive : boolean" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=150;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="40" y="660" width="180" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="member-interface" value="&lt;&lt;interface&gt;&gt;&#10;Member&#10;---------------------------&#10;+ memberId : number&#10;+ fullName : string&#10;+ identification : string&#10;+ memberCode : string&#10;+ qualityId : number&#10;+ levelId : number&#10;+ isActive : boolean" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=160;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="240" y="660" width="180" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="assembly-interface" value="&lt;&lt;interface&gt;&gt;&#10;Assembly&#10;---------------------------&#10;+ assemblyId : number&#10;+ title : string&#10;+ scheduledDate : Date&#10;+ startTime : string&#10;+ endTime : string&#10;+ isActive : boolean" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=150;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="440" y="660" width="180" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="transaction-interface" value="&lt;&lt;interface&gt;&gt;&#10;Transaction&#10;---------------------------&#10;+ transactionId : number&#10;+ accountId : number&#10;+ type : TransactionType&#10;+ amount : number&#10;+ date : Date&#10;+ status : string" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=150;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="640" y="660" width="180" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- ENUMS -->
+        <!-- ============================================ -->
+
+        <mxCell id="user-role-enum" value="&lt;&lt;enumeration&gt;&gt;&#10;UserRole&#10;---------------------------&#10;ADMINISTRATOR&#10;REGISTRAR&#10;MANAGER&#10;MEMBER" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=100;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="840" y="660" width="140" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="transaction-type-enum" value="&lt;&lt;enumeration&gt;&gt;&#10;TransactionType&#10;---------------------------&#10;DEPOSIT&#10;WITHDRAWAL&#10;ADJUSTMENT&#10;TRANSFER" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=100;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="660" width="140" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- RELACIONES -->
+        <!-- ============================================ -->
+
+        <!-- Context provee a Hooks -->
+        <mxCell id="rel-context-hook" style="endArrow=open;endFill=0;endSize=12;html=1;dashed=1;exitX=1;exitY=0.25;entryX=0;entryY=0.5;" edge="1" parent="1" source="auth-context" target="use-auth">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel-context-hook-label" value="provee" style="text;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="600" y="115" width="40" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Service usa api -->
+        <mxCell id="rel-service-api" style="endArrow=open;endFill=0;endSize=12;html=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="member-service" target="api-service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Page usa Hook -->
+        <mxCell id="rel-page-hook" style="endArrow=open;endFill=0;endSize=12;html=1;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="members-page" target="use-members">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="280" />
+              <mxPoint x="1390" y="280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Page contiene Component -->
+        <mxCell id="rel-page-comp1" style="endArrow=diamond;endFill=1;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="members-page" target="member-form">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel-page-comp1-label" value="contiene" style="text;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="620" y="455" width="50" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Page contiene DataTable -->
+        <mxCell id="rel-page-comp2" style="endArrow=diamond;endFill=1;endSize=12;html=1;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="members-page" target="data-table">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- AttendancePage contiene QRScanner -->
+        <mxCell id="rel-attend-qr" style="endArrow=diamond;endFill=1;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="attendance-page" target="qr-scanner">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- SavingsPage contiene TransactionForm -->
+        <mxCell id="rel-savings-form" style="endArrow=diamond;endFill=1;endSize=12;html=1;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="savings-page" target="transaction-form">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Member Interface usado por MemberForm -->
+        <mxCell id="rel-interface-form" style="endArrow=open;endFill=0;endSize=12;html=1;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="member-interface" target="member-form">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="330" y="640" />
+              <mxPoint x="890" y="640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Notas -->
+        <mxCell id="note1" value="Arquitectura React&#10;&#10;- Context API para estado global&#10;- Custom Hooks para logica&#10;- Services para llamadas API&#10;- Components reutilizables&#10;&#10;&#9671; = composicion (contiene)&#10;---> = usa/depende" style="shape=note;whiteSpace=wrap;html=0;backgroundOutline=1;darkOpacity=0.05;fillColor=#ffffcc;strokeColor=#999900;align=left;spacingLeft=5;size=20;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="660" width="200" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="note2" value="Tecnologias:&#10;- React 18 + Vite&#10;- TailwindCSS&#10;- React Router v6&#10;- Axios&#10;- html5-qrcode" style="shape=note;whiteSpace=wrap;html=0;backgroundOutline=1;darkOpacity=0.05;fillColor=#ffffcc;strokeColor=#999900;align=left;spacingLeft=5;size=20;" vertex="1" parent="1">
+          <mxGeometry x="1380" y="660" width="140" height="110" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

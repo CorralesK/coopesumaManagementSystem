@@ -1,0 +1,560 @@
+@startuml Sistema_CoopLink_CR
+!theme plain
+skinparam linetype ortho
+skinparam groupInheritance 2
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+    FontSize 11
+}
+
+title Diagrama de Clases UML - CoopLink CR\nSistema de Gestión para Cooperativas Estudiantiles
+
+' ============================================================================
+' MÓDULO DE ORGANIZACIÓN
+' ============================================================================
+
+package "Módulo de Organización" #DDDDDD {
+    class School {
+        - school_id : Integer <<PK>>
+        - name : String
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        + getCooperatives() : List<Cooperative>
+    }
+
+    class Cooperative {
+        - cooperative_id : Integer <<PK>>
+        - school_id : Integer <<FK>>
+        - trade_name : String
+        - legal_name : String
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        + getMembers() : List<Member>
+        + getUsers() : List<User>
+        + getAccounts() : List<Account>
+    }
+}
+
+' ============================================================================
+' MÓDULO DE USUARIOS Y AUTENTICACIÓN
+' ============================================================================
+
+package "Módulo de Usuarios y Autenticación" #E8F4F8 {
+    class User {
+        - user_id : Integer <<PK>>
+        - cooperative_id : Integer <<FK>>
+        - full_name : String
+        - email : String <<unique>>
+        - microsoft_id : String <<unique>>
+        - role : Enum
+        - is_active : Boolean
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        + authenticate() : Boolean
+        + hasPermission(permission: String) : Boolean
+        + createAssembly() : Assembly
+        + processLiquidation() : Liquidation
+    }
+
+    enum UserRole {
+        ADMINISTRATOR
+        REGISTRAR
+        MANAGER
+        MEMBER
+    }
+}
+
+' ============================================================================
+' MÓDULO DE MIEMBROS Y CATÁLOGOS
+' ============================================================================
+
+package "Módulo de Miembros" #FFF4E6 {
+    class Member {
+        - member_id : Integer <<PK>>
+        - cooperative_id : Integer <<FK>>
+        - user_id : Integer <<FK, nullable>>
+        - full_name : String
+        - identification : String <<unique>>
+        - gender : Char
+        - member_code : String <<unique>>
+        - quality_id : Integer <<FK>>
+        - level_id : Integer <<FK, nullable>>
+        - institutional_email : String <<unique>>
+        - photo_url : String
+        - qr_hash : String <<unique>>
+        - affiliation_date : Date
+        - last_liquidation_date : Date
+        - is_active : Boolean
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        + getAccounts() : List<Account>
+        + getTotalSavings() : Decimal
+        + getTotalContributions() : Decimal
+        + requestWithdrawal() : WithdrawalRequest
+        + needsLiquidation() : Boolean
+    }
+
+    class MemberQuality {
+        - quality_id : Integer <<PK>>
+        - quality_code : String <<unique>>
+        - quality_name : String
+        - description : Text
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        {static} STUDENT : String = "student"
+        {static} STAFF : String = "staff"
+    }
+
+    class MemberLevel {
+        - level_id : Integer <<PK>>
+        - level_code : String <<unique>>
+        - level_name : String
+        - applies_to_quality_code : String <<FK>>
+        - display_order : Integer
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        {static} GRADE_1 : String = "grade_1"
+        {static} GRADE_2 : String = "grade_2"
+        {static} GRADE_3 : String = "grade_3"
+        {static} GRADE_4 : String = "grade_4"
+        {static} GRADE_5 : String = "grade_5"
+        {static} GRADE_6 : String = "grade_6"
+        {static} TRANSICION : String = "transicion"
+        {static} MATERNO : String = "materno"
+        {static} NOT_APPLICABLE : String = "not_applicable"
+    }
+}
+
+' ============================================================================
+' MÓDULO DE ASAMBLEAS Y ASISTENCIA
+' ============================================================================
+
+package "Módulo de Asambleas y Asistencia" #E8F5E9 {
+    class Assembly {
+        - assembly_id : Integer <<PK>>
+        - cooperative_id : Integer <<FK>>
+        - title : String
+        - scheduled_date : Date
+        - start_time : Time
+        - end_time : Time
+        - is_active : Boolean
+        - concluded_at : Timestamp
+        - created_by : Integer <<FK>>
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        + activate() : void
+        + conclude() : void
+        + getAttendanceRecords() : List<AttendanceRecord>
+        + getAttendancePercentage() : Decimal
+    }
+
+    class AttendanceRecord {
+        - attendance_id : Integer <<PK>>
+        - member_id : Integer <<FK>>
+        - assembly_id : Integer <<FK>>
+        - registered_at : Timestamp
+        - registered_by : Integer <<FK>>
+        - registration_method : Enum
+        - notes : Text
+        __
+        + scanQR() : void
+        + registerManually() : void
+    }
+
+    enum RegistrationMethod {
+        QR_SCAN
+        MANUAL
+    }
+}
+
+' ============================================================================
+' MÓDULO FINANCIERO - CUENTAS Y TRANSACCIONES
+' ============================================================================
+
+package "Módulo Financiero" #FFF3E0 {
+    class Account {
+        - account_id : Integer <<PK>>
+        - member_id : Integer <<FK>>
+        - cooperative_id : Integer <<FK>>
+        - account_type : String <<FK>>
+        - current_balance : Decimal
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        + deposit(amount: Decimal) : Transaction
+        + withdraw(amount: Decimal) : Transaction
+        + calculateBalance() : Decimal
+        + hasSufficientBalance(amount: Decimal) : Boolean
+    }
+
+    class AccountType {
+        - account_type_code : String <<PK>>
+        - display_name : String
+        - description : Text
+        - is_visible_to_member : Boolean
+        - display_order : Integer
+        - created_at : Timestamp
+        __
+        {static} SAVINGS : String = "savings"
+        {static} CONTRIBUTIONS : String = "contributions"
+        {static} SURPLUS : String = "surplus"
+        {static} AFFILIATION : String = "affiliation"
+    }
+
+    class Transaction {
+        - transaction_id : Integer <<PK>>
+        - account_id : Integer <<FK>>
+        - transaction_type : Enum
+        - amount : Decimal
+        - transaction_date : Date
+        - fiscal_year : Integer
+        - receipt_number : String
+        - description : Text
+        - related_transaction_id : Integer <<FK, nullable>>
+        - status : Enum
+        - created_by : Integer <<FK>>
+        - approved_by : Integer <<FK, nullable>>
+        - approved_at : Timestamp
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        + approve() : void
+        + cancel() : void
+        + generateReceipt() : Receipt
+    }
+
+    enum TransactionType {
+        DEPOSIT
+        WITHDRAWAL
+        ADJUSTMENT
+        TRANSFER_IN
+        TRANSFER_OUT
+        SURPLUS_DISTRIBUTION
+        LIQUIDATION
+    }
+
+    enum TransactionStatus {
+        PENDING
+        COMPLETED
+        CANCELLED
+    }
+}
+
+' ============================================================================
+' MÓDULO DE APORTACIONES
+' ============================================================================
+
+package "Módulo de Aportaciones" #F3E5F5 {
+    class ContributionPeriod {
+        - period_id : Integer <<PK>>
+        - cooperative_id : Integer <<FK>>
+        - fiscal_year : Integer
+        - tract_number : Integer
+        - start_date : Date
+        - end_date : Date
+        - required_amount : Decimal
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        + isActive() : Boolean
+        + getTotalContributions() : Decimal
+        {static} TRACTS_PER_YEAR : Integer = 3
+        {static} AMOUNT_PER_TRACT : Decimal = 300.00
+        {static} TOTAL_ANNUAL : Decimal = 900.00
+    }
+}
+
+' ============================================================================
+' MÓDULO DE EXCEDENTES
+' ============================================================================
+
+package "Módulo de Excedentes" #FCE4EC {
+    class SurplusDistribution {
+        - distribution_id : Integer <<PK>>
+        - cooperative_id : Integer <<FK>>
+        - fiscal_year : Integer
+        - total_distributable_amount : Decimal
+        - total_contributions : Decimal
+        - distribution_date : Date
+        - status : Enum
+        - notes : Text
+        - created_by : Integer <<FK>>
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        + calculateMemberShare(memberId: Integer) : Decimal
+        + distribute() : List<Transaction>
+        + complete() : void
+        + cancel() : void
+    }
+
+    enum DistributionStatus {
+        PENDING
+        COMPLETED
+        CANCELLED
+    }
+}
+
+' ============================================================================
+' MÓDULO DE SOLICITUDES DE RETIRO
+' ============================================================================
+
+package "Módulo de Retiros" #E0F2F1 {
+    class WithdrawalRequest {
+        - request_id : Integer <<PK>>
+        - member_id : Integer <<FK>>
+        - account_id : Integer <<FK>>
+        - requested_amount : Decimal
+        - request_type : Enum
+        - status : Enum
+        - request_notes : Text
+        - admin_notes : Text
+        - requested_at : Timestamp
+        - reviewed_by : Integer <<FK, nullable>>
+        - reviewed_at : Timestamp
+        - completed_transaction_id : Integer <<FK, nullable>>
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        + approve() : Transaction
+        + reject(reason: String) : void
+        + complete() : void
+        + cancel() : void
+    }
+
+    enum WithdrawalRequestType {
+        WITHDRAWAL
+        SURPLUS_TO_SAVINGS
+    }
+
+    enum WithdrawalStatus {
+        PENDING
+        APPROVED
+        REJECTED
+        COMPLETED
+        CANCELLED
+    }
+}
+
+' ============================================================================
+' MÓDULO DE LIQUIDACIONES
+' ============================================================================
+
+package "Módulo de Liquidaciones" #FFF9C4 {
+    class Liquidation {
+        - liquidation_id : Integer <<PK>>
+        - member_id : Integer <<FK>>
+        - cooperative_id : Integer <<FK>>
+        - liquidation_type : Enum
+        - liquidation_date : Date
+        - total_savings : Decimal
+        - total_contributions : Decimal
+        - total_surplus : Decimal
+        - total_amount : Decimal
+        - member_continues : Boolean
+        - notes : Text
+        - processed_by : Integer <<FK>>
+        - created_at : Timestamp
+        - updated_at : Timestamp
+        __
+        + calculateTotal() : Decimal
+        + process() : List<Transaction>
+        + generateReceipt() : Receipt
+        {static} LIQUIDATION_PERIOD_YEARS : Integer = 6
+    }
+
+    enum LiquidationType {
+        PERIODIC
+        EXIT
+    }
+}
+
+' ============================================================================
+' MÓDULO DE RECIBOS Y NOTIFICACIONES
+' ============================================================================
+
+package "Módulo de Recibos y Notificaciones" #ECEFF1 {
+    class Receipt {
+        - receipt_id : Integer <<PK>>
+        - cooperative_id : Integer <<FK>>
+        - transaction_id : Integer <<FK, nullable>>
+        - liquidation_id : Integer <<FK, nullable>>
+        - receipt_number : String <<unique>>
+        - receipt_type : Enum
+        - member_id : Integer <<FK>>
+        - amount : Decimal
+        - pdf_url : String
+        - created_at : Timestamp
+        __
+        + generatePDF() : String
+        + download() : File
+        + send() : void
+    }
+
+    enum ReceiptType {
+        DEPOSIT
+        WITHDRAWAL
+        CONTRIBUTION
+        SURPLUS_DISTRIBUTION
+        LIQUIDATION
+        TRANSFER
+    }
+
+    class Notification {
+        - notification_id : Integer <<PK>>
+        - user_id : Integer <<FK>>
+        - notification_type : Enum
+        - title : String
+        - message : Text
+        - related_entity_type : String
+        - related_entity_id : Integer
+        - is_read : Boolean
+        - read_at : Timestamp
+        - created_at : Timestamp
+        __
+        + markAsRead() : void
+        + getRelatedEntity() : Object
+    }
+
+    enum NotificationType {
+        WITHDRAWAL_REQUEST
+        TRANSFER_REQUEST
+        LIQUIDATION_DUE
+        CONTRIBUTION_OVERDUE
+        SYSTEM_ALERT
+    }
+}
+
+' ============================================================================
+' RELACIONES ENTRE CLASES
+' ============================================================================
+
+' Organización
+School "1" -- "0..*" Cooperative : tiene >
+
+' Cooperativa y Usuarios
+Cooperative "1" -- "0..*" User : pertenece a >
+Cooperative "1" -- "0..*" Member : tiene >
+Cooperative "1" -- "0..*" Account : gestiona >
+Cooperative "1" -- "0..*" Assembly : organiza >
+Cooperative "1" -- "0..*" ContributionPeriod : define >
+Cooperative "1" -- "0..*" SurplusDistribution : realiza >
+Cooperative "1" -- "0..*" Liquidation : procesa >
+Cooperative "1" -- "0..*" Receipt : emite >
+
+' Usuario y roles
+User "1" -- "1" UserRole : tiene >
+User "1" ..> "0..*" Assembly : crea >
+User "1" ..> "0..*" AttendanceRecord : registra >
+User "1" ..> "0..*" Transaction : crea/aprueba >
+User "1" ..> "0..*" SurplusDistribution : crea >
+User "1" ..> "0..*" WithdrawalRequest : revisa >
+User "1" ..> "0..*" Liquidation : procesa >
+User "1" -- "0..*" Notification : recibe >
+
+' Miembros y Catálogos
+Member "0..1" -- "0..1" User : vinculado a >
+Member "1" -- "1" MemberQuality : tiene >
+Member "0..1" -- "0..1" MemberLevel : asignado a >
+MemberQuality "1" -- "0..*" MemberLevel : aplica a >
+
+' Miembros y Cuentas
+Member "1" -- "4" Account : posee >
+
+' Cuentas y Tipos
+Account "1" -- "1" AccountType : es de tipo >
+Account "1" -- "0..*" Transaction : registra >
+
+' Transacciones
+Transaction "1" -- "1" TransactionType : es de tipo >
+Transaction "1" -- "1" TransactionStatus : tiene estado >
+Transaction "0..1" -- "0..1" Transaction : relacionada con >
+
+' Asambleas y Asistencia
+Assembly "1" -- "0..*" AttendanceRecord : tiene >
+Assembly "1" -- "1" Member : creada por >
+AttendanceRecord "1" -- "1" Member : registra >
+AttendanceRecord "1" -- "1" RegistrationMethod : usa >
+
+' Solicitudes de Retiro
+Member "1" -- "0..*" WithdrawalRequest : solicita >
+Account "1" -- "0..*" WithdrawalRequest : desde >
+WithdrawalRequest "1" -- "1" WithdrawalRequestType : es de tipo >
+WithdrawalRequest "1" -- "1" WithdrawalStatus : tiene estado >
+WithdrawalRequest "0..1" -- "0..1" Transaction : genera >
+
+' Liquidaciones
+Member "1" -- "0..*" Liquidation : tiene >
+Liquidation "1" -- "1" LiquidationType : es de tipo >
+
+' Recibos
+Receipt "1" -- "1" ReceiptType : es de tipo >
+Receipt "0..1" -- "0..1" Transaction : documenta >
+Receipt "0..1" -- "0..1" Liquidation : documenta >
+Receipt "1" -- "1" Member : pertenece a >
+
+' Notificaciones
+Notification "1" -- "1" NotificationType : es de tipo >
+
+' Períodos de Contribución
+ContributionPeriod "1" ..> "0..*" Transaction : genera >
+
+' Distribución de Excedentes
+SurplusDistribution "1" -- "1" DistributionStatus : tiene estado >
+SurplusDistribution "1" ..> "0..*" Transaction : genera >
+
+' Notas importantes
+note top of Member
+  **Miembro de la Cooperativa**
+  - Puede ser estudiante o funcionario
+  - Cada miembro tiene 4 cuentas automáticas
+  - Liquidación cada 6 años
+  - QR único para asistencia
+end note
+
+note top of Account
+  **Cuenta Individual**
+  - 4 tipos por miembro:
+    1. Ahorros (savings)
+    2. Aportaciones (contributions)
+    3. Excedentes (surplus)
+    4. Afiliación (affiliation)
+end note
+
+note top of ContributionPeriod
+  **Aportaciones**
+  - ₡900 por año
+  - 3 tractos de ₡300 c/u
+  - Año fiscal: Oct 1 - Sep 30
+end note
+
+note top of Assembly
+  **Restricción importante:**
+  Solo una asamblea puede
+  estar activa a la vez
+end note
+
+note top of Transaction
+  **Transacción Financiera**
+  - Actualiza saldo automáticamente
+  - Genera recibo opcional
+  - Puede estar vinculada (transferencias)
+end note
+
+note top of Liquidation
+  **Liquidación**
+  - Periódica: cada 6 años
+  - Salida: al dejar cooperativa
+  - Total = Ahorros + Aportaciones + Excedentes
+end note
+
+@enduml

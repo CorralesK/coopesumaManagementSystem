@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-01-01T00:00:00.000Z" agent="draw.io" version="21.0.0" type="device">
+  <diagram id="Backend-Classes" name="Diagrama de Clases - Backend">
+    <mxGraphModel dx="1800" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Titulo -->
+        <mxCell id="title" value="Diagrama de Clases UML - Backend (Node.js/Express)&#10;CoopLink CR" style="text;html=0;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="500" y="20" width="500" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- CAPA DE CONFIGURACION -->
+        <!-- ============================================ -->
+
+        <mxCell id="database" value="Database&#10;---------------------------&#10;- pool : Pool&#10;- client : Client&#10;---------------------------&#10;+ getClient() : Client&#10;+ query(sql) : Result" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=120;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="180" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="environment" value="Environment&#10;---------------------------&#10;- config : Object&#10;---------------------------&#10;+ validate() : void&#10;+ get(key) : any" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=100;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="240" y="100" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- MIDDLEWARES -->
+        <!-- ============================================ -->
+
+        <mxCell id="auth-middleware" value="AuthMiddleware&#10;---------------------------&#10;---------------------------&#10;+ verifyToken(req, res, next)&#10;+ extractUser(req) : User" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=100;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="440" y="100" width="200" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="role-middleware" value="RoleMiddleware&#10;---------------------------&#10;---------------------------&#10;+ requireRole(...roles)&#10;+ checkPermission(perm)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=100;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="660" y="100" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="error-handler" value="ErrorHandler&#10;---------------------------&#10;---------------------------&#10;+ handleError(err, req, res)&#10;+ notFound(req, res)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=100;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="860" y="100" width="200" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- UTILS -->
+        <!-- ============================================ -->
+
+        <mxCell id="logger" value="Logger&#10;---------------------------&#10;---------------------------&#10;+ info(msg)&#10;+ error(msg)&#10;+ warn(msg)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=100;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="100" width="140" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="jwt-utils" value="JwtUtils&#10;---------------------------&#10;---------------------------&#10;+ sign(payload) : string&#10;+ verify(token) : Object" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=100;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="100" width="160" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- AUTH MODULE -->
+        <!-- ============================================ -->
+
+        <mxCell id="auth-controller" value="AuthController&#10;---------------------------&#10;- authService : AuthService&#10;---------------------------&#10;+ login(req, res)&#10;+ callback(req, res)&#10;+ logout(req, res)&#10;+ me(req, res)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=130;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="40" y="260" width="200" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="auth-service" value="AuthService&#10;---------------------------&#10;- userRepository : UserRepository&#10;---------------------------&#10;+ authenticateWithMicrosoft()&#10;+ generateToken(user) : string&#10;+ validateToken(token) : User" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=130;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="220" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- USER MODULE -->
+        <!-- ============================================ -->
+
+        <mxCell id="user-controller" value="UserController&#10;---------------------------&#10;- userService : UserService&#10;---------------------------&#10;+ getAll(req, res)&#10;+ getById(req, res)&#10;+ create(req, res)&#10;+ update(req, res)&#10;+ delete(req, res)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=150;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="300" y="260" width="180" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="user-service" value="UserService&#10;---------------------------&#10;- userRepository : UserRepository&#10;---------------------------&#10;+ findAll() : User[]&#10;+ findById(id) : User&#10;+ create(data) : User&#10;+ update(id, data) : User&#10;+ delete(id) : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=150;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="300" y="440" width="200" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="user-repository" value="UserRepository&#10;---------------------------&#10;- db : Database&#10;---------------------------&#10;+ findAll() : User[]&#10;+ findById(id) : User&#10;+ findByEmail(email) : User&#10;+ insert(data) : User&#10;+ update(id, data) : User&#10;+ delete(id) : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=160;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="300" y="620" width="200" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- MEMBER MODULE -->
+        <!-- ============================================ -->
+
+        <mxCell id="member-controller" value="MemberController&#10;---------------------------&#10;- memberService : MemberService&#10;---------------------------&#10;+ getAll(req, res)&#10;+ getById(req, res)&#10;+ create(req, res)&#10;+ update(req, res)&#10;+ delete(req, res)&#10;+ getCards(req, res)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=170;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="540" y="260" width="200" height="170" as="geometry" />
+        </mxCell>
+
+        <mxCell id="member-service" value="MemberService&#10;---------------------------&#10;- memberRepository : MemberRepository&#10;- accountService : AccountService&#10;---------------------------&#10;+ findAll() : Member[]&#10;+ findById(id) : Member&#10;+ create(data) : Member&#10;+ update(id, data) : Member&#10;+ generateQR(member) : string" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=170;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="540" y="460" width="220" height="170" as="geometry" />
+        </mxCell>
+
+        <mxCell id="member-repository" value="MemberRepository&#10;---------------------------&#10;- db : Database&#10;---------------------------&#10;+ findAll() : Member[]&#10;+ findById(id) : Member&#10;+ findByIdentification(id) : Member&#10;+ insert(data) : Member&#10;+ update(id, data) : Member" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=150;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#b0e3e6;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="540" y="660" width="220" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- ASSEMBLY MODULE -->
+        <!-- ============================================ -->
+
+        <mxCell id="assembly-controller" value="AssemblyController&#10;---------------------------&#10;- assemblyService : AssemblyService&#10;---------------------------&#10;+ getAll(req, res)&#10;+ create(req, res)&#10;+ activate(req, res)&#10;+ conclude(req, res)&#10;+ delete(req, res)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=150;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="800" y="260" width="200" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="assembly-service" value="AssemblyService&#10;---------------------------&#10;- assemblyRepository : AssemblyRepository&#10;---------------------------&#10;+ findAll() : Assembly[]&#10;+ create(data) : Assembly&#10;+ activate(id) : Assembly&#10;+ conclude(id) : Assembly&#10;+ getActive() : Assembly" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=150;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="800" y="440" width="220" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="assembly-repository" value="AssemblyRepository&#10;---------------------------&#10;- db : Database&#10;---------------------------&#10;+ findAll() : Assembly[]&#10;+ findById(id) : Assembly&#10;+ findActive() : Assembly&#10;+ insert(data) : Assembly&#10;+ update(id, data) : Assembly" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=150;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="800" y="620" width="220" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- SAVINGS MODULE -->
+        <!-- ============================================ -->
+
+        <mxCell id="savings-controller" value="SavingsController&#10;---------------------------&#10;- savingsService : SavingsService&#10;---------------------------&#10;+ deposit(req, res)&#10;+ withdraw(req, res)&#10;+ getBalance(req, res)&#10;+ getHistory(req, res)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=140;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="260" width="200" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="savings-service" value="SavingsService&#10;---------------------------&#10;- savingsRepository : SavingsRepository&#10;- accountService : AccountService&#10;---------------------------&#10;+ deposit(memberId, amount)&#10;+ withdraw(memberId, amount)&#10;+ getBalance(memberId) : number&#10;+ transfer(from, to, amount)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=160;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="430" width="220" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="savings-repository" value="SavingsRepository&#10;---------------------------&#10;- db : Database&#10;---------------------------&#10;+ findByMember(id) : Transaction[]&#10;+ insert(data) : Transaction&#10;+ getBalance(accountId) : number" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=130;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="620" width="220" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- ATTENDANCE MODULE -->
+        <!-- ============================================ -->
+
+        <mxCell id="attendance-controller" value="AttendanceController&#10;---------------------------&#10;- attendanceService : AttendanceService&#10;---------------------------&#10;+ registerByQR(req, res)&#10;+ registerManual(req, res)&#10;+ getByAssembly(req, res)&#10;+ delete(req, res)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=140;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="260" width="220" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="attendance-service" value="AttendanceService&#10;---------------------------&#10;- attendanceRepository&#10;- memberService : MemberService&#10;---------------------------&#10;+ registerQR(qrHash, assemblyId)&#10;+ registerManual(memberId, assemblyId)&#10;+ getByAssembly(assemblyId)" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=150;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="430" width="230" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="attendance-repository" value="AttendanceRepository&#10;---------------------------&#10;- db : Database&#10;---------------------------&#10;+ findByAssembly(id) : Attendance[]&#10;+ insert(data) : Attendance&#10;+ delete(id) : void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=130;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="610" width="220" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================ -->
+        <!-- RELACIONES -->
+        <!-- ============================================ -->
+
+        <!-- Auth: Controller -> Service -->
+        <mxCell id="rel-auth-1" style="endArrow=open;endFill=0;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="auth-controller" target="auth-service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel-auth-1-label" value="usa" style="text;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="165" y="395" width="30" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- User: Controller -> Service -->
+        <mxCell id="rel-user-1" style="endArrow=open;endFill=0;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="user-controller" target="user-service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- User: Service -> Repository -->
+        <mxCell id="rel-user-2" style="endArrow=open;endFill=0;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="user-service" target="user-repository">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- User: Repository -> Database -->
+        <mxCell id="rel-user-3" style="endArrow=open;endFill=0;endSize=12;html=1;dashed=1;exitX=0;exitY=0.5;entryX=1;entryY=1;" edge="1" parent="1" source="user-repository" target="database">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="260" y="700" />
+              <mxPoint x="260" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Member: Controller -> Service -->
+        <mxCell id="rel-member-1" style="endArrow=open;endFill=0;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="member-controller" target="member-service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Member: Service -> Repository -->
+        <mxCell id="rel-member-2" style="endArrow=open;endFill=0;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="member-service" target="member-repository">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Assembly: Controller -> Service -->
+        <mxCell id="rel-assembly-1" style="endArrow=open;endFill=0;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="assembly-controller" target="assembly-service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Assembly: Service -> Repository -->
+        <mxCell id="rel-assembly-2" style="endArrow=open;endFill=0;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="assembly-service" target="assembly-repository">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Savings: Controller -> Service -->
+        <mxCell id="rel-savings-1" style="endArrow=open;endFill=0;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="savings-controller" target="savings-service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Savings: Service -> Repository -->
+        <mxCell id="rel-savings-2" style="endArrow=open;endFill=0;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="savings-service" target="savings-repository">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Attendance: Controller -> Service -->
+        <mxCell id="rel-attend-1" style="endArrow=open;endFill=0;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="attendance-controller" target="attendance-service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Attendance: Service -> Repository -->
+        <mxCell id="rel-attend-2" style="endArrow=open;endFill=0;endSize=12;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="attendance-service" target="attendance-repository">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Auth Service -> User Repository -->
+        <mxCell id="rel-auth-user" style="endArrow=open;endFill=0;endSize=12;html=1;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="auth-service" target="user-repository">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="280" y="485" />
+              <mxPoint x="280" y="700" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Attendance Service -> Member Service -->
+        <mxCell id="rel-attend-member" style="endArrow=open;endFill=0;endSize=12;html=1;dashed=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="attendance-service" target="member-service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Nota explicativa -->
+        <mxCell id="note1" value="Patron: Controller-Service-Repository&#10;&#10;Controller: Maneja peticiones HTTP&#10;Service: Logica de negocio&#10;Repository: Acceso a base de datos&#10;&#10;--- = dependencia&#10;---> = usa" style="shape=note;whiteSpace=wrap;html=0;backgroundOutline=1;darkOpacity=0.05;fillColor=#ffffcc;strokeColor=#999900;align=left;spacingLeft=5;size=20;" vertex="1" parent="1">
+          <mxGeometry x="40" y="820" width="240" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="note2" value="Tecnologias:&#10;- Node.js + Express&#10;- PostgreSQL&#10;- Microsoft OAuth 2.0&#10;- JWT para autenticacion" style="shape=note;whiteSpace=wrap;html=0;backgroundOutline=1;darkOpacity=0.05;fillColor=#ffffcc;strokeColor=#999900;align=left;spacingLeft=5;size=20;" vertex="1" parent="1">
+          <mxGeometry x="300" y="820" width="180" height="100" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

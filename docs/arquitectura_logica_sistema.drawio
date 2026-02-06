@@ -1,0 +1,352 @@
+<mxfile host="app.diagrams.net" modified="2025-12-05T00:00:00.000Z" agent="Claude Code" etag="CoopLink-CR-Architecture-v1" version="24.0.0" type="device">
+  <diagram id="CoopLink-CR-Logical-Architecture" name="Arquitectura Lógica - CoopLink CR">
+    <mxGraphModel dx="1434" dy="844" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Título del Diagrama -->
+        <mxCell id="title" value="ARQUITECTURA LÓGICA DEL SISTEMA&#xa;CoopLink CR" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="570" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CAPA DE PRESENTACIÓN (Frontend) -->
+        <!-- ========================================== -->
+        <mxCell id="layer-presentation" value="CAPA DE PRESENTACIÓN" style="swimlane;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;startSize=40;" vertex="1" parent="1">
+          <mxGeometry x="80" y="120" width="1000" height="280" as="geometry" />
+        </mxCell>
+
+        <!-- Cliente Web Browser -->
+        <mxCell id="web-browser" value="&lt;b&gt;Navegador Web&lt;/b&gt;&lt;br&gt;(Cliente)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;verticalAlign=top;" vertex="1" parent="layer-presentation">
+          <mxGeometry x="40" y="60" width="920" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- React Application -->
+        <mxCell id="react-app" value="&lt;b&gt;React Application&lt;/b&gt;&lt;br&gt;(SPA - Vite)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;verticalAlign=top;" vertex="1" parent="layer-presentation">
+          <mxGeometry x="60" y="100" width="880" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- Módulos del Frontend -->
+        <mxCell id="frontend-modules" value="" style="group" vertex="1" connectable="0" parent="layer-presentation">
+          <mxGeometry x="80" y="140" width="840" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="module-auth" value="&lt;b&gt;Módulo Auth&lt;/b&gt;&lt;br&gt;Login OAuth&lt;br&gt;Microsoft 365" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="frontend-modules">
+          <mxGeometry width="120" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="module-members" value="&lt;b&gt;Módulo Miembros&lt;/b&gt;&lt;br&gt;Gestión&lt;br&gt;QR Codes&lt;br&gt;Verificación" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="frontend-modules">
+          <mxGeometry x="130" width="120" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="module-attendance" value="&lt;b&gt;Módulo Asistencia&lt;/b&gt;&lt;br&gt;Escáner QR&lt;br&gt;Asambleas&lt;br&gt;Registros" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="frontend-modules">
+          <mxGeometry x="260" width="120" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="module-financial" value="&lt;b&gt;Módulo Financiero&lt;/b&gt;&lt;br&gt;Ahorros&lt;br&gt;Aportaciones&lt;br&gt;Transacciones" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="frontend-modules">
+          <mxGeometry x="390" width="120" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="module-surplus" value="&lt;b&gt;Módulo Excedentes&lt;/b&gt;&lt;br&gt;Distribución&lt;br&gt;Solicitudes&lt;br&gt;Reportes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="frontend-modules">
+          <mxGeometry x="520" width="120" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="module-liquidations" value="&lt;b&gt;Módulo Liquidaciones&lt;/b&gt;&lt;br&gt;Periódicas (6 años)&lt;br&gt;Por Salida&lt;br&gt;Recibos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="frontend-modules">
+          <mxGeometry x="650" width="120" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="module-reports" value="&lt;b&gt;Módulo Reportes&lt;/b&gt;&lt;br&gt;Dashboards&lt;br&gt;Exportación&lt;br&gt;Analytics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="frontend-modules">
+          <mxGeometry x="780" width="120" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CAPA DE COMUNICACIÓN (API REST) -->
+        <!-- ========================================== -->
+        <mxCell id="api-layer" value="CAPA DE COMUNICACIÓN - API REST" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="440" width="1000" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="api-label" value="HTTP/HTTPS - JSON&lt;br&gt;CORS habilitado | Autenticación JWT" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="430" y="450" width="310" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Conexión Frontend -> API -->
+        <mxCell id="connection-frontend-api" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#6c8ebf;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="layer-presentation" target="api-layer">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="530" y="520" as="sourcePoint" />
+            <mxPoint x="580" y="470" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CAPA DE APLICACIÓN (Backend) -->
+        <!-- ========================================== -->
+        <mxCell id="layer-application" value="CAPA DE APLICACIÓN (Backend)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;fontStyle=1;startSize=40;" vertex="1" parent="1">
+          <mxGeometry x="80" y="530" width="1000" height="420" as="geometry" />
+        </mxCell>
+
+        <!-- Node.js + Express.js -->
+        <mxCell id="nodejs-express" value="&lt;b&gt;Node.js + Express.js&lt;/b&gt;&lt;br&gt;Runtime JavaScript del lado del servidor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;verticalAlign=top;" vertex="1" parent="layer-application">
+          <mxGeometry x="40" y="60" width="920" height="340" as="geometry" />
+        </mxCell>
+
+        <!-- Arquitectura en Capas del Backend -->
+        <mxCell id="backend-layer-controllers" value="&lt;b&gt;Capa de Controladores&lt;/b&gt;&lt;br&gt;(HTTP Request/Response Handling)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff4e6;strokeColor=#d79b00;fontSize=10;verticalAlign=top;" vertex="1" parent="layer-application">
+          <mxGeometry x="60" y="100" width="880" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="controllers-list" value="UserController | MemberController | AttendanceController | SavingsController&lt;br&gt;ContributionController | SurplusController | LiquidationController | WithdrawalController&lt;br&gt;ReceiptController | ReportController | NotificationController" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="layer-application">
+          <mxGeometry x="80" y="120" width="840" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="backend-layer-services" value="&lt;b&gt;Capa de Servicios&lt;/b&gt;&lt;br&gt;(Lógica de Negocio)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff4e6;strokeColor=#d79b00;fontSize=10;verticalAlign=top;" vertex="1" parent="layer-application">
+          <mxGeometry x="60" y="190" width="880" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="services-list" value="UserService | MemberService | AttendanceService | SavingsService&lt;br&gt;ContributionService | SurplusService | LiquidationService | WithdrawalService&lt;br&gt;ReceiptService (PDF Generation) | ReportService | NotificationService" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="layer-application">
+          <mxGeometry x="80" y="210" width="840" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="backend-layer-repositories" value="&lt;b&gt;Capa de Repositorios&lt;/b&gt;&lt;br&gt;(Acceso a Datos)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff4e6;strokeColor=#d79b00;fontSize=10;verticalAlign=top;" vertex="1" parent="layer-application">
+          <mxGeometry x="60" y="280" width="880" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="repositories-list" value="UserRepository | MemberRepository | AttendanceRepository | SavingsRepository&lt;br&gt;ContributionRepository | SurplusRepository | LiquidationRepository | WithdrawalRepository&lt;br&gt;ReceiptRepository | ReportRepository | NotificationRepository" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="layer-application">
+          <mxGeometry x="80" y="300" width="840" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Middlewares del Backend -->
+        <mxCell id="middleware-section" value="" style="group" vertex="1" connectable="0" parent="layer-application">
+          <mxGeometry x="60" y="365" width="880" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="middleware-auth" value="Auth Middleware" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="middleware-section">
+          <mxGeometry width="140" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="middleware-permissions" value="Permission Middleware" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="middleware-section">
+          <mxGeometry x="150" width="150" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="middleware-ownership" value="Ownership Middleware" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="middleware-section">
+          <mxGeometry x="310" width="160" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="middleware-validation" value="Validation (Joi)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="middleware-section">
+          <mxGeometry x="480" width="120" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="middleware-error" value="Error Handler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="middleware-section">
+          <mxGeometry x="610" width="110" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="middleware-logger" value="Logger (Winston)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="middleware-section">
+          <mxGeometry x="730" width="110" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Conexión API -> Backend -->
+        <mxCell id="connection-api-backend" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#d79b00;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="api-layer" target="layer-application">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="530" y="610" as="sourcePoint" />
+            <mxPoint x="580" y="560" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- CAPA DE DATOS -->
+        <!-- ========================================== -->
+        <mxCell id="layer-data" value="CAPA DE DATOS" style="swimlane;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;fontStyle=1;startSize=40;" vertex="1" parent="1">
+          <mxGeometry x="80" y="990" width="1000" height="280" as="geometry" />
+        </mxCell>
+
+        <!-- PostgreSQL -->
+        <mxCell id="postgresql-db" value="&lt;b&gt;PostgreSQL 14+&lt;/b&gt;&lt;br&gt;Base de Datos Relacional" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;verticalAlign=top;" vertex="1" parent="layer-data">
+          <mxGeometry x="40" y="60" width="920" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- Esquema de Base de Datos -->
+        <mxCell id="db-schema" value="&lt;b&gt;Esquema de Base de Datos&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;" vertex="1" parent="layer-data">
+          <mxGeometry x="60" y="100" width="880" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Tablas Principales -->
+        <mxCell id="db-tables-org" value="&lt;b&gt;Organización&lt;/b&gt;&lt;br&gt;schools&lt;br&gt;cooperatives" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;verticalAlign=top;" vertex="1" parent="layer-data">
+          <mxGeometry x="70" y="145" width="100" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db-tables-users" value="&lt;b&gt;Usuarios&lt;/b&gt;&lt;br&gt;users" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;verticalAlign=top;" vertex="1" parent="layer-data">
+          <mxGeometry x="180" y="145" width="90" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db-tables-members" value="&lt;b&gt;Miembros&lt;/b&gt;&lt;br&gt;members&lt;br&gt;member_qualities&lt;br&gt;member_levels" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;verticalAlign=top;" vertex="1" parent="layer-data">
+          <mxGeometry x="280" y="145" width="110" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db-tables-assembly" value="&lt;b&gt;Asambleas&lt;/b&gt;&lt;br&gt;assemblies&lt;br&gt;attendance_records" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;verticalAlign=top;" vertex="1" parent="layer-data">
+          <mxGeometry x="400" y="145" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db-tables-financial" value="&lt;b&gt;Financiero&lt;/b&gt;&lt;br&gt;accounts&lt;br&gt;account_types&lt;br&gt;transactions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;verticalAlign=top;" vertex="1" parent="layer-data">
+          <mxGeometry x="530" y="145" width="100" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db-tables-contributions" value="&lt;b&gt;Aportaciones&lt;/b&gt;&lt;br&gt;contribution_periods" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;verticalAlign=top;" vertex="1" parent="layer-data">
+          <mxGeometry x="640" y="145" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db-tables-surplus" value="&lt;b&gt;Excedentes&lt;/b&gt;&lt;br&gt;surplus_distributions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;verticalAlign=top;" vertex="1" parent="layer-data">
+          <mxGeometry x="770" y="145" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db-tables-requests" value="&lt;b&gt;Solicitudes&lt;/b&gt;&lt;br&gt;withdrawal_requests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;verticalAlign=top;" vertex="1" parent="layer-data">
+          <mxGeometry x="70" y="215" width="120" height="35" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db-tables-liquidations" value="&lt;b&gt;Liquidaciones&lt;/b&gt;&lt;br&gt;liquidations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;verticalAlign=top;" vertex="1" parent="layer-data">
+          <mxGeometry x="200" y="215" width="100" height="35" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db-tables-receipts" value="&lt;b&gt;Recibos&lt;/b&gt;&lt;br&gt;receipts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;verticalAlign=top;" vertex="1" parent="layer-data">
+          <mxGeometry x="310" y="215" width="90" height="35" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db-tables-notifications" value="&lt;b&gt;Notificaciones&lt;/b&gt;&lt;br&gt;notifications" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;verticalAlign=top;" vertex="1" parent="layer-data">
+          <mxGeometry x="410" y="215" width="110" height="35" as="geometry" />
+        </mxCell>
+
+        <mxCell id="db-features" value="&lt;b&gt;Características DB:&lt;/b&gt; Triggers | Stored Functions | Indexes | Constraints | Foreign Keys | Check Constraints" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="layer-data">
+          <mxGeometry x="530" y="220" width="390" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Conexión Backend -> Database -->
+        <mxCell id="connection-backend-db" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#9673a6;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="layer-application" target="layer-data">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="530" y="1060" as="sourcePoint" />
+            <mxPoint x="580" y="1010" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="connection-backend-db-label" value="SQL Queries&lt;br&gt;node-postgres (pg)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontStyle=1" vertex="1" connectable="0" parent="connection-backend-db">
+          <mxGeometry x="-0.2" y="1" relative="1" as="geometry">
+            <mxPoint x="-1" y="4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- SERVICIOS EXTERNOS -->
+        <!-- ========================================== -->
+        <mxCell id="external-services" value="SERVICIOS EXTERNOS" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=14;fontStyle=1;startSize=40;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1310" width="480" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="microsoft-oauth" value="&lt;b&gt;Microsoft OAuth 2.0&lt;/b&gt;&lt;br&gt;Autenticación Microsoft 365&lt;br&gt;Proveedor de Identidad" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="external-services">
+          <mxGeometry x="30" y="60" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="smtp-server" value="&lt;b&gt;Servidor SMTP&lt;/b&gt;&lt;br&gt;(Opcional)&lt;br&gt;Envío de notificaciones&lt;br&gt;por correo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="external-services">
+          <mxGeometry x="250" y="60" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- ALMACENAMIENTO DE ARCHIVOS -->
+        <!-- ========================================== -->
+        <mxCell id="file-storage" value="ALMACENAMIENTO DE ARCHIVOS" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=14;fontStyle=1;startSize=40;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="600" y="1310" width="480" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="local-filesystem" value="&lt;b&gt;Sistema de Archivos Local&lt;/b&gt;&lt;br&gt;/backend/uploads/&lt;br&gt;• Fotos de miembros&lt;br&gt;• Recibos PDF generados&lt;br&gt;• Documentos temporales" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="file-storage">
+          <mxGeometry x="30" y="60" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="future-cloud" value="&lt;b&gt;Almacenamiento Cloud&lt;/b&gt;&lt;br&gt;(Futuro - Opcional)&lt;br&gt;AWS S3 / Azure Blob&lt;br&gt;Google Cloud Storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;dashed=1;dashPattern=5 5;" vertex="1" parent="file-storage">
+          <mxGeometry x="250" y="60" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Conexión Backend -> Microsoft OAuth -->
+        <mxCell id="connection-backend-oauth" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#9673a6;exitX=0.15;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;curved=1;" edge="1" parent="1" source="layer-application" target="microsoft-oauth">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="250" y="1060" as="sourcePoint" />
+            <mxPoint x="300" y="1010" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="230" y="1120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="connection-oauth-label" value="OAuth 2.0&lt;br&gt;JWT Tokens" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontStyle=1" vertex="1" connectable="0" parent="connection-backend-oauth">
+          <mxGeometry x="0.1" y="2" relative="1" as="geometry">
+            <mxPoint x="-15" y="-8" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Conexión Backend -> File Storage -->
+        <mxCell id="connection-backend-files" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#d79b00;exitX=0.85;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;curved=1;" edge="1" parent="1" source="layer-application" target="local-filesystem">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="900" y="1060" as="sourcePoint" />
+            <mxPoint x="950" y="1010" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="900" y="1120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="connection-files-label" value="File I/O&lt;br&gt;Read/Write" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontStyle=1" vertex="1" connectable="0" parent="connection-backend-files">
+          <mxGeometry x="0.1" y="2" relative="1" as="geometry">
+            <mxPoint x="15" y="-8" as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ========================================== -->
+        <!-- LEYENDA Y NOTAS -->
+        <!-- ========================================== -->
+        <mxCell id="legend-title" value="LEYENDA" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="80" y="1490" width="100" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-item1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1520" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-label1" value="Capa de Presentación (Frontend)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1520" width="220" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-item2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1550" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-label2" value="Capa de Aplicación (Backend)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1550" width="220" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-item3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1580" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-label3" value="Capa de Datos / Servicios Externos" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1580" width="220" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend-item4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1610" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-label4" value="Middlewares / Componentes Transversales" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1610" width="250" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- NOTAS IMPORTANTES -->
+        <mxCell id="notes-title" value="NOTAS IMPORTANTES" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="400" y="1490" width="200" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="notes-content" value="• &lt;b&gt;Arquitectura:&lt;/b&gt; Monolítica en 3 capas (Presentación, Aplicación, Datos)&lt;br&gt;• &lt;b&gt;Patrón:&lt;/b&gt; MVC + Repository Pattern&lt;br&gt;• &lt;b&gt;Comunicación:&lt;/b&gt; API REST con JSON&lt;br&gt;• &lt;b&gt;Autenticación:&lt;/b&gt; OAuth 2.0 (Microsoft 365) + JWT&lt;br&gt;• &lt;b&gt;Base de Datos:&lt;/b&gt; PostgreSQL 14+ (Relacional)&lt;br&gt;• &lt;b&gt;Frontend:&lt;/b&gt; React 18 + Vite (SPA)&lt;br&gt;• &lt;b&gt;Backend:&lt;/b&gt; Node.js 18+ + Express.js&lt;br&gt;• &lt;b&gt;Seguridad:&lt;/b&gt; HTTPS, CORS, JWT, Validación Joi, SQL Injection Protection&lt;br&gt;• &lt;b&gt;Logging:&lt;/b&gt; Winston (archivos rotativos)&lt;br&gt;• &lt;b&gt;Testing:&lt;/b&gt; Jest (Unit + Integration tests)" style="text;html=1;strokeColor=#666666;fillColor=#f5f5f5;align=left;verticalAlign=top;whiteSpace=wrap;rounded=1;fontSize=9;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1520" width="680" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Información del Documento -->
+        <mxCell id="document-info" value="&lt;b&gt;CoopLink CR&lt;/b&gt; | Diagrama de Arquitectura Lógica | Versión 1.0 | Diciembre 2025" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1670" width="1000" height="20" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

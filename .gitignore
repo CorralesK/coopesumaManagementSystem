@@ -1,12 +1,11 @@
 # ============================================================================
-# .gitignore - CoopeSuma Management System
+# .gitignore - CoopLink CR Management System
 # ============================================================================
 
 # ============================================================================
-# Documentation and Summary Files
+# Summary Files
 # ============================================================================
-# Exclude documentation folder and summary markdown files
-/docs/
+# Exclude temporary summary markdown files
 FRONTEND_SETUP_COMPLETED.md
 LIMPIEZA_RAIZ_COMPLETADA.md
 VERIFICACION_MICROSOFT_OAUTH.md
